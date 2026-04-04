@@ -138,6 +138,74 @@ Phase 1 focuses on setting up the foundation: project infrastructure, authentica
 - **Verify:** User can register and login
 - **Done:** Auth flow functional
 
+#### Task 3.3.1: Database Auth Trigger
+- **Type:** database
+- **Module:** Supabase
+- **Estimate:** 0.5d
+- **Description:** Setup database trigger for auto user profile creation
+- **Files:** supabase/migrations/
+- **Action:**
+  1. Create handle_new_user function
+  2. Create on_auth_user_created trigger
+  3. Configure RLS for auth.users
+- **Verify:** Auth user auto creates profile in public.users
+- **Depends on:** Task 2.1
+
+#### Task 3.3.2: Registration UI
+- **Type:** android
+- **Module:** Android
+- **Estimate:** 1d
+- **Description:** Implement registration screen
+- **Files:** RegisterActivity.kt, RegisterViewModel.kt, register_layout.xml
+- **Action:**
+  1. Create RegisterActivity/Fragment with form
+  2. Add validation (email, phone, password, full_name)
+  3. Integrate Supabase signUp
+  4. Handle loading and error states
+- **Verify:** User can register with email + phone
+- **Depends on:** Task 3.3
+
+#### Task 3.3.3: Login UI
+- **Type:** android
+- **Module:** Android
+- **Estimate:** 0.5d
+- **Description:** Implement login screen
+- **Files:** LoginActivity.kt, LoginViewModel.kt, login_layout.xml
+- **Action:**
+  1. Create LoginActivity/Fragment
+  2. Support email and phone login
+  3. Implement remember me
+  4. Integrate Supabase signIn
+- **Verify:** User can login
+- **Depends on:** Task 3.3
+
+#### Task 3.3.4: Password Reset
+- **Type:** android
+- **Module:** Android
+- **Estimate:** 0.5d
+- **Description:** Implement password reset functionality
+- **Files:** ResetPasswordActivity.kt, reset_password_layout.xml
+- **Action:**
+  1. Create forgot password flow
+  2. Implement resetPasswordForEmail
+  3. Handle deep link for password reset
+- **Verify:** User can reset password
+- **Depends on:** Task 3.3.3
+
+#### Task 3.3.5: Session Management
+- **Type:** android
+- **Module:** Android
+- **Estimate:** 0.5d
+- **Description:** Implement session and token management
+- **Files:** SessionManager.kt, AuthRepository.kt
+- **Action:**
+  1. Implement secure token storage
+  2. Auto-refresh token logic
+  3. Handle session expiration
+  4. Logout functionality
+- **Verify:** App maintains session after restart
+- **Depends on:** Task 3.3.3
+
 #### Task 3.4: Design System Base
 - **Type:** feature
 - **Module:** Android
