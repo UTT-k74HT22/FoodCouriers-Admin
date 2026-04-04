@@ -7,6 +7,7 @@
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- =====================================================
 -- TABLE: users
@@ -110,7 +111,7 @@ CREATE INDEX idx_categories_sort_order ON public.categories(sort_order);
 CREATE TABLE public.menu_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
-    category_id UUID NOT NULL REFERENCES categories(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     description TEXT,
     price INTEGER NOT NULL,
@@ -126,6 +127,29 @@ CREATE INDEX idx_menu_items_restaurant ON public.menu_items(restaurant_id);
 CREATE INDEX idx_menu_items_category ON public.menu_items(category_id);
 CREATE INDEX idx_menu_items_restaurant_available ON public.menu_items(restaurant_id, is_available);
 CREATE INDEX idx_menu_items_name_gin ON public.menu_items USING gin(name gin_trgm_ops);
+
+-- =====================================================
+-- TABLE: promotions
+-- =====================================================
+CREATE TABLE public.promotions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    description TEXT,
+    discount_type TEXT NOT NULL CHECK (discount_type IN ('percent', 'fixed')),
+    discount_value INTEGER NOT NULL,
+    min_order INTEGER DEFAULT 0,
+    max_discount INTEGER,
+    start_date TIMESTAMPTZ NOT NULL,
+    end_date TIMESTAMPTZ NOT NULL,
+    usage_limit INTEGER,
+    usage_count INTEGER DEFAULT 0,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_promotions_code ON public.promotions(code);
+CREATE INDEX idx_promotions_active ON public.promotions(is_active, start_date, end_date);
 
 -- =====================================================
 -- TABLE: carts
@@ -161,8 +185,8 @@ CREATE INDEX idx_cart_items_cart ON public.cart_items(cart_id);
 CREATE TABLE public.orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_code TEXT NOT NULL UNIQUE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-    restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    restaurant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL,
     delivery_address TEXT NOT NULL,
     delivery_latitude DOUBLE PRECISION,
     delivery_longitude DOUBLE PRECISION,
@@ -193,7 +217,7 @@ CREATE INDEX idx_orders_restaurant_status ON public.orders(restaurant_id, status
 CREATE TABLE public.order_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-    menu_item_id UUID NOT NULL REFERENCES menu_items(id) ON DELETE SET NULL,
+    menu_item_id UUID REFERENCES menu_items(id) ON DELETE SET NULL,
     menu_item_name TEXT NOT NULL,
     menu_item_price INTEGER NOT NULL,
     quantity INTEGER NOT NULL,
@@ -219,29 +243,6 @@ CREATE TABLE public.order_status_logs (
 
 CREATE INDEX idx_order_status_logs_order ON public.order_status_logs(order_id);
 CREATE INDEX idx_order_status_logs_created ON public.order_status_logs(created_at DESC);
-
--- =====================================================
--- TABLE: promotions
--- =====================================================
-CREATE TABLE public.promotions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    description TEXT,
-    discount_type TEXT NOT NULL CHECK (discount_type IN ('percent', 'fixed')),
-    discount_value INTEGER NOT NULL,
-    min_order INTEGER DEFAULT 0,
-    max_discount INTEGER,
-    start_date TIMESTAMPTZ NOT NULL,
-    end_date TIMESTAMPTZ NOT NULL,
-    usage_limit INTEGER,
-    usage_count INTEGER DEFAULT 0,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_promotions_code ON public.promotions(code);
-CREATE INDEX idx_promotions_active ON public.promotions(is_active, start_date, end_date);
 
 -- =====================================================
 -- TABLE: promotion_usages
@@ -284,7 +285,7 @@ CREATE TABLE public.banners (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title TEXT NOT NULL,
     image_url TEXT NOT NULL,
-    link_type TEXT CHECK (link_type IN ('restaurant', 'category', 'url', 'none')),
+    link_type TEXT CHECK (link_type IN ('restaurant', 'category', 'promotion', 'url', 'none')),
     link_value TEXT,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT true,

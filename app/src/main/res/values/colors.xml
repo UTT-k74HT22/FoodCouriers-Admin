@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="primary">#FF6C63EC</color>
+    <color name="primary_variant">#FF5248D6</color>
+    <color name="primary_dark">#FF3B32B8</color>
+    <color name="secondary">#FFFF7B5E</color>
+    <color name="secondary_variant">#FFFF5A3D</color>
+    <color name="accent">#FF00C9A7</color>
+    <color name="background">#FFF8F9FE</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="error">#FFFF4757</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    <color name="on_background">#FF2D3142</color>
+    <color name="on_surface">#FF2D3142</color>
+    <color name="on_surface_secondary">#FF9094A6</color>
+    <color name="text_hint">#FFB8BEC8</color>
+    <color name="divider">#FFE8EAF0</color>
+    <color name="gradient_start">#FF6C63EC</color>
+    <color name="gradient_end">#FFFF7B5E</color>
+    <color name="card_shadow">#1A6C63EC</color>
+    <color name="input_background">#FFF5F6FA</color>
+    <color name="success">#FF2ED573</color>
+    <color name="warning">#FFFFBE21</color>
+    
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
