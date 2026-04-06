@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    tools:openDrawer="start">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/surface"
+            android:elevation="2dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/toolbar_height"
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                app:navigationIcon="@drawable/ic_menu"
+                app:titleTextAppearance="@style/AdminTextAppearance.Title"
+                app:titleTextColor="@color/text_primary" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:tabIndicatorColor="@color/primary"
+                app:tabIndicatorFullWidth="true"
+                app:tabMode="scrollable"
+                app:tabSelectedTextColor="@color/primary"
+                app:tabTextAppearance="@style/AdminTextAppearance.Small"
+                app:tabTextColor="@color/text_secondary"
+                tools:visibility="visible" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <FrameLayout
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigation_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/surface"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header_main"
+        app:menu="@menu/menu_navigation_drawer"
+        app:itemIconSize="@dimen/icon_md"
+        app:itemIconTint="@color/primary"
+        app:itemTextColor="@color/text_primary"
+        app:itemTextAppearance="@style/AdminTextAppearance.Body"
+        app:subheaderColor="@color/text_secondary"
+        app:subheaderTextAppearance="@style/AdminTextAppearance.Small"
+        app:itemBackground="@drawable/admin_nav_item_bg"
+        app:itemHorizontalPadding="16dp"
+        app:itemIconPadding="12dp" />
+
+</androidx.drawerlayout.widget.DrawerLayout>
