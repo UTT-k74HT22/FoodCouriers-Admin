@@ -14,11 +14,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.utt.foodcouriers_admin.R;
+import com.utt.foodcouriers_admin.data.common.BaseResponse;
+import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Category;
-import com.utt.foodcouriers_admin.data.remote.SupabaseClient;
+import com.utt.foodcouriers_admin.data.repository.CategoryRepository;
 import com.utt.foodcouriers_admin.ui.menu.adapter.CategoryAdapter;
 
-import java.util.Arrays;
+import java.util.List;
 
 public class CategoryFragment extends Fragment implements CategoryAdapter.OnCategoryClickListener {
 
@@ -26,7 +28,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     private CategoryAdapter adapter;
     private View emptyState;
     private ExtendedFloatingActionButton fabAdd;
-    private SupabaseClient supabaseClient;
+    private CategoryRepository categoryRepository;
 
     @Nullable
     @Override
@@ -41,7 +43,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
         rvCategories = view.findViewById(R.id.rv_categories);
         emptyState = view.findViewById(R.id.empty_state);
         fabAdd = view.findViewById(R.id.fab_add_category);
-        supabaseClient = SupabaseClient.getInstance();
+        categoryRepository = CategoryRepository.getInstance();
 
         setupRecyclerView();
         loadCategories();
@@ -61,22 +63,23 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     }
 
     private void loadCategories() {
-        supabaseClient.getCategories(new SupabaseClient.ApiCallback<Category[]>() {
+        categoryRepository.getAll(new RepositoryCallback<List<Category>>() {
             @Override
-            public void onSuccess(Category[] result) {
-                if (result == null || result.length == 0) {
+            public void onComplete(BaseResponse<List<Category>> response) {
+                if (!response.isSuccess()) {
+                    Toast.makeText(getContext(), "Loi: " + response.getMessage(), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                List<Category> result = response.getData();
+                if (result == null || result.isEmpty()) {
                     emptyState.setVisibility(View.VISIBLE);
                     rvCategories.setVisibility(View.GONE);
                 } else {
                     emptyState.setVisibility(View.GONE);
                     rvCategories.setVisibility(View.VISIBLE);
-                    adapter.setCategories(Arrays.asList(result));
+                    adapter.setCategories(result);
                 }
-            }
-
-            @Override
-            public void onError(String error) {
-                Toast.makeText(getContext(), "Lỗi: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -88,6 +91,6 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
 
     @Override
     public void onStatusChange(Category category, boolean isActive) {
-        // TODO: Update category status in Supabase
+        // TODO: Update category status via repository
     }
 }

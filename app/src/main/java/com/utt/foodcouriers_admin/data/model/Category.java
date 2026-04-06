@@ -12,6 +12,8 @@ public class Category implements Serializable {
     private int sortOrder;
     @SerializedName("is_active")
     private boolean isActive;
+    @SerializedName("created_at")
+    private String createdAt;
 
     public Category() {}
 
@@ -29,4 +31,7 @@ public class Category implements Serializable {
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }
