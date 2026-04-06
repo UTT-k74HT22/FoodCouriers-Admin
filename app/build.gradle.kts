@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.gson)
     implementation(libs.okhttp)
+    implementation(libs.supabase.kt)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
