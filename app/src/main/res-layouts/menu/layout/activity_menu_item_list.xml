@@ -49,7 +49,24 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_filter_restaurant"
-                    android:layout_width="150dp"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:inputType="none" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_filter_category"
+                style="@style/AdminInputLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_sm"
+                android:hint="Danh mục">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_filter_category"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:focusable="false"
                     android:inputType="none" />

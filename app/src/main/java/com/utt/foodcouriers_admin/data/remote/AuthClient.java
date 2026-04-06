@@ -1,88 +1,51 @@
 package com.utt.foodcouriers_admin.data.remote;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import com.utt.foodcouriers_admin.data.model.Category;
-import com.utt.foodcouriers_admin.data.model.MenuItem;
 import com.utt.foodcouriers_admin.data.model.User;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class SupabaseClient {
+/**
+ * Client for handling Supabase authentication operations.
+ * Extends BaseSupabaseClient to leverage common functionalities.
+ */
+public class AuthClient extends BaseSupabaseClient {
     
-    private static final String TAG = "SupabaseClient";
-    private static SupabaseClient instance;
+    private static AuthClient instance;
     
-    private final OkHttpClient client;
-    private final Gson gson;
-    private final Handler mainHandler;
-    
-    private String accessToken;
-    private String refreshToken;
-    
-    private SupabaseClient() {
-        client = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build();
-        gson = new GsonBuilder().setLenient().create();
-        mainHandler = new Handler(Looper.getMainLooper());
+    // Private constructor to enforce Singleton pattern
+    private AuthClient() {
+        super(); // Calls BaseSupabaseClient constructor
     }
     
-    public static synchronized SupabaseClient getInstance() {
+    /**
+     * Returns the singleton instance of AuthClient.
+     * @return The singleton instance.
+     */
+    public static synchronized AuthClient getInstance() {
         if (instance == null) {
-            instance = new SupabaseClient();
+            instance = new AuthClient();
         }
         return instance;
     }
     
-    public void setSession(String accessToken, String refreshToken) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-    }
+    // --- Authentication Methods ---
     
-    public void clearSession() {
-        this.accessToken = null;
-        this.refreshToken = null;
-    }
-    
-    public boolean isAuthenticated() {
-        return accessToken != null && !accessToken.isEmpty();
-    }
-    
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-    
-    public interface ApiCallback<T> {
-        void onSuccess(T result);
-        void onError(String error);
-    }
-    
-    // ==================== AUTH ====================
-    
+    /**
+     * Signs in a user with email and password.
+     * @param email The user's email.
+     * @param password The user's password.
+     * @param callback The callback to handle the result.
+     */
     public void signIn(String email, String password, ApiCallback<User> callback) {
         if (!SupabaseConfig.isConfigured()) {
             postError(callback, "Supabase is not configured");
@@ -97,7 +60,7 @@ public class SupabaseClient {
         
         RequestBody requestBody = RequestBody.create(
                 gson.toJson(body), 
-                MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
+                okhttp3.MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
         );
         
         Request request = new Request.Builder()
@@ -109,15 +72,15 @@ public class SupabaseClient {
 
         Log.d(TAG, "signIn request: " + request.url() + " email=" + email);
         
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 Log.e(TAG, "signIn network failure", e);
                 postError(callback, "Network error: " + e.getMessage());
             }
             
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
                 try (ResponseBody responseBody = response.body()) {
                     String json = responseBody != null ? responseBody.string() : "";
                     Log.d(TAG, "signIn response code=" + response.code() + " body=" + json);
@@ -136,7 +99,7 @@ public class SupabaseClient {
                             postError(callback, "Invalid response from server");
                         }
                     } else {
-                        String errorMessage = parseAuthError(json);
+                        String errorMessage = parseAuthError(json); // Use base class error parsing
                         postError(callback, errorMessage);
                     }
                 }
@@ -144,6 +107,14 @@ public class SupabaseClient {
         });
     }
     
+    /**
+     * Signs up a new user.
+     * @param email The new user's email.
+     * @param password The new user's password.
+     * @param name The new user's full name.
+     * @param phone The new user's phone number.
+     * @param callback The callback to handle the result.
+     */
     public void signUp(String email, String password, String name, String phone, ApiCallback<User> callback) {
         if (!SupabaseConfig.isConfigured()) {
             postError(callback, "Supabase is not configured");
@@ -157,7 +128,7 @@ public class SupabaseClient {
         
         RequestBody requestBody = RequestBody.create(
                 gson.toJson(body), 
-                MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
+                okhttp3.MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
         );
         
         Request request = new Request.Builder()
@@ -169,15 +140,15 @@ public class SupabaseClient {
 
         Log.d(TAG, "signUp request: " + request.url() + " email=" + email);
         
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 Log.e(TAG, "signUp network failure", e);
                 postError(callback, "Network error: " + e.getMessage());
             }
             
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
                 try (ResponseBody responseBody = response.body()) {
                     String json = responseBody != null ? responseBody.string() : "";
                     Log.d(TAG, "signUp response code=" + response.code() + " body=" + json);
@@ -189,13 +160,14 @@ public class SupabaseClient {
                                 && authResponse.getUser() != null
                                 && authResponse.getUser().getId() != null) {
                             setSession(authResponse.getAccessToken(), authResponse.getRefreshToken());
+                            // Create user profile after successful auth signup
                             createUserProfile(authResponse.getUser().getId(), name, phone, email, callback);
                         } else {
                             Log.e(TAG, "signUp parse failure: access token or user is null");
                             postError(callback, "Invalid response from server");
                         }
                     } else {
-                        String errorMessage = parseAuthError(json);
+                        String errorMessage = parseAuthError(json); // Use base class error parsing
                         postError(callback, errorMessage);
                     }
                 }
@@ -203,35 +175,46 @@ public class SupabaseClient {
         });
     }
     
+    /**
+     * Signs out the current user. Clears session tokens.
+     * @param callback The callback to handle the result.
+     */
     public void signOut(ApiCallback<Void> callback) {
+        // Supabase auth/v1/logout requires POST with Authorization header
         Request request = new Request.Builder()
                 .url(SupabaseConfig.AUTH_URL + "/logout")
-                .post(RequestBody.create("", MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)))
+                .post(RequestBody.create("", okhttp3.MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)))
                 .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
-                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
+                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken) // Use Bearer token for logout
                 .build();
         
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
+                // Even if network fails, clear session locally
                 clearSession();
                 postSuccess(callback, null);
             }
             
             @Override
-            public void onResponse(Call call, Response response) {
-                clearSession();
+            public void onResponse(okhttp3.Call call, Response response) {
+                clearSession(); // Clear session locally regardless of server response success
                 postSuccess(callback, null);
             }
         });
     }
     
+    /**
+     * Gets the currently authenticated user's details from the Auth API.
+     * @param callback The callback to handle the result.
+     */
     public void getCurrentUser(ApiCallback<User> callback) {
         if (!isAuthenticated()) {
             postError(callback, "Not authenticated");
             return;
         }
         
+        // Fetch user details from Supabase Auth endpoint
         Request request = new Request.Builder()
                 .url(SupabaseConfig.AUTH_URL + "/user")
                 .get()
@@ -239,30 +222,43 @@ public class SupabaseClient {
                 .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
                 .build();
         
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 postError(callback, "Network error: " + e.getMessage());
             }
             
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
                 try (ResponseBody responseBody = response.body()) {
                     if (response.isSuccessful()) {
                         String json = responseBody.string();
+                        // AuthUser is a simple model for the user object returned by /user endpoint
                         AuthUser authUser = gson.fromJson(json, AuthUser.class);
-                        fetchUserProfile(authUser.getId(), callback);
+                        if (authUser != null && authUser.getId() != null) {
+                            // Fetch full user profile from the 'users' table
+                            fetchUserProfile(authUser.getId(), callback);
+                        } else {
+                            postError(callback, "Failed to parse user details");
+                        }
                     } else {
-                        postError(callback, "Failed to get user");
+                        postError(callback, "Failed to get user: " + response.code());
                     }
                 }
             }
         });
     }
     
-    // ==================== USERS ====================
+    // --- User Profile Fetching ---
     
-    private void fetchUserProfile(String authId, ApiCallback<User> callback) {
+    /**
+     * Fetches the full user profile from the 'users' table using the Supabase auth_id.
+     * This is used after authentication to get the user's role and other profile data.
+     * @param authId The auth_id obtained from Supabase Auth.
+     * @param callback The callback to handle the result.
+     */
+    protected void fetchUserProfile(String authId, ApiCallback<User> callback) {
+        // Construct URL to query the 'users' table by auth_id
         Request request = new Request.Builder()
                 .url(SupabaseConfig.REST_URL + "/users?auth_id=eq." + authId)
                 .get()
@@ -272,19 +268,20 @@ public class SupabaseClient {
 
         Log.d(TAG, "fetchUserProfile request: " + request.url() + " authId=" + authId);
         
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 Log.e(TAG, "fetchUserProfile network failure", e);
                 postError(callback, "Network error: " + e.getMessage());
             }
             
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
                 try (ResponseBody responseBody = response.body()) {
                     String json = responseBody != null ? responseBody.string() : "";
                     Log.d(TAG, "fetchUserProfile response code=" + response.code() + " body=" + json);
                     if (response.isSuccessful()) {
+                        // Supabase REST API returns an array, even for a single match
                         User[] users = gson.fromJson(json, User[].class);
                         if (users != null && users.length > 0) {
                             Log.d(TAG, "fetchUserProfile success: profileId=" + users[0].getId() + " role=" + users[0].getRole());
@@ -300,18 +297,27 @@ public class SupabaseClient {
         });
     }
     
-    private void createUserProfile(String authId, String name, String phone, String email, ApiCallback<User> callback) {
+    /**
+     * Creates a new user profile entry in the 'users' table.
+     * This is called after a successful signup to create the associated profile.
+     * @param authId The Supabase Auth ID.
+     * @param name User's full name.
+     * @param phone User's phone number.
+     * @param email User's email.
+     * @param callback Callback to handle the result.
+     */
+    protected void createUserProfile(String authId, String name, String phone, String email, ApiCallback<User> callback) {
         Map<String, Object> profile = new HashMap<>();
         profile.put("auth_id", authId);
         profile.put("full_name", name);
         profile.put("phone", phone);
         profile.put("email", email);
-        profile.put("role", "admin");
+        profile.put("role", "admin"); // Default role for new signups, can be adjusted
         profile.put("is_active", true);
         
         RequestBody requestBody = RequestBody.create(
                 gson.toJson(profile),
-                MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
+                okhttp3.MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
         );
         
         Request request = new Request.Builder()
@@ -319,20 +325,20 @@ public class SupabaseClient {
                 .post(requestBody)
                 .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
                 .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
-                .addHeader(SupabaseConfig.HEADER_PREFER, SupabaseConfig.PREF_RETURN_REPRESENTATION)
+                .addHeader(SupabaseConfig.HEADER_PREFER, SupabaseConfig.PREF_RETURN_REPRESENTATION) // To get the created user object back
                 .build();
 
         Log.d(TAG, "createUserProfile request: " + request.url() + " email=" + email);
         
-        client.newCall(request).enqueue(new Callback() {
+        client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(okhttp3.Call call, IOException e) {
                 Log.e(TAG, "createUserProfile network failure", e);
                 postError(callback, "Network error: " + e.getMessage());
             }
             
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
                 try (ResponseBody responseBody = response.body()) {
                     String json = responseBody != null ? responseBody.string() : "";
                     Log.d(TAG, "createUserProfile response code=" + response.code() + " body=" + json);
@@ -351,129 +357,12 @@ public class SupabaseClient {
         });
     }
     
-    // ==================== CATEGORIES ====================
-
-    public void getCategories(ApiCallback<Category[]> callback) {
-        Request request = new Request.Builder()
-                .url(SupabaseConfig.REST_URL + "/categories?select=*&order=sort_order.asc")
-                .get()
-                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
-                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                postError(callback, "Network error: " + e.getMessage());
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try (ResponseBody responseBody = response.body()) {
-                    String json = responseBody != null ? responseBody.string() : "[]";
-                    if (response.isSuccessful()) {
-                        Category[] categories = gson.fromJson(json, Category[].class);
-                        postSuccess(callback, categories);
-                    } else {
-                        postError(callback, parseRestError("Failed to fetch categories", response.code(), json));
-                    }
-                }
-            }
-        });
-    }
-
-    // ==================== MENU ITEMS ====================
-
-    public void getMenuItems(String categoryId, ApiCallback<MenuItem[]> callback) {
-        String url = SupabaseConfig.REST_URL + "/menu_items?select=*&order=sort_order.asc";
-        if (categoryId != null) {
-            url += "&category_id=eq." + categoryId;
-        }
-
-        Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
-                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                postError(callback, "Network error: " + e.getMessage());
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try (ResponseBody responseBody = response.body()) {
-                    String json = responseBody != null ? responseBody.string() : "[]";
-                    if (response.isSuccessful()) {
-                        MenuItem[] items = gson.fromJson(json, MenuItem[].class);
-                        postSuccess(callback, items);
-                    } else {
-                        postError(callback, parseRestError("Failed to fetch menu items", response.code(), json));
-                    }
-                }
-            }
-        });
-    }
-
-    // ==================== HELPERS ====================
+    // --- Inner Classes for Auth Responses (kept within AuthClient as they are auth-specific) ---
     
-    private String parseAuthError(String json) {
-        try {
-            AuthError error = gson.fromJson(json, AuthError.class);
-            if (error != null) {
-                if (error.getMsg() != null && !error.getMsg().isBlank()) {
-                    return error.getMsg();
-                }
-                if (error.getErrorDescription() != null && !error.getErrorDescription().isBlank()) {
-                    return error.getErrorDescription();
-                }
-                if (error.getMessage() != null && !error.getMessage().isBlank()) {
-                    return error.getMessage();
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to parse error", e);
-        }
-        Log.e(TAG, "Authentication failed with raw body: " + json);
-        return "Authentication failed";
-    }
-
-    private String parseRestError(String fallbackMessage, int statusCode, String json) {
-        try {
-            AuthError error = gson.fromJson(json, AuthError.class);
-            if (error != null) {
-                if (error.getMessage() != null && !error.getMessage().isBlank()) {
-                    return error.getMessage();
-                }
-                if (error.getMsg() != null && !error.getMsg().isBlank()) {
-                    return error.getMsg();
-                }
-                if (error.getErrorDescription() != null && !error.getErrorDescription().isBlank()) {
-                    return error.getErrorDescription();
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to parse REST error", e);
-        }
-
-        Log.e(TAG, "REST request failed with status=" + statusCode + " body=" + json);
-        return fallbackMessage + " (" + statusCode + ")";
-    }
-    
-    private <T> void postSuccess(ApiCallback<T> callback, T result) {
-        mainHandler.post(() -> callback.onSuccess(result));
-    }
-    
-    private <T> void postError(ApiCallback<T> callback, String error) {
-        mainHandler.post(() -> callback.onError(error));
-    }
-    
-    // ==================== INNER CLASSES ====================
-    
-    private static class AuthResponse {
+    /**
+     * Represents the response structure from Supabase Auth token endpoint.
+     */
+    protected static class AuthResponse {
         @SerializedName("access_token")
         private String accessToken;
         @SerializedName("token_type")
@@ -489,7 +378,10 @@ public class SupabaseClient {
         public AuthUser getUser() { return user; }
     }
     
-    private static class AuthUser {
+    /**
+     * Represents the user object returned by Supabase Auth API (e.g., /user endpoint).
+     */
+    protected static class AuthUser {
         private String id;
         private String email;
         
@@ -497,17 +389,6 @@ public class SupabaseClient {
         public String getEmail() { return email; }
     }
     
-    private static class AuthError {
-        private String error;
-        @SerializedName("error_code")
-        private String errorCode;
-        @SerializedName("error_description")
-        private String errorDescription;
-        private String message;
-        private String msg;
-        
-        public String getErrorDescription() { return errorDescription; }
-        public String getMessage() { return message; }
-        public String getMsg() { return msg; }
-    }
+    // AuthError class is also part of BaseSupabaseClient as it can be used for parsing various errors.
+    // It's defined in BaseSupabaseClient.java for now.
 }

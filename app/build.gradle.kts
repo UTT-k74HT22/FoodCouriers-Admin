@@ -56,6 +56,25 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res-layouts/common",
+                "src/main/res-layouts/auth",
+                "src/main/res-layouts/dashboard",
+                "src/main/res-layouts/menu",
+                "src/main/res-layouts/order",
+                "src/main/res-layouts/restaurant",
+                "src/main/res-layouts/user",
+                "src/main/res-layouts/shipper",
+                "src/main/res-layouts/promotion",
+                "src/main/res-layouts/report",
+                "src/main/res-layouts/notification"
+            )
+        }
+    }
 }
 
 dependencies {

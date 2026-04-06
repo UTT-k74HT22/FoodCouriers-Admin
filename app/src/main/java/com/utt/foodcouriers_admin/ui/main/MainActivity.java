@@ -46,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // Initialize Supabase clients with the saved session token
+        com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.initializeClients(this);
+
         setContentView(R.layout.activity_main_with_drawer);
 
         toolbar = findViewById(R.id.toolbar);
