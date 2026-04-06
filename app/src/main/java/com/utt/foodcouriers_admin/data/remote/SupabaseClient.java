@@ -7,6 +7,8 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+import com.utt.foodcouriers_admin.data.model.Category;
+import com.utt.foodcouriers_admin.data.model.MenuItem;
 import com.utt.foodcouriers_admin.data.model.User;
 
 import java.io.IOException;
@@ -349,6 +351,73 @@ public class SupabaseClient {
         });
     }
     
+    // ==================== CATEGORIES ====================
+
+    public void getCategories(ApiCallback<Category[]> callback) {
+        Request request = new Request.Builder()
+                .url(SupabaseConfig.REST_URL + "/categories?select=*&order=sort_order.asc")
+                .get()
+                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
+                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                postError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    String json = responseBody != null ? responseBody.string() : "[]";
+                    if (response.isSuccessful()) {
+                        Category[] categories = gson.fromJson(json, Category[].class);
+                        postSuccess(callback, categories);
+                    } else {
+                        postError(callback, parseRestError("Failed to fetch categories", response.code(), json));
+                    }
+                }
+            }
+        });
+    }
+
+    // ==================== MENU ITEMS ====================
+
+    public void getMenuItems(String categoryId, ApiCallback<MenuItem[]> callback) {
+        String url = SupabaseConfig.REST_URL + "/menu_items?select=*&order=sort_order.asc";
+        if (categoryId != null) {
+            url += "&category_id=eq." + categoryId;
+        }
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
+                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                postError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    String json = responseBody != null ? responseBody.string() : "[]";
+                    if (response.isSuccessful()) {
+                        MenuItem[] items = gson.fromJson(json, MenuItem[].class);
+                        postSuccess(callback, items);
+                    } else {
+                        postError(callback, parseRestError("Failed to fetch menu items", response.code(), json));
+                    }
+                }
+            }
+        });
+    }
+
     // ==================== HELPERS ====================
     
     private String parseAuthError(String json) {

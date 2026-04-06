@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_sm"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="@dimen/radius_lg"
+    app:cardElevation="@dimen/card_elevation">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_md">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_code"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/admin_badge_pending"
+                android:paddingStart="@dimen/spacing_sm"
+                android:paddingTop="@dimen/spacing_xs"
+                android:paddingEnd="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_xs"
+                android:textAppearance="@style/AdminTextAppearance.Body"
+                android:textColor="@color/warning"
+                android:textStyle="bold"
+                tools:text="WELCOME50" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_sm"
+                android:background="@drawable/admin_badge_success"
+                android:paddingStart="@dimen/spacing_sm"
+                android:paddingTop="@dimen/spacing_xs"
+                android:paddingEnd="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_xs"
+                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:textColor="@color/success"
+                tools:text="Đang hoạt động" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:textAppearance="@style/AdminTextAppearance.Body"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold"
+            tools:text="Giảm 50% cho đơn đầu tiên" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_discount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:textColor="@color/primary"
+                android:textStyle="bold"
+                tools:text="Giảm 50%" />
+
+            <TextView
+                android:id="@+id/tv_usage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:textColor="@color/text_secondary"
+                tools:text="Đã dùng: 45/100" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_valid_dates"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:textAppearance="@style/AdminTextAppearance.Small"
+            android:textColor="@color/text_hint"
+            tools:text="01/01/2024 - 31/12/2024" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_sm"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="@dimen/radius_lg"
+    app:cardElevation="@dimen/card_elevation">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md">
+
+        <ImageView
+            android:id="@+id/iv_notification_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/admin_card"
+            android:contentDescription="@null"
+            android:padding="@dimen/spacing_sm"
+            android:src="@drawable/ic_notifications"
+            app:tint="@color/primary" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_notification_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/AdminTextAppearance.Body"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                tools:text="Đơn hàng mới #FC-001" />
+
+            <TextView
+                android:id="@+id/tv_notification_body"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:textColor="@color/text_secondary"
+                tools:text="Khách hàng Nguyễn Văn A vừa đặt đơn mới từ Cơm Tấm 79" />
+
+            <TextView
+                android:id="@+id/tv_notification_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:textColor="@color/text_hint"
+                tools:text="5 phút trước" />
+
+        </LinearLayout>
+
+        <View
+            android:id="@+id/unread_indicator"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/admin_badge_cancel"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
