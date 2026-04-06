@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_dashboard"
+            android:icon="@drawable/ic_dashboard"
+            android:title="Dashboard" />
+        <item
+            android:id="@+id/nav_orders"
+            android:icon="@drawable/ic_orders"
+            android:title="Quản lý đơn hàng" />
+        <item
+            android:id="@+id/nav_restaurants"
+            android:icon="@drawable/ic_restaurant"
+            android:title="Quản lý nhà hàng" />
+        <item
+            android:id="@+id/nav_categories"
+            android:icon="@drawable/ic_category"
+            android:title="Quản lý danh mục" />
+        <item
+            android:id="@+id/nav_menu_items"
+            android:icon="@drawable/ic_menu_item"
+            android:title="Quản lý món ăn" />
+    </group>
+
+    <item android:title="Quản lý khác">
+        <menu>
+            <item
+                android:id="@+id/nav_users"
+                android:icon="@drawable/ic_users"
+                android:title="Quản lý người dùng" />
+            <item
+                android:id="@+id/nav_shippers"
+                android:icon="@drawable/ic_shipper"
+                android:title="Quản lý shipper" />
+            <item
+                android:id="@+id/nav_promotions"
+                android:icon="@drawable/ic_promotion"
+                android:title="Khuyến mãi" />
+        </menu>
+    </item>
+
+    <item android:title="Báo cáo &amp; Thông báo">
+        <menu>
+            <item
+                android:id="@+id/nav_reports"
+                android:icon="@drawable/ic_report"
+                android:title="Báo cáo" />
+            <item
+                android:id="@+id/nav_notifications"
+                android:icon="@drawable/ic_notifications"
+                android:title="Thông báo" />
+        </menu>
+    </item>
+
+    <item android:title="Tài khoản">
+        <menu>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_logout"
+                android:title="Đăng xuất" />
+        </menu>
+    </item>
+
+</menu>
