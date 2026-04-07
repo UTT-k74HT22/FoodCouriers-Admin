@@ -1,0 +1,34 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- FoodCouriers Admin Design System Colors for Dark Mode -->
+    <style name="Theme.FoodCouriersAdmin" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Core Colors -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryContainer">@color/primary_dark</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryContainer">@color/secondary_variant</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        
+        <!-- Surface and Background -->
+        <item name="android:colorBackground">#121212</item>
+        <item name="colorSurface">#1E1E1E</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        
+        <!-- Feedback -->
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/white</item>
+        
+        <!-- Text -->
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#B0B0B0</item>
+        <item name="android:textColorHint">#808080</item>
+        
+        <!-- System UI -->
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:windowBackground">#121212</item>
+
+        <!-- Component Styles -->
+        <item name="dividerColor">@color/border</item>
+        <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
+    </style>
+</resources>

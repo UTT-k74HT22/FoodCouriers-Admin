@@ -13,6 +13,7 @@
         android:layout_height="match_parent">
 
         <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/surface"
@@ -57,7 +58,6 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="@color/surface"
-        android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_main"
         app:menu="@menu/menu_navigation_drawer"
         app:itemIconSize="@dimen/icon_md"

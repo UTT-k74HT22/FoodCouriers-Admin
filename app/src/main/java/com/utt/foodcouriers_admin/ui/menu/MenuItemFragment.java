@@ -2,21 +2,18 @@ package com.utt.foodcouriers_admin.ui.menu;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.utt.foodcouriers_admin.R;
@@ -28,15 +25,11 @@ import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
 import com.utt.foodcouriers_admin.data.repository.MenuRepository;
 import com.utt.foodcouriers_admin.ui.menu.adapter.MenuItemAdapter;
 import com.utt.foodcouriers_admin.utils.SessionManager;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenuItemClickListener {
-
-    private static final String TAG = "MenuItemFragment";
 
     private RecyclerView rvMenuItems;
     private MenuItemAdapter adapter;
@@ -190,12 +183,22 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             loadMenuItems();
             return true;
         });
-        
-        // Clear filters when search text changes or when they are cleared
-        etSearch.setOnClickListener(v -> {
-             if (etSearch.getText() != null && etSearch.getText().toString().isEmpty()) {
-                 loadMenuItems(); // Reload if search is cleared
-             }
+
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s == null || s.toString().trim().isEmpty()) {
+                    loadMenuItems();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
         });
     }
 
@@ -245,47 +248,51 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
              restaurantId = restaurants.get(0).getId();
         }
 
+        if (restaurantId == null && currentUser.isAdmin()) {
+            renderMenuItems(new ArrayList<>());
+            return;
+        }
+
         menuRepository.getMenuItems(restaurantId, categoryId, new BaseSupabaseClient.ApiCallback<MenuItem[]>() {
             @Override
             public void onSuccess(MenuItem[] result) {
                 allMenuItems.clear();
                 if (result != null && result.length > 0) {
                     allMenuItems.addAll(Arrays.asList(result));
-                    
-                    // Filter by search term if not empty
+                    List<MenuItem> displayItems = new ArrayList<>(allMenuItems);
                     if (searchTerm != null && !searchTerm.isEmpty()) {
                         List<MenuItem> filteredList = new ArrayList<>();
                         for (MenuItem item : allMenuItems) {
-                            if (item.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                            String itemName = item.getName();
+                            if (itemName != null && itemName.toLowerCase().contains(searchTerm.toLowerCase())) {
                                 filteredList.add(item);
                             }
                         }
-                        adapter.setItems(filteredList);
-                    } else {
-                        adapter.setItems(allMenuItems);
+                        displayItems = filteredList;
                     }
-
-                    if (allMenuItems.isEmpty()) {
-                        emptyState.setVisibility(View.VISIBLE);
-                        rvMenuItems.setVisibility(View.GONE);
-                    } else {
-                        emptyState.setVisibility(View.GONE);
-                        rvMenuItems.setVisibility(View.VISIBLE);
-                    }
+                    renderMenuItems(displayItems);
                 } else {
-                    adapter.setItems(new ArrayList<>()); // Clear list if no results
-                    emptyState.setVisibility(View.VISIBLE);
-                    rvMenuItems.setVisibility(View.GONE);
+                    renderMenuItems(new ArrayList<>());
                 }
             }
 
             @Override
             public void onError(String error) {
                 Toast.makeText(getContext(), "Lỗi tải món ăn: " + error, Toast.LENGTH_SHORT).show();
-                emptyState.setVisibility(View.VISIBLE); // Show empty state on error
-                rvMenuItems.setVisibility(View.GONE);
+                renderMenuItems(new ArrayList<>());
             }
         });
+    }
+
+    private void renderMenuItems(List<MenuItem> items) {
+        adapter.setItems(items);
+        if (items.isEmpty()) {
+            emptyState.setVisibility(View.VISIBLE);
+            rvMenuItems.setVisibility(View.GONE);
+        } else {
+            emptyState.setVisibility(View.GONE);
+            rvMenuItems.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -347,7 +354,8 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     @Override
     public void onResume() {
         super.onResume();
-        // Reload data when fragment is resumed, e.g., after adding/editing an item
-        loadMenuItems();
+        if (!currentUser.isAdmin() || selectedRestaurant != null) {
+            loadMenuItems();
+        }
     }
 }
