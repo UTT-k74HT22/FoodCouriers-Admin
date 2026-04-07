@@ -141,17 +141,14 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             restaurants.addAll(Arrays.asList(result));
             setupRestaurantFilter();
             
-            // If user is staff or only one restaurant available, pre-select it
+            // For both Admin and Staff, load items after restaurants are loaded
             if (!currentUser.isAdmin() || restaurants.size() == 1) {
                 if (!restaurants.isEmpty()) {
                     selectedRestaurant = restaurants.get(0);
                     etFilterRestaurant.setText(selectedRestaurant.getName());
-                    loadMenuItems(); // Load items for the pre-selected restaurant
                 }
-            } else if (restaurants.isEmpty()) {
-                 etFilterRestaurant.setHint("Không có nhà hàng nào");
-                 etFilterRestaurant.setEnabled(false);
             }
+            loadMenuItems(); // Luôn gọi load ở đây để khởi tạo danh sách
         }
     }
 
@@ -205,16 +202,22 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     private void showRestaurantPicker() {
         if (restaurants.isEmpty()) return;
 
-        String[] names = new String[restaurants.size()];
+        String[] names = new String[restaurants.size() + 1];
+        names[0] = "Tất cả nhà hàng";
         for (int i = 0; i < restaurants.size(); i++) {
-            names[i] = restaurants.get(i).getName();
+            names[i+1] = restaurants.get(i).getName();
         }
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Chọn nhà hàng")
                 .setItems(names, (dialog, which) -> {
-                    selectedRestaurant = restaurants.get(which);
-                    etFilterRestaurant.setText(selectedRestaurant.getName());
+                    if (which == 0) {
+                        selectedRestaurant = null;
+                        etFilterRestaurant.setText("Tất cả nhà hàng");
+                    } else {
+                        selectedRestaurant = restaurants.get(which - 1);
+                        etFilterRestaurant.setText(selectedRestaurant.getName());
+                    }
                     loadMenuItems();
                 })
                 .show();
@@ -223,16 +226,22 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     private void showCategoryPicker() {
         if (categories.isEmpty()) return;
 
-        String[] names = new String[categories.size()];
+        String[] names = new String[categories.size() + 1];
+        names[0] = "Tất cả danh mục";
         for (int i = 0; i < categories.size(); i++) {
-            names[i] = categories.get(i).getName();
+            names[i+1] = categories.get(i).getName();
         }
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Chọn danh mục")
                 .setItems(names, (dialog, which) -> {
-                    selectedCategory = categories.get(which);
-                    etFilterCategory.setText(selectedCategory.getName());
+                    if (which == 0) {
+                        selectedCategory = null;
+                        etFilterCategory.setText("Tất cả danh mục");
+                    } else {
+                        selectedCategory = categories.get(which - 1);
+                        etFilterCategory.setText(selectedCategory.getName());
+                    }
                     loadMenuItems();
                 })
                 .show();
@@ -241,16 +250,11 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     private void loadMenuItems() {
         String restaurantId = (selectedRestaurant != null) ? selectedRestaurant.getId() : null;
         String categoryId = (selectedCategory != null) ? selectedCategory.getId() : null;
-        String searchTerm = etSearch.getText() != null ? etSearch.getText().toString().trim() : null;
+        String searchTerm = etSearch.getText() != null ? etSearch.getText().toString().trim() : "";
 
+        // Staff default to their first restaurant if none selected
         if (!currentUser.isAdmin() && restaurantId == null && !restaurants.isEmpty()) {
-             // If staff and no restaurant selected, default to first one if available
              restaurantId = restaurants.get(0).getId();
-        }
-
-        if (restaurantId == null && currentUser.isAdmin()) {
-            renderMenuItems(new ArrayList<>());
-            return;
         }
 
         menuRepository.getMenuItems(restaurantId, categoryId, new BaseSupabaseClient.ApiCallback<MenuItem[]>() {
@@ -259,16 +263,17 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                 allMenuItems.clear();
                 if (result != null && result.length > 0) {
                     allMenuItems.addAll(Arrays.asList(result));
-                    List<MenuItem> displayItems = new ArrayList<>(allMenuItems);
-                    if (searchTerm != null && !searchTerm.isEmpty()) {
-                        List<MenuItem> filteredList = new ArrayList<>();
+                    
+                    List<MenuItem> displayItems = new ArrayList<>();
+                    if (searchTerm.isEmpty()) {
+                        displayItems.addAll(allMenuItems);
+                    } else {
+                        String lowerSearch = searchTerm.toLowerCase();
                         for (MenuItem item : allMenuItems) {
-                            String itemName = item.getName();
-                            if (itemName != null && itemName.toLowerCase().contains(searchTerm.toLowerCase())) {
-                                filteredList.add(item);
+                            if (item.getName() != null && item.getName().toLowerCase().contains(lowerSearch)) {
+                                displayItems.add(item);
                             }
                         }
-                        displayItems = filteredList;
                     }
                     renderMenuItems(displayItems);
                 } else {
@@ -278,8 +283,10 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
             @Override
             public void onError(String error) {
-                Toast.makeText(getContext(), "Lỗi tải món ăn: " + error, Toast.LENGTH_SHORT).show();
-                renderMenuItems(new ArrayList<>());
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Lỗi tải món ăn: " + error, Toast.LENGTH_SHORT).show();
+                    renderMenuItems(new ArrayList<>());
+                }
             }
         });
     }
@@ -304,25 +311,27 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
     @Override
     public void onAvailabilityChange(MenuItem item, boolean isAvailable) {
-        item.setAvailable(isAvailable); // Update local model first
+        item.setAvailable(isAvailable); 
         menuRepository.updateMenuItem(item, new BaseSupabaseClient.ApiCallback<MenuItem>() {
             @Override
             public void onSuccess(MenuItem updatedItem) {
-                Toast.makeText(getContext(), "Trạng thái đã được cập nhật", Toast.LENGTH_SHORT).show();
-                // Find the item in the adapter's list and update it
-                int index = allMenuItems.indexOf(item);
-                if (index != -1) {
-                    allMenuItems.set(index, updatedItem);
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Trạng thái đã được cập nhật", Toast.LENGTH_SHORT).show();
+                    int index = allMenuItems.indexOf(item);
+                    if (index != -1) {
+                        allMenuItems.set(index, updatedItem);
+                    }
+                    adapter.notifyDataSetChanged();
                 }
-                adapter.notifyDataSetChanged(); // Refresh adapter
             }
 
             @Override
             public void onError(String error) {
-                Toast.makeText(getContext(), "Lỗi cập nhật trạng thái: " + error, Toast.LENGTH_SHORT).show();
-                // Revert the change in UI if update fails
-                item.setAvailable(!isAvailable); 
-                adapter.notifyDataSetChanged();
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Lỗi cập nhật trạng thái: " + error, Toast.LENGTH_SHORT).show();
+                    item.setAvailable(!isAvailable); 
+                    adapter.notifyDataSetChanged();
+                }
             }
         });
     }
@@ -336,13 +345,17 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                     menuRepository.deleteMenuItem(item.getId(), new BaseSupabaseClient.ApiCallback<Void>() {
                         @Override
                         public void onSuccess(Void result) {
-                            Toast.makeText(getContext(), "Món ăn đã được xóa", Toast.LENGTH_SHORT).show();
-                            loadMenuItems(); // Reload the list after deletion
+                            if (isAdded()) {
+                                Toast.makeText(getContext(), "Món ăn đã được xóa", Toast.LENGTH_SHORT).show();
+                                loadMenuItems();
+                            }
                         }
 
                         @Override
                         public void onError(String error) {
-                            Toast.makeText(getContext(), "Lỗi xóa món ăn: " + error, Toast.LENGTH_SHORT).show();
+                            if (isAdded()) {
+                                Toast.makeText(getContext(), "Lỗi xóa món ăn: " + error, Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
                 })
@@ -354,8 +367,6 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     @Override
     public void onResume() {
         super.onResume();
-        if (!currentUser.isAdmin() || selectedRestaurant != null) {
-            loadMenuItems();
-        }
+        loadMenuItems();
     }
 }
