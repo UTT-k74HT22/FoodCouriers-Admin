@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
-import com.utt.foodcouriers_admin.data.remote.SupabaseClient;
+import com.utt.foodcouriers_admin.data.remote.AuthClient;
 import com.utt.foodcouriers_admin.data.remote.SupabaseConfig;
 import java.io.IOException;
 import java.util.Arrays;
@@ -42,7 +42,7 @@ public abstract class BaseSupabaseRepository {
 
     protected final Gson gson = new GsonBuilder().setLenient().create();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final SupabaseClient sessionClient = SupabaseClient.getInstance();
+    private final AuthClient sessionClient = AuthClient.getInstance();
 
     /**
      * Lấy danh sách các bản ghi từ bảng

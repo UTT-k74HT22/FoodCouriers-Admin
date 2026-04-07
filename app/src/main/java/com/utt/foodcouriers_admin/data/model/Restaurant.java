@@ -82,54 +82,6 @@ public class Restaurant implements Serializable {
         return name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public double getRating() {
-        return rating;
-    }
-
-    public int getReviewCount() {
-        return reviewCount;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public boolean isOpen() {
-        return isOpen;
-    }
-
-    public String getOpenTime() {
-        return openTime;
-    }
-
-    public String getCloseTime() {
-        return closeTime;
-    }
-
-    public int getDeliveryFee() {
-        return deliveryFee;
-    }
-
-    public int getMinOrder() {
-        return minOrder;
-    }
-
     public String getCreatedAt() {
         return createdAt;
     }

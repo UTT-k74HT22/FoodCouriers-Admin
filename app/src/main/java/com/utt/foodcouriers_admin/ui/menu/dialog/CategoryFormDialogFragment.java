@@ -208,7 +208,12 @@ public class CategoryFormDialogFragment extends DialogFragment {
             tilName.setError(getString(R.string.error_field_required));
             isValid = false;
         }
+        String sortOrderValue = etSortOrder.getText() != null ? etSortOrder.getText().toString().trim() : "";
         Integer sortOrder = parseSortOrder();
+        if (!TextUtils.isEmpty(sortOrderValue) && sortOrder == null) {
+            tilSortOrder.setError(getString(R.string.error_generic));
+            isValid = false;
+        }
         if (sortOrder != null && sortOrder < 0) {
             tilSortOrder.setError(getString(R.string.error_generic));
             isValid = false;
