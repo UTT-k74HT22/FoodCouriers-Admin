@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -31,6 +30,7 @@ import com.utt.foodcouriers_admin.ui.main.MainActivity;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
 import com.utt.foodcouriers_admin.ui.restaurant.adapter.RestaurantAdapter;
 import com.utt.foodcouriers_admin.ui.restaurant.dialog.RestaurantFormDialogFragment;
+import com.utt.foodcouriers_admin.utils.Banner;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -252,19 +252,13 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
             public void onComplete(BaseResponse<Restaurant> response) {
                 dialog.setLoading(false);
                 if (!response.isSuccess()) {
-                    Context context = getContext();
-                    if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                    Banner.showError(response.getMessage());
                     return;
                 }
                 dialog.dismissAllowingStateLoss();
                 boolean isCreate = restaurantId == null || restaurantId.isEmpty();
-                Context context = getContext();
-                if (context != null) {
-                    String message = context.getString(isCreate ? R.string.toast_restaurant_created : R.string.toast_restaurant_updated);
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                }
+                String message = requireContext().getString(isCreate ? R.string.toast_restaurant_created : R.string.toast_restaurant_updated);
+                Banner.showSuccess(message);
                 loadRestaurants(true);
             }
         };
@@ -302,17 +296,12 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
         restaurantRepository.update(restaurant.getId(), request, new RepositoryCallback<Restaurant>() {
             @Override
             public void onComplete(BaseResponse<Restaurant> response) {
-                Context context = getContext();
                 if (!response.isSuccess()) {
-                    if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                    Banner.showError(response.getMessage());
                     loadRestaurants(false);
                     return;
                 }
-                if (context != null) {
-                    Toast.makeText(context, context.getString(R.string.toast_restaurant_updated), Toast.LENGTH_SHORT).show();
-                }
+                Banner.showSuccess(requireContext().getString(R.string.toast_restaurant_updated));
                 loadRestaurants(false);
             }
         });
@@ -332,16 +321,11 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
         restaurantRepository.delete(restaurant.getId(), new RepositoryCallback<Void>() {
             @Override
             public void onComplete(BaseResponse<Void> response) {
-                Context context = getContext();
                 if (!response.isSuccess()) {
-                    if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                    Banner.showError(response.getMessage());
                     return;
                 }
-                if (context != null) {
-                    Toast.makeText(context, context.getString(R.string.toast_restaurant_deleted), Toast.LENGTH_SHORT).show();
-                }
+                Banner.showSuccess(requireContext().getString(R.string.toast_restaurant_deleted));
                 loadRestaurants(true);
             }
         });
