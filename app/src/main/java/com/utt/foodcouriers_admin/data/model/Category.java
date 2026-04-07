@@ -6,7 +6,7 @@ import java.io.Serializable;
 public class Category implements Serializable {
     private String id;
     private String name;
-    private String description;
+
     @SerializedName("image_url")
     private String imageUrl;
     @SerializedName("sort_order")
@@ -28,9 +28,6 @@ public class Category implements Serializable {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
 
     public int getSortOrder() { return sortOrder; }
     public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }

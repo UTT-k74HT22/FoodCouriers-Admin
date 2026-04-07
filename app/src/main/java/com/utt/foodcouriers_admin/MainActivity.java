@@ -1,4 +1,4 @@
-package com.utt.foodcouriers_admin.ui.main;
+package com.utt.foodcouriers_admin;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,7 +23,6 @@ import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
-import com.utt.foodcouriers_admin.ui.shipper.ShipperFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -80,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        
+
         sessionManager = SessionManager.getInstance(this);
         if (sessionManager.isLoggedIn() && sessionManager.isTokenExpired()) {
             refreshTokenIfNeeded();
@@ -133,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_users) {
                     title = "Quản lý người dùng";
                 } else if (id == R.id.nav_shippers) {
-                    fragment = new ShipperFragment();
                     title = "Quản lý shipper";
                 } else if (id == R.id.nav_promotions) {
                     title = "Khuyến mãi";
