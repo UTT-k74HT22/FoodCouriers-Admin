@@ -1,4 +1,4 @@
-package com.utt.foodcouriers_admin.ui.menu.adapter;
+package com.utt.foodcouriers_admin.ui.category.adapter;
 
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -17,6 +17,7 @@ import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Category;
+import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 
 public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.CategoryViewHolder> {
 
@@ -61,7 +62,6 @@ public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.Categ
         @Override
         public boolean areContentsTheSame(@NonNull Category oldItem, @NonNull Category newItem) {
             return TextUtils.equals(oldItem.getName(), newItem.getName())
-                    && TextUtils.equals(oldItem.getDescription(), newItem.getDescription())
                     && TextUtils.equals(oldItem.getImageUrl(), newItem.getImageUrl())
                     && oldItem.getSortOrder() == newItem.getSortOrder()
                     && oldItem.isActive() == newItem.isActive()
@@ -95,14 +95,7 @@ public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.Categ
 
         void bind(Category category) {
             tvName.setText(category.getName());
-            String description = category.getDescription();
-            if (TextUtils.isEmpty(description)) {
-                tvDescription.setText(R.string.label_description_vi_en);
-                tvDescription.setAlpha(0.7f);
-            } else {
-                tvDescription.setText(description);
-                tvDescription.setAlpha(1f);
-            }
+            tvDescription.setVisibility(View.GONE);
 
             tvSortOrder.setText(itemView.getContext().getString(R.string.label_sort_order) + " #" + category.getSortOrder());
             tvUpdatedAt.setText(itemView.getContext().getString(R.string.label_updated_at) + ": " + formatTimestamp(category.getUpdatedAt(), category.getCreatedAt()));
@@ -170,6 +163,13 @@ public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.Categ
                     .error(R.drawable.ic_category)
                     .centerCrop()
                     .into(ivImage);
+
+            ivImage.setOnClickListener(v -> {
+                if (v.getContext() instanceof androidx.fragment.app.FragmentActivity) {
+                    androidx.fragment.app.FragmentActivity activity = (androidx.fragment.app.FragmentActivity) v.getContext();
+                    ImageZoomDialogFragment.newInstance(url).show(activity.getSupportFragmentManager(), "ImageZoomDialog");
+                }
+            });
         }
 
         private String formatTimestamp(String updatedAt, String createdAt) {

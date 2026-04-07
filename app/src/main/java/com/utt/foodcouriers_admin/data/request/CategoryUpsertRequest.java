@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class CategoryUpsertRequest {
 
     private String name;
-    private String description;
+
     @SerializedName("image_url")
     private String imageUrl;
     @SerializedName("sort_order")
@@ -16,9 +16,8 @@ public class CategoryUpsertRequest {
     public CategoryUpsertRequest() {
     }
 
-    public CategoryUpsertRequest(String name, String description, String imageUrl, Integer sortOrder, Boolean isActive) {
+    public CategoryUpsertRequest(String name, String imageUrl, Integer sortOrder, Boolean isActive) {
         this.name = name;
-        this.description = description;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;
         this.isActive = isActive;
@@ -38,14 +37,6 @@ public class CategoryUpsertRequest {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public Integer getSortOrder() {

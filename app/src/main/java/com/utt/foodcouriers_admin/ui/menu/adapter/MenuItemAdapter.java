@@ -10,9 +10,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Category;
 import com.utt.foodcouriers_admin.data.model.MenuItem;
+import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -128,6 +130,27 @@ public class MenuItemAdapter extends RecyclerView.Adapter<MenuItemAdapter.ViewHo
             });
             
             // TODO: Load image with Glide/Picasso if URL is not null
+            loadImage(item.getImageUrl());
+        }
+
+        private void loadImage(String url) {
+            if (url == null || url.isEmpty()) {
+                ivImage.setImageResource(R.drawable.ic_menu_item);
+                return;
+            }
+            Glide.with(ivImage.getContext())
+                    .load(url)
+                    .placeholder(R.drawable.ic_menu_item)
+                    .error(R.drawable.ic_menu_item)
+                    .centerCrop()
+                    .into(ivImage);
+
+            ivImage.setOnClickListener(v -> {
+                if (v.getContext() instanceof androidx.fragment.app.FragmentActivity) {
+                    androidx.fragment.app.FragmentActivity activity = (androidx.fragment.app.FragmentActivity) v.getContext();
+                    ImageZoomDialogFragment.newInstance(url).show(activity.getSupportFragmentManager(), "ImageZoomDialog");
+                }
+            });
         }
     }
 }
