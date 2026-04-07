@@ -1,5 +1,9 @@
 package com.utt.foodcouriers_admin.data.common;
 
+/**
+ * Trả về kết quả từ server
+ * @param <T>
+ */
 public class BaseResponse<T> {
 
     private final boolean success;

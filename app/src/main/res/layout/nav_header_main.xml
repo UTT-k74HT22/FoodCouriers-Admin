@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_sm"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
         android:textColor="@color/white"
         android:textStyle="bold" />
 
@@ -28,7 +28,7 @@
         android:id="@+id/nav_header_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
         android:textColor="@color/white" />
 
 </LinearLayout>

@@ -1,12 +1,13 @@
 package com.utt.foodcouriers_admin.data.repository;
 
+import android.net.Uri;
+import android.text.TextUtils;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Category;
 import com.utt.foodcouriers_admin.data.repository.base.BaseSupabaseRepository;
 import com.utt.foodcouriers_admin.data.repository.base.CrudRepository;
 import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
-
 import java.util.List;
 
 public class CategoryRepository extends BaseSupabaseRepository implements CrudRepository<Category, CategoryUpsertRequest> {
@@ -23,7 +24,29 @@ public class CategoryRepository extends BaseSupabaseRepository implements CrudRe
 
     @Override
     public void getAll(RepositoryCallback<List<Category>> callback) {
-        fetchList(TABLE, "?select=*&order=sort_order.asc", Category[].class, callback);
+        getCategories(null, null, 50, 0, callback);
+    }
+
+    public void getCategories(String searchQuery,
+                              Boolean isActive,
+                              int limit,
+                              int offset,
+                              RepositoryCallback<List<Category>> callback) {
+        StringBuilder query = new StringBuilder("?select=*&order=sort_order.asc");
+        if (limit > 0) {
+            query.append("&limit=").append(limit);
+        }
+        if (offset > 0) {
+            query.append("&offset=").append(offset);
+        }
+        if (!TextUtils.isEmpty(searchQuery)) {
+            String encoded = Uri.encode("%" + searchQuery.trim() + "%");
+            query.append("&name=ilike.").append(encoded);
+        }
+        if (isActive != null) {
+            query.append("&is_active=eq.").append(isActive ? "true" : "false");
+        }
+        fetchList(TABLE, query.toString(), Category[].class, callback);
     }
 
     @Override
@@ -79,7 +102,7 @@ public class CategoryRepository extends BaseSupabaseRepository implements CrudRe
         updateItem(
                 TABLE,
                 eqIdFilter(id.trim()),
-                new CategoryUpsertRequest(null, null, null, isActive),
+                new CategoryUpsertRequest(null, null, null, null, isActive),
                 Category[].class,
                 callback
         );

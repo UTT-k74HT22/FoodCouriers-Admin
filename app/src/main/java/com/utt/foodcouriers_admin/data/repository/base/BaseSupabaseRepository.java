@@ -4,7 +4,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
@@ -12,12 +11,10 @@ import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.remote.SupabaseClient;
 import com.utt.foodcouriers_admin.data.remote.SupabaseConfig;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -27,6 +24,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+
+/**
+ * Lớp cơ sở cho các repository sử dụng Supabase
+ * Edit by: DungHD
+ * Edit data: 2026/04/06
+ */
 public abstract class BaseSupabaseRepository {
 
     private static final String TAG = "BaseSupabaseRepo";
@@ -41,10 +44,26 @@ public abstract class BaseSupabaseRepository {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final SupabaseClient sessionClient = SupabaseClient.getInstance();
 
+    /**
+     * Lấy danh sách các bản ghi từ bảng
+     * @param table tên bảng
+     * @param query câu lệnh truy vấn
+     * @param clazz lớp đối tượng trả về
+     * @param callback callback
+     * @param <T> kiểu dữ liệu trả về
+     */
     protected <T> void fetchList(String table, String query, Class<T[]> clazz, RepositoryCallback<List<T>> callback) {
         executeArrayRequest(buildGetRequest(table, query), clazz, callback, "Fetch " + table + " failed");
     }
 
+    /**
+     * Lấy bản ghi duy nhất từ bảng
+     * @param table tên bảng
+     * @param filterQuery câu lệnh truy vấn
+     * @param clazz lớp đối tượng trả về
+     * @param callback callback
+     * @param <T> kiểu dữ liệu trả về
+     */
     protected <T> void fetchSingle(String table, String filterQuery, Class<T[]> clazz, RepositoryCallback<T> callback) {
         executeArrayRequest(buildGetRequest(table, filterQuery), clazz, new RepositoryCallback<List<T>>() {
             @Override
@@ -65,6 +84,14 @@ public abstract class BaseSupabaseRepository {
         }, "Fetch " + table + " failed");
     }
 
+    /**
+     * Tạo bản ghi mới trong bảng
+     * @param table tên bảng
+     * @param payload dữ liệu bản ghi
+     * @param clazz lớp đối tượng trả về
+     * @param callback callback
+     * @param <T> kiểu dữ liệu trả về
+     */
     protected <T> void createItem(String table, Object payload, Class<T[]> clazz, RepositoryCallback<T> callback) {
         Request request = withDefaultHeaders(new Request.Builder())
                 .url(buildTableUrl(table))
@@ -74,6 +101,15 @@ public abstract class BaseSupabaseRepository {
         executeMutation(request, clazz, callback, "Create " + table + " failed");
     }
 
+    /**
+     * Cập nhật bản ghi trong bảng
+     * @param table tên bảng
+     * @param filterQuery câu lệnh truy vấn
+     * @param payload dữ liệu bản ghi
+     * @param clazz lớp đối tượng trả về
+     * @param callback callback
+     * @param <T> kiểu dữ liệu trả về
+     */
     protected <T> void updateItem(String table, String filterQuery, Object payload, Class<T[]> clazz, RepositoryCallback<T> callback) {
         Request request = withDefaultHeaders(new Request.Builder())
                 .url(buildTableUrl(table) + filterQuery)
@@ -83,6 +119,12 @@ public abstract class BaseSupabaseRepository {
         executeMutation(request, clazz, callback, "Update " + table + " failed");
     }
 
+    /**
+     * Xóa bản ghi trong bảng
+     * @param table tên bảng
+     * @param filterQuery câu lệnh truy vấn
+     * @param callback callback
+     */
     protected void deleteItem(String table, String filterQuery, RepositoryCallback<Void> callback) {
         Request request = withDefaultHeaders(new Request.Builder())
                 .url(buildTableUrl(table) + filterQuery)
@@ -149,6 +191,14 @@ public abstract class BaseSupabaseRepository {
         return builder;
     }
 
+    /**
+     * Thực hiện yêu cầu GET và trả về danh sách các bản ghi
+     * @param request yêu cầu
+     * @param clazz lớp đối tượng trả về
+     * @param callback callback
+     * @param fallbackMessage thông báo lỗi
+     * @param <T> kiểu dữ liệu trả về
+     */
     private <T> void executeArrayRequest(
             Request request,
             Class<T[]> clazz,
@@ -176,6 +226,14 @@ public abstract class BaseSupabaseRepository {
         });
     }
 
+    /**
+     * Thực hiện yêu cầu POST và trả về một bản ghi
+     * @param request yêu cầu
+     * @param clazz lớp đối tượng trả về
+     * @param callback callback
+     * @param fallbackMessage thông báo lỗi
+     * @param <T> kiểu dữ liệu trả về
+     */
     private <T> void executeMutation(
             Request request,
             Class<T[]> clazz,
@@ -207,6 +265,13 @@ public abstract class BaseSupabaseRepository {
         });
     }
 
+    /**
+     * Xử lý lỗi từ server
+     * @param fallbackMessage thông báo lỗi mặc định
+     * @param statusCode mã lỗi
+     * @param json dữ liệu lỗi
+     * @return thông báo lỗi
+     */
     private String parseRestError(String fallbackMessage, int statusCode, String json) {
         try {
             RestError error = gson.fromJson(json, RestError.class);
@@ -227,6 +292,11 @@ public abstract class BaseSupabaseRepository {
         return fallbackMessage + " (" + statusCode + ")";
     }
 
+    /**
+     * Lấy mã lỗi từ response
+     * @param response response
+     * @return mã lỗi
+     */
     private String getErrorCode(BaseResponse<?> response) {
         if (response.getError() == null || TextUtils.isEmpty(response.getError().getCode())) {
             return "UNKNOWN_ERROR";
@@ -234,6 +304,12 @@ public abstract class BaseSupabaseRepository {
         return response.getError().getCode();
     }
 
+    /**
+     * Gửi response về UI thread
+     * @param callback callback
+     * @param response response
+     * @param <T> kiểu dữ liệu trả về
+     */
     protected <T> void postResponse(RepositoryCallback<T> callback, BaseResponse<T> response) {
         mainHandler.post(new Runnable() {
             @Override
@@ -243,6 +319,9 @@ public abstract class BaseSupabaseRepository {
         });
     }
 
+    /**
+     * Lỗi từ server
+     */
     private static class RestError {
         String message;
         String msg;
