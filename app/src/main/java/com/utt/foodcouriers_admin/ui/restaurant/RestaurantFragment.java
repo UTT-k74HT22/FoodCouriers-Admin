@@ -30,7 +30,7 @@ import com.utt.foodcouriers_admin.ui.main.MainActivity;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
 import com.utt.foodcouriers_admin.ui.restaurant.adapter.RestaurantAdapter;
 import com.utt.foodcouriers_admin.ui.restaurant.dialog.RestaurantFormDialogFragment;
-import com.utt.foodcouriers_admin.utils.Banner;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -252,13 +252,13 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
             public void onComplete(BaseResponse<Restaurant> response) {
                 dialog.setLoading(false);
                 if (!response.isSuccess()) {
-                    Banner.showError(response.getMessage());
+                    ToastBanner.showError(response.getMessage());
                     return;
                 }
                 dialog.dismissAllowingStateLoss();
                 boolean isCreate = restaurantId == null || restaurantId.isEmpty();
                 String message = requireContext().getString(isCreate ? R.string.toast_restaurant_created : R.string.toast_restaurant_updated);
-                Banner.showSuccess(message);
+                ToastBanner.showSuccess(message);
                 loadRestaurants(true);
             }
         };
@@ -297,11 +297,11 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
             @Override
             public void onComplete(BaseResponse<Restaurant> response) {
                 if (!response.isSuccess()) {
-                    Banner.showError(response.getMessage());
+                    ToastBanner.showError(response.getMessage());
                     loadRestaurants(false);
                     return;
                 }
-                Banner.showSuccess(requireContext().getString(R.string.toast_restaurant_updated));
+                ToastBanner.showSuccess(requireContext().getString(R.string.toast_restaurant_updated));
                 loadRestaurants(false);
             }
         });
@@ -322,10 +322,10 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
             @Override
             public void onComplete(BaseResponse<Void> response) {
                 if (!response.isSuccess()) {
-                    Banner.showError(response.getMessage());
+                    ToastBanner.showError(response.getMessage());
                     return;
                 }
-                Banner.showSuccess(requireContext().getString(R.string.toast_restaurant_deleted));
+                ToastBanner.showSuccess(requireContext().getString(R.string.toast_restaurant_deleted));
                 loadRestaurants(true);
             }
         });

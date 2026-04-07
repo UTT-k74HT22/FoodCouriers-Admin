@@ -8,7 +8,9 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
+import java.util.ArrayList;
+import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -127,7 +129,7 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
                 if (!response.isSuccess() || response.getData() == null) {
                     Context context = getContext();
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     return;
                 }
@@ -180,7 +182,7 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
                 if (!response.isSuccess()) {
                     Context context = getContext();
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     return;
                 }
@@ -188,8 +190,7 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
                 boolean isCreate = TextUtils.isEmpty(shipperId);
                 Context context = getContext();
                 if (context != null) {
-                    String message = context.getString(isCreate ? R.string.toast_shipper_created : R.string.toast_shipper_updated);
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess(context.getString(isCreate ? R.string.toast_shipper_created : R.string.toast_shipper_updated));
                 }
                 loadShippers(true);
             }
@@ -215,13 +216,13 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
                 Context context = getContext();
                 if (!response.isSuccess()) {
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     loadShippers(false);
                     return;
                 }
                 if (context != null) {
-                    Toast.makeText(context, context.getString(R.string.toast_shipper_updated), Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess(context.getString(R.string.toast_shipper_updated));
                 }
                 loadShippers(false);
             }
@@ -245,12 +246,12 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
                 Context context = getContext();
                 if (!response.isSuccess()) {
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     return;
                 }
                 if (context != null) {
-                    Toast.makeText(context, context.getString(R.string.toast_shipper_deleted), Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess(context.getString(R.string.toast_shipper_deleted));
                 }
                 loadShippers(true);
             }

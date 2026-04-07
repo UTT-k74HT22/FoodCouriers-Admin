@@ -10,50 +10,52 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.utt.foodcouriers_admin.R;
 
-public class Banner implements Application.ActivityLifecycleCallbacks {
+public class ToastBanner implements Application.ActivityLifecycleCallbacks {
 
     private static Activity currentActivity;
-    private static Banner instance;
+    private static ToastBanner instance;
     private static final int DURATION_MS = 3000;
 
-    public enum BannerType {
+    public enum ToastBannerType {
         SUCCESS,
         ERROR,
         WARNING
     }
 
-    private Banner() {
+    private ToastBanner() {
     }
 
     public static void init(Application app) {
         if (instance == null) {
-            instance = new Banner();
+            instance = new ToastBanner();
             app.registerActivityLifecycleCallbacks(instance);
         }
     }
 
     public static void showSuccess(String message) {
-        show(message, BannerType.SUCCESS);
+        show(message, ToastBannerType.SUCCESS);
     }
 
     public static void showError(String message) {
-        show(message, BannerType.ERROR);
+        show(message, ToastBannerType.ERROR);
     }
 
     public static void showWarning(String message) {
-        show(message, BannerType.WARNING);
+        show(message, ToastBannerType.WARNING);
     }
 
-    private static void show(String message, BannerType type) {
+    private static void show(String message, ToastBannerType type) {
         if (currentActivity == null) {
             return;
         }
@@ -76,17 +78,22 @@ public class Banner implements Application.ActivityLifecycleCallbacks {
                     backgroundColor = currentActivity.getColor(R.color.primary);
             }
 
-            showBannerView(currentActivity, message, backgroundColor, textColor);
+            showToastBannerView(currentActivity, message, backgroundColor, textColor);
         });
     }
 
-    private static void showBannerView(Activity activity, String message, int backgroundColor, int textColor) {
+    private static void showToastBannerView(Activity activity, String message, int backgroundColor, int textColor) {
         if (activity == null || activity.isFinishing()) {
             return;
         }
 
-        FrameLayout rootView = activity.findViewById(android.R.id.content);
+        View rootView = activity.findViewById(android.R.id.content);
         if (rootView == null) {
+            return;
+        }
+
+        ViewGroup viewGroup = (rootView instanceof ViewGroup) ? (ViewGroup) rootView : null;
+        if (viewGroup == null) {
             return;
         }
 
@@ -95,10 +102,10 @@ public class Banner implements Application.ActivityLifecycleCallbacks {
             bannerId = 12345;
         }
 
-        for (int i = 0; i < rootView.getChildCount(); i++) {
-            View child = rootView.getChildAt(i);
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
             if (child.getId() == bannerId) {
-                rootView.removeView(child);
+                viewGroup.removeView(child);
                 break;
             }
         }
@@ -116,14 +123,26 @@ public class Banner implements Application.ActivityLifecycleCallbacks {
         drawable.setColor(backgroundColor);
         banner.setBackground(drawable);
 
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-        params.topMargin = getStatusBarHeight(activity) + 16;
+        ViewGroup.LayoutParams params;
+        if (rootView instanceof CoordinatorLayout) {
+            CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
+                    CoordinatorLayout.LayoutParams.WRAP_CONTENT,
+                    CoordinatorLayout.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+            layoutParams.topMargin = getStatusBarHeight(activity) + 16;
+            params = layoutParams;
+        } else {
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+            layoutParams.topMargin = getStatusBarHeight(activity) + 16;
+            params = layoutParams;
+        }
 
-        rootView.addView(banner, params);
+        viewGroup.addView(banner, params);
 
         banner.setAlpha(0f);
         banner.setTranslationY(-100f);
@@ -139,7 +158,7 @@ public class Banner implements Application.ActivityLifecycleCallbacks {
                         .alpha(0f)
                         .translationY(-100f)
                         .setDuration(300)
-                        .withEndAction(() -> rootView.removeView(banner))
+                        .withEndAction(() -> viewGroup.removeView(banner))
                         .start();
             }
         }, DURATION_MS);

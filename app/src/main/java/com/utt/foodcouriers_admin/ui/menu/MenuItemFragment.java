@@ -7,7 +7,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -119,7 +119,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
             @Override
             public void onError(String error) {
-                Toast.makeText(getContext(), "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
+                ToastBanner.showError("Lỗi tải danh mục: " + error);
             }
         });
 
@@ -133,7 +133,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(getContext(), "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         } else {
@@ -145,7 +145,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(getContext(), "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         }
@@ -308,7 +308,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             @Override
             public void onError(String error) {
                 if (isAdded()) {
-                    Toast.makeText(getContext(), "Lỗi tải món ăn: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải món ăn: " + error);
                     renderMenuItems(new ArrayList<>());
                 }
             }
@@ -340,7 +340,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             @Override
             public void onSuccess(MenuItem updatedItem) {
                 if (isAdded()) {
-                    Toast.makeText(getContext(), "Trạng thái đã được cập nhật", Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess("Trạng thái đã được cập nhật");
                     int index = allMenuItems.indexOf(item);
                     if (index != -1) {
                         allMenuItems.set(index, updatedItem);
@@ -352,7 +352,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             @Override
             public void onError(String error) {
                 if (isAdded()) {
-                    Toast.makeText(getContext(), "Lỗi cập nhật trạng thái: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi cập nhật trạng thái: " + error);
                     item.setAvailable(!isAvailable); 
                     adapter.notifyDataSetChanged();
                 }
@@ -370,7 +370,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                         @Override
                         public void onSuccess(Void result) {
                             if (isAdded()) {
-                                Toast.makeText(getContext(), "Món ăn đã được xóa", Toast.LENGTH_SHORT).show();
+                                ToastBanner.showSuccess("Món ăn đã được xóa");
                                 loadMenuItems();
                             }
                         }
@@ -378,7 +378,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                         @Override
                         public void onError(String error) {
                             if (isAdded()) {
-                                Toast.makeText(getContext(), "Lỗi xóa món ăn: " + error, Toast.LENGTH_SHORT).show();
+                                ToastBanner.showError("Lỗi xóa món ăn: " + error);
                             }
                         }
                     });
