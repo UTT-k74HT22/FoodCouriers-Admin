@@ -1,4 +1,4 @@
-package com.utt.foodcouriers_admin.ui.menu;
+package com.utt.foodcouriers_admin.ui.category;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -28,8 +28,8 @@ import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Category;
 import com.utt.foodcouriers_admin.data.repository.CategoryRepository;
 import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
-import com.utt.foodcouriers_admin.ui.menu.adapter.CategoryAdapter;
-import com.utt.foodcouriers_admin.ui.menu.dialog.CategoryFormDialogFragment;
+import com.utt.foodcouriers_admin.ui.category.adapter.CategoryAdapter;
+import com.utt.foodcouriers_admin.ui.category.dialog.CategoryFormDialogFragment;
 import java.util.ArrayList;
 import java.util.List;
 

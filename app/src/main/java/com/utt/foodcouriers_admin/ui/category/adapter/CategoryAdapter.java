@@ -1,4 +1,4 @@
-package com.utt.foodcouriers_admin.ui.menu.adapter;
+package com.utt.foodcouriers_admin.ui.category.adapter;
 
 import android.text.TextUtils;
 import android.view.LayoutInflater;

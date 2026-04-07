@@ -1,4 +1,4 @@
-package com.utt.foodcouriers_admin.ui.menu.dialog;
+package com.utt.foodcouriers_admin.ui.shipper.dialog;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -7,6 +7,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -19,36 +21,47 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.utt.foodcouriers_admin.R;
-import com.utt.foodcouriers_admin.data.model.Category;
-import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
+import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.request.ShipperUpsertRequest;
+import java.util.List;
 
-public class CategoryFormDialogFragment extends DialogFragment {
+public class ShipperFormDialogFragment extends DialogFragment {
 
-    public interface CategoryFormListener {
-        void onSubmit(@Nullable String categoryId, CategoryUpsertRequest request, CategoryFormDialogFragment dialog);
+    public interface ShipperFormListener {
+        void onSubmit(@Nullable String shipperId, ShipperUpsertRequest request, ShipperFormDialogFragment dialog);
     }
 
-    private static final String ARG_CATEGORY = "arg_category";
+    private static final String ARG_SHIPPER = "arg_shipper";
+    private static final String ARG_RESTAURANTS = "arg_restaurants";
 
-    public static CategoryFormDialogFragment newInstance(@Nullable Category category) {
-        CategoryFormDialogFragment fragment = new CategoryFormDialogFragment();
+    public static ShipperFormDialogFragment newInstance(@Nullable Shipper shipper, @Nullable List<Restaurant> restaurants) {
+        ShipperFormDialogFragment fragment = new ShipperFormDialogFragment();
         Bundle bundle = new Bundle();
-        if (category != null) {
-            bundle.putSerializable(ARG_CATEGORY, category);
+        if (shipper != null) {
+            bundle.putSerializable(ARG_SHIPPER, shipper);
+        }
+        if (restaurants != null) {
+            bundle.putSerializable(ARG_RESTAURANTS, new java.util.ArrayList<>(restaurants));
         }
         fragment.setArguments(bundle);
         return fragment;
     }
 
-    private Category category;
-    private CategoryFormListener listener;
+    private Shipper shipper;
+    private List<Restaurant> restaurants;
+    private ShipperFormListener listener;
 
     private TextInputLayout tilName;
-    private TextInputLayout tilSortOrder;
+    private TextInputLayout tilPhone;
+    private TextInputLayout tilEmail;
+    private TextInputLayout tilImage;
+    private TextInputLayout tilRestaurant;
     private TextInputEditText etName;
-    private TextInputEditText etDescription;
+    private TextInputEditText etPhone;
+    private TextInputEditText etEmail;
     private TextInputEditText etImage;
-    private TextInputEditText etSortOrder;
+    private AutoCompleteTextView etRestaurant;
     private MaterialSwitch switchActive;
     private MaterialButton btnSave;
     private MaterialButton btnCancel;
@@ -56,9 +69,11 @@ public class CategoryFormDialogFragment extends DialogFragment {
     private ImageView ivPreview;
     private TextView tvStatusHelper;
     private TextView tvPreviewName;
-    private TextView tvPreviewDescription;
+    private TextView tvPreviewPhone;
     private TextView tvFormTitle;
     private TextView tvFormSubtitle;
+
+    private Restaurant selectedRestaurant;
 
     private final TextWatcher previewWatcher = new TextWatcher() {
         @Override
@@ -78,21 +93,23 @@ public class CategoryFormDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NO_TITLE, com.google.android.material.R.style.ThemeOverlay_Material3_Dialog_Alert);
         if (getArguments() != null) {
-            category = (Category) getArguments().getSerializable(ARG_CATEGORY);
+            shipper = (Shipper) getArguments().getSerializable(ARG_SHIPPER);
+            restaurants = (List<Restaurant>) getArguments().getSerializable(ARG_RESTAURANTS);
         }
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.dialog_category_form, container, false);
+        return inflater.inflate(R.layout.dialog_shipper_form, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-        bindCategory();
+        setupRestaurantDropdown();
+        bindShipper();
         setupListeners();
     }
 
@@ -102,22 +119,22 @@ public class CategoryFormDialogFragment extends DialogFragment {
         if (etName != null) {
             etName.removeTextChangedListener(previewWatcher);
         }
-        if (etDescription != null) {
-            etDescription.removeTextChangedListener(previewWatcher);
+        if (etPhone != null) {
+            etPhone.removeTextChangedListener(previewWatcher);
         }
-        if (etImage != null) {
-            etImage.removeTextChangedListener(previewWatcher);
+        if (etEmail != null) {
+            etEmail.removeTextChangedListener(previewWatcher);
         }
     }
 
-    public void setCategoryFormListener(CategoryFormListener listener) {
+    public void setShipperFormListener(ShipperFormListener listener) {
         this.listener = listener;
     }
 
     public void setLoading(boolean loading) {
         if (btnSave != null) {
             btnSave.setEnabled(!loading);
-            btnSave.setText(loading ? getString(R.string.category_saving) : getString(R.string.action_save));
+            btnSave.setText(loading ? getString(R.string.shipper_saving) : getString(R.string.action_save));
         }
         if (progressSave != null) {
             progressSave.setVisibility(loading ? View.VISIBLE : View.GONE);
@@ -129,34 +146,62 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
     private void initViews(View view) {
         tilName = view.findViewById(R.id.til_name);
-        tilSortOrder = view.findViewById(R.id.til_sort_order);
+        tilPhone = view.findViewById(R.id.til_phone);
+        tilEmail = view.findViewById(R.id.til_email);
+        tilImage = view.findViewById(R.id.til_image);
+        tilRestaurant = view.findViewById(R.id.til_restaurant);
         etName = view.findViewById(R.id.et_name);
-        etDescription = view.findViewById(R.id.et_description);
+        etPhone = view.findViewById(R.id.et_phone);
+        etEmail = view.findViewById(R.id.et_email);
         etImage = view.findViewById(R.id.et_image);
-        etSortOrder = view.findViewById(R.id.et_sort_order);
+        etRestaurant = view.findViewById(R.id.et_restaurant);
         switchActive = view.findViewById(R.id.switch_active);
         btnSave = view.findViewById(R.id.btn_save);
         btnCancel = view.findViewById(R.id.btn_cancel);
         progressSave = view.findViewById(R.id.progress_save);
-        ivPreview = view.findViewById(R.id.iv_form_image);
+        ivPreview = view.findViewById(R.id.iv_form_avatar);
         tvStatusHelper = view.findViewById(R.id.tv_status_helper);
         tvPreviewName = view.findViewById(R.id.tv_preview_name);
-        tvPreviewDescription = view.findViewById(R.id.tv_preview_description);
+        tvPreviewPhone = view.findViewById(R.id.tv_preview_phone);
         tvFormTitle = view.findViewById(R.id.tv_form_title);
         tvFormSubtitle = view.findViewById(R.id.tv_form_subtitle);
     }
 
-    private void bindCategory() {
-        boolean isEdit = category != null && !TextUtils.isEmpty(category.getId());
-        tvFormTitle.setText(isEdit ? R.string.dialog_category_title_edit : R.string.dialog_category_title_create);
-        tvFormSubtitle.setText(isEdit ? category.getName() : getString(R.string.label_name_vi_en));
-        switchActive.setChecked(isEdit ? category.isActive() : true);
+    private void setupRestaurantDropdown() {
+        if (restaurants == null || restaurants.isEmpty()) {
+            return;
+        }
+        String[] restaurantNames = new String[restaurants.size()];
+        for (int i = 0; i < restaurants.size(); i++) {
+            restaurantNames[i] = restaurants.get(i).getName();
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, restaurantNames);
+        etRestaurant.setAdapter(adapter);
+        etRestaurant.setOnItemClickListener((parent, view, position, id) -> {
+            selectedRestaurant = restaurants.get(position);
+        });
+    }
+
+    private void bindShipper() {
+        boolean isEdit = shipper != null && !TextUtils.isEmpty(shipper.getId());
+        tvFormTitle.setText(isEdit ? R.string.dialog_shipper_title_edit : R.string.dialog_shipper_title_create);
+        tvFormSubtitle.setText(isEdit ? shipper.getFullName() : getString(R.string.label_shipper_info));
+        switchActive.setChecked(isEdit ? shipper.isActive() : true);
         if (isEdit) {
-            etName.setText(category.getName());
-            etDescription.setText(category.getDescription());
-            etImage.setText(category.getImageUrl());
-            etSortOrder.setText(String.valueOf(category.getSortOrder()));
-            loadPreviewImage(category.getImageUrl());
+            etName.setText(shipper.getFullName());
+            etPhone.setText(shipper.getPhone());
+            etEmail.setText(shipper.getEmail());
+            etImage.setText(shipper.getAvatarUrl());
+            loadPreviewImage(shipper.getAvatarUrl());
+            if (!TextUtils.isEmpty(shipper.getRestaurantId()) && restaurants != null) {
+                for (int i = 0; i < restaurants.size(); i++) {
+                    if (restaurants.get(i).getId().equals(shipper.getRestaurantId())) {
+                        selectedRestaurant = restaurants.get(i);
+                        etRestaurant.setText(restaurants.get(i).getName(), false);
+                        break;
+                    }
+                }
+            }
         }
         tvStatusHelper.setText(switchActive.isChecked() ? R.string.label_active_vi_en : R.string.label_inactive_vi_en);
         updatePreview();
@@ -167,7 +212,8 @@ public class CategoryFormDialogFragment extends DialogFragment {
         btnCancel.setOnClickListener(v -> dismiss());
 
         etName.addTextChangedListener(previewWatcher);
-        etDescription.addTextChangedListener(previewWatcher);
+        etPhone.addTextChangedListener(previewWatcher);
+        etEmail.addTextChangedListener(previewWatcher);
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -190,69 +236,49 @@ public class CategoryFormDialogFragment extends DialogFragment {
             return;
         }
         String name = etName.getText() != null ? etName.getText().toString().trim() : null;
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : null;
+        String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : null;
+        String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : null;
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
-        Integer sortOrder = parseSortOrder();
-        CategoryUpsertRequest request = new CategoryUpsertRequest(name, description, imageUrl, sortOrder, switchActive.isChecked());
+        String restaurantId = selectedRestaurant != null ? selectedRestaurant.getId() : null;
+        ShipperUpsertRequest request = new ShipperUpsertRequest(null, restaurantId, name, phone, email, switchActive.isChecked());
         if (listener != null) {
-            listener.onSubmit(category != null ? category.getId() : null, request, this);
+            listener.onSubmit(shipper != null ? shipper.getId() : null, request, this);
         }
     }
 
     private boolean validate() {
         boolean isValid = true;
         tilName.setError(null);
-        tilSortOrder.setError(null);
+        tilPhone.setError(null);
+        tilRestaurant.setError(null);
         String name = etName.getText() != null ? etName.getText().toString().trim() : "";
         if (TextUtils.isEmpty(name)) {
             tilName.setError(getString(R.string.error_field_required));
             isValid = false;
         }
-        String sortOrderValue = etSortOrder.getText() != null ? etSortOrder.getText().toString().trim() : "";
-        Integer sortOrder = parseSortOrder();
-        if (!TextUtils.isEmpty(sortOrderValue) && sortOrder == null) {
-            tilSortOrder.setError(getString(R.string.error_generic));
-            isValid = false;
-        }
-        if (sortOrder != null && sortOrder < 0) {
-            tilSortOrder.setError(getString(R.string.error_generic));
+        if (selectedRestaurant == null) {
+            tilRestaurant.setError(getString(R.string.error_field_required));
             isValid = false;
         }
         return isValid;
     }
 
-    private Integer parseSortOrder() {
-        if (etSortOrder.getText() == null) {
-            return null;
-        }
-        String value = etSortOrder.getText().toString().trim();
-        if (TextUtils.isEmpty(value)) {
-            return null;
-        }
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException exception) {
-            tilSortOrder.setError(getString(R.string.error_generic));
-            return null;
-        }
-    }
-
     private void updatePreview() {
         String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
-        tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_name_vi_en) : name);
-        tvPreviewDescription.setText(TextUtils.isEmpty(description) ? getString(R.string.label_description_vi_en) : description);
+        String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
+        tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_shipper_name) : name);
+        tvPreviewPhone.setText(TextUtils.isEmpty(phone) ? getString(R.string.label_phone) : phone);
     }
 
     private void loadPreviewImage(@Nullable String url) {
         if (TextUtils.isEmpty(url)) {
-            ivPreview.setImageResource(R.drawable.ic_category);
+            ivPreview.setImageResource(R.drawable.ic_shipper);
             return;
         }
         Glide.with(ivPreview.getContext())
                 .load(url)
-                .placeholder(R.drawable.ic_category)
-                .error(R.drawable.ic_category)
+                .placeholder(R.drawable.ic_shipper)
+                .error(R.drawable.ic_shipper)
                 .centerCrop()
                 .into(ivPreview);
     }
