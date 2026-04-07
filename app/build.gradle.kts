@@ -36,6 +36,11 @@ android {
         )
         buildConfigField(
             "String",
+            "SUPABASE_STORAGE_BUCKET",
+            "\"${localProperties.getProperty("SUPABASE_STORAGE_BUCKET", "images")}\""
+        )
+        buildConfigField(
+            "String",
             "ADMIN_API_BASE_URL",
             "\"${localProperties.getProperty("ADMIN_API_BASE_URL", localProperties.getProperty("SUPABASE_URL", "") + "/functions/v1")}\""
         )

@@ -6,12 +6,14 @@ public class SupabaseConfig {
     
     public static final String SUPABASE_URL = BuildConfig.SUPABASE_URL;
     public static final String SUPABASE_ANON_KEY = BuildConfig.SUPABASE_ANON_KEY;
+    public static final String SUPABASE_STORAGE_BUCKET = BuildConfig.SUPABASE_STORAGE_BUCKET;
     public static final String ADMIN_API_BASE_URL = BuildConfig.ADMIN_API_BASE_URL;
-    
+
     public static final String AUTH_URL = SUPABASE_URL + "/auth/v1";
     public static final String REST_URL = SUPABASE_URL + "/rest/v1";
     public static final String STORAGE_URL = SUPABASE_URL + "/storage/v1";
-    
+    public static final String STORAGE_OBJECT_URL = STORAGE_URL + "/object/public/" + SUPABASE_STORAGE_BUCKET;
+
     public static final String HEADER_AUTH = "apikey";
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
@@ -22,6 +24,16 @@ public class SupabaseConfig {
     
     public static final String PREF_RETURN_REPRESENTATION = "return=representation";
     public static final String PREF_RETURN_MINIMAL = "return=minimal";
+
+    public static String buildPublicImageUrl(String path) {
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+        if (path.startsWith("http://") || path.startsWith("https://")) {
+            return path;
+        }
+        return STORAGE_OBJECT_URL + "/" + path.replaceFirst("^/", "");
+    }
 
     public static boolean isConfigured() {
         return SUPABASE_URL != null && !SUPABASE_URL.isBlank()

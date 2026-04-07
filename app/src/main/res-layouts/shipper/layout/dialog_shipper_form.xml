@@ -20,7 +20,7 @@
             android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
-            tools:text="Thêm danh mục" />
+            tools:text="Thêm shipper" />
 
         <TextView
             android:id="@+id/tv_form_subtitle"
@@ -29,10 +29,10 @@
             android:layout_marginTop="@dimen/spacing_xs"
             android:textAppearance="@style/TextAppearance.Material3.BodySmall"
             android:textColor="@color/text_secondary"
-            tools:text="Nhập thông tin song ngữ" />
+            tools:text="Thông tin nhân viên giao hàng" />
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_image_preview"
+            android:id="@+id/card_avatar_preview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_md"
@@ -45,11 +45,11 @@
                 android:layout_height="wrap_content">
 
                 <ImageView
-                    android:id="@+id/iv_form_image"
+                    android:id="@+id/iv_form_avatar"
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/ic_category"
+                    android:src="@drawable/ic_shipper"
                     android:contentDescription="@null" />
 
                 <TextView
@@ -89,13 +89,13 @@
                 android:id="@+id/et_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/label_name_vi_en"
-                android:inputType="textCapSentences" />
+                android:hint="@string/label_shipper_name"
+                android:inputType="textPersonName|textCapWords" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_description"
+            android:id="@+id/til_phone"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -103,12 +103,28 @@
             app:hintTextColor="@color/text_secondary">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_description"
+                android:id="@+id/et_phone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/label_description_vi_en"
-                android:inputType="textCapSentences|textMultiLine"
-                android:minLines="3" />
+                android:hint="@string/label_phone"
+                android:inputType="phone" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_email"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            app:hintTextColor="@color/text_secondary">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/label_email"
+                android:inputType="textEmailAddress" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -130,18 +146,19 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_sort_order"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:id="@+id/til_restaurant"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_md">
+            android:layout_marginTop="@dimen/spacing_md"
+            app:hintTextColor="@color/text_secondary">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_sort_order"
+            <AutoCompleteTextView
+                android:id="@+id/et_restaurant"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/label_sort_order_vi_en"
-                android:inputType="number" />
+                android:hint="@string/label_select_restaurant"
+                android:inputType="none" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -207,12 +224,12 @@
                     tools:text="Preview name" />
 
                 <TextView
-                    android:id="@+id/tv_preview_description"
+                    android:id="@+id/tv_preview_phone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_xs"
                     android:textColor="@color/text_secondary"
-                    tools:text="Preview description" />
+                    tools:text="Preview phone" />
 
             </LinearLayout>
 

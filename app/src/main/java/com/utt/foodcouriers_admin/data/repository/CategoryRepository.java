@@ -102,7 +102,7 @@ public class CategoryRepository extends BaseSupabaseRepository implements CrudRe
         updateItem(
                 TABLE,
                 eqIdFilter(id.trim()),
-                new CategoryUpsertRequest(null, null, null, null, isActive),
+                new CategoryUpsertRequest(null, null, null, isActive),
                 Category[].class,
                 callback
         );
