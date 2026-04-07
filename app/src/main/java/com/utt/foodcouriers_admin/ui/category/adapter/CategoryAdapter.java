@@ -62,6 +62,7 @@ public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.Categ
         @Override
         public boolean areContentsTheSame(@NonNull Category oldItem, @NonNull Category newItem) {
             return TextUtils.equals(oldItem.getName(), newItem.getName())
+                    && TextUtils.equals(oldItem.getDescription(), newItem.getDescription())
                     && TextUtils.equals(oldItem.getImageUrl(), newItem.getImageUrl())
                     && oldItem.getSortOrder() == newItem.getSortOrder()
                     && oldItem.isActive() == newItem.isActive()
@@ -95,7 +96,13 @@ public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.Categ
 
         void bind(Category category) {
             tvName.setText(category.getName());
-            tvDescription.setVisibility(View.GONE);
+            
+            if (!TextUtils.isEmpty(category.getDescription())) {
+                tvDescription.setText(category.getDescription());
+                tvDescription.setVisibility(View.VISIBLE);
+            } else {
+                tvDescription.setVisibility(View.GONE);
+            }
 
             tvSortOrder.setText(itemView.getContext().getString(R.string.label_sort_order) + " #" + category.getSortOrder());
             tvUpdatedAt.setText(itemView.getContext().getString(R.string.label_updated_at) + ": " + formatTimestamp(category.getUpdatedAt(), category.getCreatedAt()));
