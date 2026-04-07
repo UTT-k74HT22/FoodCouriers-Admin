@@ -34,6 +34,11 @@ android {
             "SUPABASE_ANON_KEY",
             "\"${localProperties.getProperty("SUPABASE_ANON_KEY", "")}\""
         )
+        buildConfigField(
+            "String",
+            "SUPABASE_STORAGE_BUCKET",
+            "\"${localProperties.getProperty("SUPABASE_STORAGE_BUCKET", "images")}\""
+        )
     }
 
     buildTypes {

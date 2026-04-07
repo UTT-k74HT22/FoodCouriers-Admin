@@ -72,4 +72,12 @@
     <string name="shipper_orders_count">Đơn hoàn thành: %d</string>
     <string name="shipper_status_available">Sẵn sàng</string>
     <string name="shipper_status_unavailable">Ngừng hoạt động</string>
+    <string name="action_choose_image">Chọn ảnh</string>
+    <string name="label_image_url_or_choose">Ảnh (dán URL hoặc chọn từ thiết bị)</string>
+    <string name="label_image_hint_new">Nhấn vào ảnh để xem, nhấn nút bên dưới để chọn ảnh mới</string>
+    <string name="toast_uploading">Đang tải ảnh lên…</string>
+    <string name="toast_upload_success">Tải ảnh lên thành công</string>
+    <string name="toast_upload_failed">Tải ảnh lên thất bại: %1$s</string>
+    <string name="toast_no_image_selected">Chưa chọn ảnh</string>
+    <string name="toast_image_zoom_failed">Không thể tải ảnh</string>
 </resources>

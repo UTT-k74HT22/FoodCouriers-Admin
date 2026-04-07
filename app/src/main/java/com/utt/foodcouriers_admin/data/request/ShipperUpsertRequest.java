@@ -12,6 +12,8 @@ public class ShipperUpsertRequest {
     private String roleInRestaurant;
     @SerializedName("is_active")
     private Boolean isActive;
+    @SerializedName("avatar_url")
+    private String avatarUrl;
 
     private String fullName;
     private String phone;
@@ -20,13 +22,14 @@ public class ShipperUpsertRequest {
     public ShipperUpsertRequest() {
     }
 
-    public ShipperUpsertRequest(String userId, String restaurantId, String fullName, String phone, String email, Boolean isActive) {
+    public ShipperUpsertRequest(String userId, String restaurantId, String fullName, String phone, String email, String avatarUrl, Boolean isActive) {
         this.userId = userId;
         this.restaurantId = restaurantId;
         this.roleInRestaurant = "shipper";
         this.fullName = fullName;
         this.phone = phone;
         this.email = email;
+        this.avatarUrl = avatarUrl;
         this.isActive = isActive != null ? isActive : true;
     }
 
@@ -50,4 +53,7 @@ public class ShipperUpsertRequest {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 }

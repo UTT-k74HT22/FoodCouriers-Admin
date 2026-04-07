@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 
 public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperViewHolder> {
 
@@ -153,6 +154,13 @@ public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperV
                     .error(R.drawable.ic_shipper)
                     .centerCrop()
                     .into(ivAvatar);
+
+            ivAvatar.setOnClickListener(v -> {
+                if (v.getContext() instanceof androidx.fragment.app.FragmentActivity) {
+                    androidx.fragment.app.FragmentActivity activity = (androidx.fragment.app.FragmentActivity) v.getContext();
+                    ImageZoomDialogFragment.newInstance(url).show(activity.getSupportFragmentManager(), "ImageZoomDialog");
+                }
+            });
         }
     }
 }

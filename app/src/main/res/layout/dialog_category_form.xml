@@ -60,13 +60,22 @@
                     android:background="#66000000"
                     android:gravity="center"
                     android:padding="@dimen/spacing_sm"
-                    android:text="@string/label_image_hint"
+                    android:text="@string/label_image_hint_new"
                     android:textColor="@color/white"
                     android:textSize="12sp" />
 
             </FrameLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_choose_image"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/action_choose_image"
+            app:icon="@drawable/ic_upload" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_name"

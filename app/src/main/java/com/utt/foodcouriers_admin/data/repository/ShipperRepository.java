@@ -81,7 +81,7 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
             postResponse(callback, BaseResponse.error("VALIDATION_ERROR", "Shipper id is required"));
             return;
         }
-        ShipperUpsertRequest request = new ShipperUpsertRequest(null, null, null, null, null, isActive);
+        ShipperUpsertRequest request = new ShipperUpsertRequest(null, null, null, null, null, null, isActive);
         updateItem(TABLE, eqIdFilter(id.trim()), request, Shipper[].class, callback);
     }
 
