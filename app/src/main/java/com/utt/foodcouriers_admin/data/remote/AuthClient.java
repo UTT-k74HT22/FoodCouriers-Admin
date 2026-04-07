@@ -205,6 +205,70 @@ public class AuthClient extends BaseSupabaseClient {
     }
     
     /**
+     * Refreshes the access token using the refresh token.
+     * @param callback The callback to handle the result with new tokens.
+     */
+    public void refreshToken(ApiCallback<AuthResponse> callback) {
+        if (!SupabaseConfig.isConfigured()) {
+            postError(callback, "Supabase is not configured");
+            return;
+        }
+
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            postError(callback, "No refresh token available");
+            return;
+        }
+
+        Log.d(TAG, "refreshToken: attempting to refresh access token");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("refresh_token", refreshToken);
+
+        RequestBody requestBody = RequestBody.create(
+                gson.toJson(body),
+                okhttp3.MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)
+        );
+
+        Request request = new Request.Builder()
+                .url(SupabaseConfig.AUTH_URL + "/token?grant_type=refresh_token")
+                .post(requestBody)
+                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
+                .addHeader(SupabaseConfig.HEADER_CONTENT_TYPE, SupabaseConfig.CONTENT_TYPE_JSON)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, IOException e) {
+                Log.e(TAG, "refreshToken network failure", e);
+                postError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    String json = responseBody != null ? responseBody.string() : "";
+                    Log.d(TAG, "refreshToken response code=" + response.code() + " body=" + json);
+                    if (response.isSuccessful()) {
+                        AuthResponse authResponse = gson.fromJson(json, AuthResponse.class);
+                        if (authResponse != null && authResponse.getAccessToken() != null) {
+                            setSession(authResponse.getAccessToken(), authResponse.getRefreshToken());
+                            Log.d(TAG, "refreshToken success");
+                            postSuccess(callback, authResponse);
+                        } else {
+                            Log.e(TAG, "refreshToken parse failure");
+                            postError(callback, "Invalid response from server");
+                        }
+                    } else {
+                        String errorMessage = parseAuthError(json);
+                        Log.e(TAG, "refreshToken error: " + errorMessage);
+                        postError(callback, errorMessage);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * Gets the currently authenticated user's details from the Auth API.
      * @param callback The callback to handle the result.
      */
@@ -376,6 +440,7 @@ public class AuthClient extends BaseSupabaseClient {
         public String getAccessToken() { return accessToken; }
         public String getRefreshToken() { return refreshToken; }
         public AuthUser getUser() { return user; }
+        public Long getExpiresIn() { return expiresIn; }
     }
     
     /**

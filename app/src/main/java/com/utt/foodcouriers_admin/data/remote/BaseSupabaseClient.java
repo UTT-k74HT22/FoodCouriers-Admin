@@ -62,6 +62,14 @@ public abstract class BaseSupabaseClient {
     public String getRefreshToken() {
         return refreshToken;
     }
+
+    protected boolean needsRefresh() {
+        return refreshToken != null && !refreshToken.isEmpty();
+    }
+
+    public void refreshTokenIfNeeded(ApiCallback<Boolean> callback) {
+        SupabaseClientManager.refreshTokenIfNeeded(callback);
+    }
     
     /**
      * Interface xử lý callback bất đồng bộ.
