@@ -33,11 +33,52 @@ public class Restaurant implements Serializable {
     @SerializedName("updated_at")
     private String updatedAt;
 
-    public String getId() {
-        return id;
-    }
+    public Restaurant() {}
 
-    public String getName() {
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public double getRating() { return rating; }
+    public void setRating(double rating) { this.rating = rating; }
+
+    public int getReviewCount() { return reviewCount; }
+    public void setReviewCount(int reviewCount) { this.reviewCount = reviewCount; }
+
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { isActive = active; }
+
+    public boolean isOpen() { return isOpen; }
+    public void setOpen(boolean open) { isOpen = open; }
+
+    public String getOpenTime() { return openTime; }
+    public void setOpenTime(String openTime) { this.openTime = openTime; }
+
+    public String getCloseTime() { return closeTime; }
+    public void setCloseTime(String closeTime) { this.closeTime = closeTime; }
+
+    public int getDeliveryFee() { return deliveryFee; }
+    public void setDeliveryFee(int deliveryFee) { this.deliveryFee = deliveryFee; }
+
+    public int getMinOrder() { return minOrder; }
+    public void setMinOrder(int minOrder) { this.minOrder = minOrder; }
+
+    @Override
+    public String toString() {
         return name;
     }
 

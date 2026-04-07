@@ -41,6 +41,9 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Force Light Mode
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+        
         super.onCreate(savedInstanceState);
 
         sessionManager = SessionManager.getInstance(this);
@@ -140,13 +143,19 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
                 if (user.isAdmin() || user.isStaff()) {
+                    String accessToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getAccessToken();
+                    String refreshToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getRefreshToken();
+
                     sessionManager.saveSession(
-                            com.utt.foodcouriers_admin.data.remote.SupabaseClient.getInstance().getAccessToken(),
-                            com.utt.foodcouriers_admin.data.remote.SupabaseClient.getInstance().getRefreshToken(),
+                            accessToken,
+                            refreshToken,
                             user
                     );
 
-                    navigateToMain("Ch\u00e0o m\u1eebng b\u1ea1n quay l\u1ea1i h\u1ec7 th\u1ed1ng.");
+                    // Sync session to all clients
+                    com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.updateAllClients(accessToken, refreshToken);
+
+                    navigateToMain("Chào mừng bạn quay lại hệ thống.");
                     return;
                 }
 

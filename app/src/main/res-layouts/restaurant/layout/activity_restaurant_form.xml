@@ -189,14 +189,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_md"
-                    android:text="Hoạt động" />
+                    android:text="Đang hoạt động"
+                    app:showText="false" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
-                    android:id="@+id/sw_is_open"
+                    android:id="@+id/sw_is_featured"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="Đang mở cửa" />
+                    android:text="Nổi bật"
+                    app:showText="false" />
 
             </LinearLayout>
 

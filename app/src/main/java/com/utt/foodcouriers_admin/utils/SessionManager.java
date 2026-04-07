@@ -16,6 +16,7 @@ public class SessionManager {
     private static final String KEY_USER_NAME = "user_name";
     private static final String KEY_USER_ROLE = "user_role";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
+    private static final String KEY_TOKEN_EXPIRES_AT = "token_expires_at";
     
     private static SessionManager instance;
     private final SharedPreferences prefs;
@@ -34,6 +35,11 @@ public class SessionManager {
     }
     
     public void saveSession(String accessToken, String refreshToken, User user) {
+        saveSession(accessToken, refreshToken, user, 3600000L);
+    }
+
+    public void saveSession(String accessToken, String refreshToken, User user, long expiresInMillis) {
+        long expiresAt = System.currentTimeMillis() + expiresInMillis;
         prefs.edit()
                 .putString(KEY_ACCESS_TOKEN, accessToken)
                 .putString(KEY_REFRESH_TOKEN, refreshToken)
@@ -42,6 +48,7 @@ public class SessionManager {
                 .putString(KEY_USER_NAME, user.getFullName())
                 .putString(KEY_USER_ROLE, user.getRole())
                 .putBoolean(KEY_IS_LOGGED_IN, true)
+                .putLong(KEY_TOKEN_EXPIRES_AT, expiresAt)
                 .apply();
     }
     
@@ -89,7 +96,16 @@ public class SessionManager {
     public boolean isStaff() {
         return "staff".equalsIgnoreCase(getUserRole());
     }
-    
+
+    public long getTokenExpiresAt() {
+        return prefs.getLong(KEY_TOKEN_EXPIRES_AT, 0);
+    }
+
+    public boolean isTokenExpired() {
+        long expiresAt = getTokenExpiresAt();
+        return expiresAt == 0 || System.currentTimeMillis() >= expiresAt;
+    }
+
     public User getCurrentUser() {
         if (!isLoggedIn()) return null;
         
@@ -109,7 +125,21 @@ public class SessionManager {
                 .remove(KEY_USER_EMAIL)
                 .remove(KEY_USER_NAME)
                 .remove(KEY_USER_ROLE)
+                .remove(KEY_TOKEN_EXPIRES_AT)
                 .putBoolean(KEY_IS_LOGGED_IN, false)
+                .apply();
+    }
+
+    public void updateSession(String accessToken, String refreshToken) {
+        updateSession(accessToken, refreshToken, 3600000L);
+    }
+
+    public void updateSession(String accessToken, String refreshToken, long expiresInMillis) {
+        long expiresAt = System.currentTimeMillis() + expiresInMillis;
+        prefs.edit()
+                .putString(KEY_ACCESS_TOKEN, accessToken)
+                .putString(KEY_REFRESH_TOKEN, refreshToken)
+                .putLong(KEY_TOKEN_EXPIRES_AT, expiresAt)
                 .apply();
     }
 }

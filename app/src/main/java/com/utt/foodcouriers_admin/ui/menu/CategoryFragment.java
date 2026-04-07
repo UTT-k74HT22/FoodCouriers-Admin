@@ -26,6 +26,8 @@ import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Category;
+import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
+import com.utt.foodcouriers_admin.data.remote.MenuClient;
 import com.utt.foodcouriers_admin.data.repository.CategoryRepository;
 import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
 import com.utt.foodcouriers_admin.ui.menu.adapter.CategoryAdapter;
@@ -40,6 +42,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
     private RecyclerView rvCategories;
     private CategoryAdapter adapter;
     private ExtendedFloatingActionButton fabAdd;
+    private MenuClient menuClient;
     private CategoryRepository categoryRepository;
     private SwipeRefreshLayout  swipeRefreshLayout;
     private SearchView searchView;
@@ -94,6 +97,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
     private void initViews(View view) {
         rvCategories = view.findViewById(R.id.rv_categories);
         fabAdd = view.findViewById(R.id.fab_add_category);
+        menuClient = MenuClient.getInstance();
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh);
         searchView = view.findViewById(R.id.search_view);
         chipGroup = view.findViewById(R.id.chip_group_filter);
@@ -120,6 +124,8 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
         rvCategories.setAdapter(adapter);
     }
 
+    private void loadCategories() {
+        menuClient.getCategories(new BaseSupabaseClient.ApiCallback<Category[]>() {
     private void setupSearch() {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override

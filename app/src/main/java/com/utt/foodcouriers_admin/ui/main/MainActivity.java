@@ -46,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // Initialize Supabase clients with the saved session token
+        com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.initializeClients(this);
+
         setContentView(R.layout.activity_main_with_drawer);
 
         toolbar = findViewById(R.id.toolbar);
@@ -66,12 +69,42 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             navigationView.setCheckedItem(R.id.nav_dashboard);
             loadFragment(new DashboardFragment(), "Dashboard");
+            String loginSuccessMessage = getIntent().getStringExtra(LoginActivity.EXTRA_LOGIN_SUCCESS_MESSAGE);
+            if (loginSuccessMessage != null && !loginSuccessMessage.isBlank()) {
+                Toast.makeText(this, loginSuccessMessage, Toast.LENGTH_LONG).show();
+            }
         }
+    }
 
-        String loginSuccessMessage = getIntent().getStringExtra(LoginActivity.EXTRA_LOGIN_SUCCESS_MESSAGE);
-        if (loginSuccessMessage != null && !loginSuccessMessage.isBlank()) {
-            Toast.makeText(this, loginSuccessMessage, Toast.LENGTH_LONG).show();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        sessionManager = SessionManager.getInstance(this);
+        if (sessionManager.isLoggedIn() && sessionManager.isTokenExpired()) {
+            refreshTokenIfNeeded();
         }
+    }
+
+    private void refreshTokenIfNeeded() {
+        com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.refreshTokenIfNeeded(
+                new com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient.ApiCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean result) {
+                        if (result != null && result) {
+                            Toast.makeText(MainActivity.this, "Session refreshed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        sessionManager.clearSession();
+                        com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.clearAllClients();
+                        startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                        finish();
+                    }
+                }
+        );
     }
 
     private void setupNavigationDrawer() {
