@@ -1,5 +1,8 @@
-package com.utt.foodcouriers_admin.ui.menu.dialog;
+package com.utt.foodcouriers_admin.ui.category.dialog;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -9,6 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
@@ -19,8 +25,12 @@ import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.utt.foodcouriers_admin.R;
+import com.utt.foodcouriers_admin.data.common.BaseResponse;
+import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Category;
+import com.utt.foodcouriers_admin.data.repository.StorageRepository;
 import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
+import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 
 public class CategoryFormDialogFragment extends DialogFragment {
 
@@ -29,6 +39,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
     }
 
     private static final String ARG_CATEGORY = "arg_category";
+    private static final int PICK_IMAGE_REQUEST = 1001;
 
     public static CategoryFormDialogFragment newInstance(@Nullable Category category) {
         CategoryFormDialogFragment fragment = new CategoryFormDialogFragment();
@@ -42,16 +53,20 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
     private Category category;
     private CategoryFormListener listener;
+    private StorageRepository storageRepository;
+    private Uri selectedImageUri;
+    private boolean isUploading = false;
 
     private TextInputLayout tilName;
     private TextInputLayout tilSortOrder;
     private TextInputEditText etName;
-    private TextInputEditText etDescription;
+
     private TextInputEditText etImage;
     private TextInputEditText etSortOrder;
     private MaterialSwitch switchActive;
     private MaterialButton btnSave;
     private MaterialButton btnCancel;
+    private MaterialButton btnChooseImage;
     private CircularProgressIndicator progressSave;
     private ImageView ivPreview;
     private TextView tvStatusHelper;
@@ -59,6 +74,16 @@ public class CategoryFormDialogFragment extends DialogFragment {
     private TextView tvPreviewDescription;
     private TextView tvFormTitle;
     private TextView tvFormSubtitle;
+
+    private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    selectedImageUri = uri;
+                    uploadSelectedImage();
+                }
+            }
+    );
 
     private final TextWatcher previewWatcher = new TextWatcher() {
         @Override
@@ -80,6 +105,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
         if (getArguments() != null) {
             category = (Category) getArguments().getSerializable(ARG_CATEGORY);
         }
+        storageRepository = StorageRepository.getInstance();
     }
 
     @Nullable
@@ -102,9 +128,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
         if (etName != null) {
             etName.removeTextChangedListener(previewWatcher);
         }
-        if (etDescription != null) {
-            etDescription.removeTextChangedListener(previewWatcher);
-        }
+
         if (etImage != null) {
             etImage.removeTextChangedListener(previewWatcher);
         }
@@ -116,7 +140,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
     public void setLoading(boolean loading) {
         if (btnSave != null) {
-            btnSave.setEnabled(!loading);
+            btnSave.setEnabled(!loading && !isUploading);
             btnSave.setText(loading ? getString(R.string.category_saving) : getString(R.string.action_save));
         }
         if (progressSave != null) {
@@ -125,18 +149,21 @@ public class CategoryFormDialogFragment extends DialogFragment {
         if (btnCancel != null) {
             btnCancel.setEnabled(!loading);
         }
+        if (btnChooseImage != null) {
+            btnChooseImage.setEnabled(!loading && !isUploading);
+        }
     }
 
     private void initViews(View view) {
         tilName = view.findViewById(R.id.til_name);
         tilSortOrder = view.findViewById(R.id.til_sort_order);
         etName = view.findViewById(R.id.et_name);
-        etDescription = view.findViewById(R.id.et_description);
         etImage = view.findViewById(R.id.et_image);
         etSortOrder = view.findViewById(R.id.et_sort_order);
         switchActive = view.findViewById(R.id.switch_active);
         btnSave = view.findViewById(R.id.btn_save);
         btnCancel = view.findViewById(R.id.btn_cancel);
+        btnChooseImage = view.findViewById(R.id.btn_choose_image);
         progressSave = view.findViewById(R.id.progress_save);
         ivPreview = view.findViewById(R.id.iv_form_image);
         tvStatusHelper = view.findViewById(R.id.tv_status_helper);
@@ -153,7 +180,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
         switchActive.setChecked(isEdit ? category.isActive() : true);
         if (isEdit) {
             etName.setText(category.getName());
-            etDescription.setText(category.getDescription());
             etImage.setText(category.getImageUrl());
             etSortOrder.setText(String.valueOf(category.getSortOrder()));
             loadPreviewImage(category.getImageUrl());
@@ -165,9 +191,10 @@ public class CategoryFormDialogFragment extends DialogFragment {
     private void setupListeners() {
         btnSave.setOnClickListener(v -> handleSubmit());
         btnCancel.setOnClickListener(v -> dismiss());
+        btnChooseImage.setOnClickListener(v -> openImagePicker());
+        ivPreview.setOnClickListener(v -> handleImageClick());
 
         etName.addTextChangedListener(previewWatcher);
-        etDescription.addTextChangedListener(previewWatcher);
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -185,15 +212,54 @@ public class CategoryFormDialogFragment extends DialogFragment {
                 tvStatusHelper.setText(isChecked ? R.string.label_active_vi_en : R.string.label_inactive_vi_en));
     }
 
+    private void handleImageClick() {
+        String currentUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
+        if (!TextUtils.isEmpty(currentUrl)) {
+            ImageZoomDialogFragment.newInstance(currentUrl).show(getParentFragmentManager(), "ImageZoomDialog");
+        }
+    }
+
+    private void openImagePicker() {
+        pickImageLauncher.launch("image/*");
+    }
+
+    private void uploadSelectedImage() {
+        if (selectedImageUri == null) return;
+
+        isUploading = true;
+        setLoading(false);
+        Toast.makeText(requireContext(), R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+
+        storageRepository.uploadImage(requireContext(), selectedImageUri, "categories", new RepositoryCallback<String>() {
+            @Override
+            public void onComplete(BaseResponse<String> response) {
+                isUploading = false;
+                if (response.isSuccess()) {
+                    String imageUrl = response.getData();
+                    etImage.setText(imageUrl);
+                    loadPreviewImage(imageUrl);
+                    Toast.makeText(requireContext(), R.string.toast_upload_success, Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMsg = response.getMessage();
+                    Toast.makeText(requireContext(), getString(R.string.toast_upload_failed, errorMsg), Toast.LENGTH_LONG).show();
+                }
+                setLoading(false);
+            }
+        });
+    }
+
     private void handleSubmit() {
         if (!validate()) {
             return;
         }
+        if (isUploading) {
+            Toast.makeText(requireContext(), R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+            return;
+        }
         String name = etName.getText() != null ? etName.getText().toString().trim() : null;
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : null;
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
         Integer sortOrder = parseSortOrder();
-        CategoryUpsertRequest request = new CategoryUpsertRequest(name, description, imageUrl, sortOrder, switchActive.isChecked());
+        CategoryUpsertRequest request = new CategoryUpsertRequest(name, imageUrl, sortOrder, switchActive.isChecked());
         if (listener != null) {
             listener.onSubmit(category != null ? category.getId() : null, request, this);
         }
@@ -239,9 +305,8 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
     private void updatePreview() {
         String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
         tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_name_vi_en) : name);
-        tvPreviewDescription.setText(TextUtils.isEmpty(description) ? getString(R.string.label_description_vi_en) : description);
+        tvPreviewDescription.setText("");
     }
 
     private void loadPreviewImage(@Nullable String url) {

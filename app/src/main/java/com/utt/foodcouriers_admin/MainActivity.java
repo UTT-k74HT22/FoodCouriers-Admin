@@ -1,4 +1,4 @@
-package com.utt.foodcouriers_admin.ui.main;
+package com.utt.foodcouriers_admin;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,14 +19,10 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.utt.foodcouriers_admin.R;
-import com.utt.foodcouriers_admin.data.model.Restaurant;
-import com.utt.foodcouriers_admin.data.model.User;
 import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
-import com.utt.foodcouriers_admin.ui.shipper.ShipperFragment;
-import com.utt.foodcouriers_admin.ui.restaurant.RestaurantFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -83,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        
+
         sessionManager = SessionManager.getInstance(this);
         if (sessionManager.isLoggedIn() && sessionManager.isTokenExpired()) {
             refreshTokenIfNeeded();
@@ -126,7 +122,6 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_orders) {
                     title = "Quản lý đơn hàng";
                 } else if (id == R.id.nav_restaurants) {
-                    fragment = new RestaurantFragment();
                     title = "Quản lý nhà hàng";
                 } else if (id == R.id.nav_categories) {
                     fragment = new CategoryFragment();
@@ -137,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_users) {
                     title = "Quản lý người dùng";
                 } else if (id == R.id.nav_shippers) {
-                    fragment = new ShipperFragment();
                     title = "Quản lý shipper";
                 } else if (id == R.id.nav_promotions) {
                     title = "Khuyến mãi";
@@ -197,20 +191,6 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
         if (toolbar != null) {
             toolbar.setTitle(title);
-        }
-    }
-
-    public void navigateToMenuWithRestaurant(Restaurant restaurant) {
-        Fragment fragment = MenuItemFragment.newInstance(restaurant);
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
-        if (toolbar != null) {
-            toolbar.setTitle("Menu: " + restaurant.getName());
-        }
-        if (drawerLayout != null) {
-            drawerLayout.closeDrawer(GravityCompat.START);
         }
     }
 
