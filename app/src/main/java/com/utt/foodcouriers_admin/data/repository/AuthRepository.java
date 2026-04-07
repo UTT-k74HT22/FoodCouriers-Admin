@@ -1,15 +1,15 @@
 package com.utt.foodcouriers_admin.data.repository;
 
 import com.utt.foodcouriers_admin.data.model.User;
-import com.utt.foodcouriers_admin.data.remote.SupabaseClient;
+import com.utt.foodcouriers_admin.data.remote.AuthClient;
 
 public class AuthRepository {
     
     private static AuthRepository instance;
-    private final SupabaseClient supabaseClient;
+    private final AuthClient authClient; // Use AuthClient
     
     private AuthRepository() {
-        supabaseClient = SupabaseClient.getInstance();
+        authClient = AuthClient.getInstance(); // Get instance of AuthClient
     }
     
     public static synchronized AuthRepository getInstance() {
@@ -29,10 +29,11 @@ public class AuthRepository {
             return;
         }
         
-        supabaseClient.signIn(email.trim(), password, new SupabaseClient.ApiCallback<User>() {
+        // Use AuthClient's signIn method
+        authClient.signIn(email.trim(), password, new AuthClient.ApiCallback<User>() {
             @Override
-            public void onSuccess(User result) {
-                callback.onSuccess(result);
+            public void onSuccess(User user) {
+                callback.onSuccess(user);
             }
             
             @Override
@@ -60,10 +61,11 @@ public class AuthRepository {
             return;
         }
         
-        supabaseClient.signUp(email.trim(), password, name.trim(), phone, new SupabaseClient.ApiCallback<User>() {
+        // Use AuthClient's signUp method
+        authClient.signUp(email.trim(), password, name.trim(), phone, new AuthClient.ApiCallback<User>() {
             @Override
-            public void onSuccess(User result) {
-                callback.onSuccess(result);
+            public void onSuccess(User user) {
+                callback.onSuccess(user);
             }
             
             @Override
@@ -74,7 +76,8 @@ public class AuthRepository {
     }
     
     public void logout(LogoutCallback callback) {
-        supabaseClient.signOut(new SupabaseClient.ApiCallback<Void>() {
+        // Use AuthClient's signOut method
+        authClient.signOut(new AuthClient.ApiCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
                 callback.onSuccess();
@@ -82,16 +85,23 @@ public class AuthRepository {
             
             @Override
             public void onError(String error) {
-                callback.onSuccess();
+                // Log error but still consider logout successful locally
+                callback.onSuccess(); 
             }
         });
     }
     
     public void getCurrentUser(GetUserCallback callback) {
-        supabaseClient.getCurrentUser(new SupabaseClient.ApiCallback<User>() {
+        if (!authClient.isAuthenticated()) { // Check authentication status via AuthClient
+            callback.onError("Not authenticated");
+            return;
+        }
+        
+        // Use AuthClient's getCurrentUser method
+        authClient.getCurrentUser(new AuthClient.ApiCallback<User>() {
             @Override
-            public void onSuccess(User result) {
-                callback.onSuccess(result);
+            public void onSuccess(User user) {
+                callback.onSuccess(user);
             }
             
             @Override
@@ -102,8 +112,10 @@ public class AuthRepository {
     }
     
     public boolean isAuthenticated() {
-        return supabaseClient.isAuthenticated();
+        return authClient.isAuthenticated(); // Check authentication status via AuthClient
     }
+    
+    // --- Callback Interfaces ---
     
     public interface AuthCallback {
         void onSuccess(User user);

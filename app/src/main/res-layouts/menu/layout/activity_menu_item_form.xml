@@ -139,14 +139,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_md"
-                    android:text="Còn hàng" />
+                    android:text="Còn hàng"
+                    app:showText="false" />
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/sw_is_featured"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_sm"
-                    android:text="Nổi bật" />
+                    android:text="Nổi bật"
+                    app:showText="false" />
 
             </LinearLayout>
 

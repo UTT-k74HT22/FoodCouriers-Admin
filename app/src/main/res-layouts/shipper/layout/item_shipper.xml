@@ -90,7 +90,8 @@
                 android:id="@+id/sw_is_active"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md" />
+                android:layout_marginTop="@dimen/spacing_md"
+                app:showText="false" />
 
         </LinearLayout>
 

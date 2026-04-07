@@ -146,11 +146,17 @@ public class RegisterActivity extends AppCompatActivity {
             public void onSuccess(User user) {
                 showLoading(false);
                 
+                String accessToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getAccessToken();
+                String refreshToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getRefreshToken();
+                
                 sessionManager.saveSession(
-                        com.utt.foodcouriers_admin.data.remote.SupabaseClient.getInstance().getAccessToken(),
-                        com.utt.foodcouriers_admin.data.remote.SupabaseClient.getInstance().getRefreshToken(),
+                        accessToken,
+                        refreshToken,
                         user
                 );
+                
+                // Sync session to all clients
+                com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.updateAllClients(accessToken, refreshToken);
                 
                 Toast.makeText(RegisterActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
                 

@@ -15,7 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Category;
-import com.utt.foodcouriers_admin.data.remote.SupabaseClient;
+import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
+import com.utt.foodcouriers_admin.data.remote.MenuClient;
 import com.utt.foodcouriers_admin.ui.menu.adapter.CategoryAdapter;
 
 import java.util.Arrays;
@@ -26,7 +27,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     private CategoryAdapter adapter;
     private View emptyState;
     private ExtendedFloatingActionButton fabAdd;
-    private SupabaseClient supabaseClient;
+    private MenuClient menuClient;
 
     @Nullable
     @Override
@@ -41,7 +42,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
         rvCategories = view.findViewById(R.id.rv_categories);
         emptyState = view.findViewById(R.id.empty_state);
         fabAdd = view.findViewById(R.id.fab_add_category);
-        supabaseClient = SupabaseClient.getInstance();
+        menuClient = MenuClient.getInstance();
 
         setupRecyclerView();
         loadCategories();
@@ -61,7 +62,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     }
 
     private void loadCategories() {
-        supabaseClient.getCategories(new SupabaseClient.ApiCallback<Category[]>() {
+        menuClient.getCategories(new BaseSupabaseClient.ApiCallback<Category[]>() {
             @Override
             public void onSuccess(Category[] result) {
                 if (result == null || result.length == 0) {
