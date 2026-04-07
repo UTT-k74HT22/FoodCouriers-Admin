@@ -31,6 +31,18 @@ import java.util.List;
 
 public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenuItemClickListener {
 
+    private static final String ARG_RESTAURANT = "arg_restaurant";
+
+    public static MenuItemFragment newInstance(@Nullable Restaurant restaurant) {
+        MenuItemFragment fragment = new MenuItemFragment();
+        Bundle bundle = new Bundle();
+        if (restaurant != null) {
+            bundle.putSerializable(ARG_RESTAURANT, restaurant);
+        }
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     private RecyclerView rvMenuItems;
     private MenuItemAdapter adapter;
     private View emptyState;
@@ -54,6 +66,10 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            selectedRestaurant = (Restaurant) getArguments().getSerializable(ARG_RESTAURANT);
+        }
 
         menuRepository = MenuRepository.getInstance();
         currentUser = SessionManager.getInstance(requireContext()).getCurrentUser();
@@ -141,14 +157,22 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             restaurants.addAll(Arrays.asList(result));
             setupRestaurantFilter();
             
-            // For both Admin and Staff, load items after restaurants are loaded
-            if (!currentUser.isAdmin() || restaurants.size() == 1) {
+            // Auto-select restaurant if passed from arguments
+            if (selectedRestaurant != null) {
+                for (Restaurant r : restaurants) {
+                    if (r.getId() != null && r.getId().equals(selectedRestaurant.getId())) {
+                        selectedRestaurant = r;
+                        etFilterRestaurant.setText(selectedRestaurant.getName());
+                        break;
+                    }
+                }
+            } else if (!currentUser.isAdmin() || restaurants.size() == 1) {
                 if (!restaurants.isEmpty()) {
                     selectedRestaurant = restaurants.get(0);
                     etFilterRestaurant.setText(selectedRestaurant.getName());
                 }
             }
-            loadMenuItems(); // Luôn gọi load ở đây để khởi tạo danh sách
+            loadMenuItems();
         }
     }
 
