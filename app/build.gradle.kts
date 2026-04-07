@@ -34,6 +34,11 @@ android {
             "SUPABASE_ANON_KEY",
             "\"${localProperties.getProperty("SUPABASE_ANON_KEY", "")}\""
         )
+        buildConfigField(
+            "String",
+            "ADMIN_API_BASE_URL",
+            "\"${localProperties.getProperty("ADMIN_API_BASE_URL", localProperties.getProperty("SUPABASE_URL", "") + "/functions/v1")}\""
+        )
     }
 
     buildTypes {
