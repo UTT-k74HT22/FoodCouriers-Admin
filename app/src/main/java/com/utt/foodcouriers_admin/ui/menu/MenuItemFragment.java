@@ -7,7 +7,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -35,6 +35,18 @@ import java.util.List;
 
 public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenuItemClickListener {
 
+    private static final String ARG_RESTAURANT = "arg_restaurant";
+
+    public static MenuItemFragment newInstance(@Nullable Restaurant restaurant) {
+        MenuItemFragment fragment = new MenuItemFragment();
+        Bundle bundle = new Bundle();
+        if (restaurant != null) {
+            bundle.putSerializable(ARG_RESTAURANT, restaurant);
+        }
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     private RecyclerView rvMenuItems;
     private MenuItemAdapter adapter;
     private View emptyState;
@@ -58,6 +70,10 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            selectedRestaurant = (Restaurant) getArguments().getSerializable(ARG_RESTAURANT);
+        }
 
         menuRepository = MenuRepository.getInstance();
         currentUser = SessionManager.getInstance(requireContext()).getCurrentUser();
@@ -108,6 +124,11 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                     adapter.setCategories(categories);
                 }
             }
+
+            @Override
+            public void onError(String error) {
+                ToastBanner.showError("Lỗi tải danh mục: " + error);
+            }
         });
 
         // Load Restaurants
@@ -120,7 +141,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(getContext(), "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         } else {
@@ -132,7 +153,7 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(getContext(), "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         }
@@ -144,14 +165,22 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             restaurants.addAll(Arrays.asList(result));
             setupRestaurantFilter();
             
-            // For both Admin and Staff, load items after restaurants are loaded
-            if (!currentUser.isAdmin() || restaurants.size() == 1) {
+            // Auto-select restaurant if passed from arguments
+            if (selectedRestaurant != null) {
+                for (Restaurant r : restaurants) {
+                    if (r.getId() != null && r.getId().equals(selectedRestaurant.getId())) {
+                        selectedRestaurant = r;
+                        etFilterRestaurant.setText(selectedRestaurant.getName());
+                        break;
+                    }
+                }
+            } else if (!currentUser.isAdmin() || restaurants.size() == 1) {
                 if (!restaurants.isEmpty()) {
                     selectedRestaurant = restaurants.get(0);
                     etFilterRestaurant.setText(selectedRestaurant.getName());
                 }
             }
-            loadMenuItems(); // Luôn gọi load ở đây để khởi tạo danh sách
+            loadMenuItems();
         }
     }
 
@@ -291,6 +320,14 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                     renderMenuItems(new ArrayList<>());
                 }
             }
+
+            @Override
+            public void onError(String error) {
+                if (isAdded()) {
+                    ToastBanner.showError("Lỗi tải món ăn: " + error);
+                    renderMenuItems(new ArrayList<>());
+                }
+            }
         });
     }
 
@@ -319,18 +356,21 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             @Override
             public void onComplete(BaseResponse<MenuItem> response) {
                 if (isAdded()) {
-                    if (response.isSuccess()) {
-                        Toast.makeText(getContext(), "Trạng thái đã được cập nhật", Toast.LENGTH_SHORT).show();
-                        int index = allMenuItems.indexOf(item);
-                        if (index != -1) {
-                            allMenuItems.set(index, response.getData());
-                        }
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        Toast.makeText(getContext(), "Lỗi cập nhật trạng thái: " + response.getMessage(), Toast.LENGTH_SHORT).show();
-                        item.setAvailable(!isAvailable); 
-                        adapter.notifyDataSetChanged();
+                    ToastBanner.showSuccess("Trạng thái đã được cập nhật");
+                    int index = allMenuItems.indexOf(item);
+                    if (index != -1) {
+                        allMenuItems.set(index, updatedItem);
                     }
+                    adapter.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                if (isAdded()) {
+                    ToastBanner.showError("Lỗi cập nhật trạng thái: " + error);
+                    item.setAvailable(!isAvailable); 
+                    adapter.notifyDataSetChanged();
                 }
             }
         });
@@ -346,12 +386,15 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                         @Override
                         public void onComplete(BaseResponse<Void> response) {
                             if (isAdded()) {
-                                if (response.isSuccess()) {
-                                    Toast.makeText(getContext(), "Món ăn đã được xóa", Toast.LENGTH_SHORT).show();
-                                    loadMenuItems();
-                                } else {
-                                    Toast.makeText(getContext(), "Lỗi xóa món ăn: " + response.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
+                                ToastBanner.showSuccess("Món ăn đã được xóa");
+                                loadMenuItems();
+                            }
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            if (isAdded()) {
+                                ToastBanner.showError("Lỗi xóa món ăn: " + error);
                             }
                         }
                     });
