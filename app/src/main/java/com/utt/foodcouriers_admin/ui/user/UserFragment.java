@@ -124,10 +124,11 @@ public class UserFragment extends Fragment implements UserAdapter.UserActionList
         dialog.show(getChildFragmentManager(), "create_user_dialog");
     }
 
-    private void handleCreateUser(AdminCreateUserAccountRequest request, CreateUserDialogFragment dialog) {
+    private void handleCreateUser(AdminCreateUserAccountRequest request, String avatarUrl, CreateUserDialogFragment dialog) {
         Log.d(TAG, "handleCreateUser() called");
         Log.d(TAG, "Request role=" + request.getRole());
         Log.d(TAG, "Request email=" + request.getEmail());
+        Log.d(TAG, "Avatar URL=" + avatarUrl);
 
         dialog.setLoading(true);
 

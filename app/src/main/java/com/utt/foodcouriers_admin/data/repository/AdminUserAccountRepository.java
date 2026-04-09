@@ -1,5 +1,7 @@
 package com.utt.foodcouriers_admin.data.repository;
 
+import android.content.Context;
+import android.net.Uri;
 import android.util.Log;
 
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
@@ -168,5 +170,88 @@ public class AdminUserAccountRepository extends BaseSupabaseClient {
 
     private static class CreateUserResponse {
         User data;
+    }
+
+    public void updateAvatar(Context context, String userId, Uri avatarUri, RepositoryCallback<User> callback) {
+        if (context == null) {
+            postRepositoryResponse(callback, BaseResponse.error("VALIDATION_ERROR", "Context is required"));
+            return;
+        }
+        if (userId == null || userId.isBlank()) {
+            postRepositoryResponse(callback, BaseResponse.error("VALIDATION_ERROR", "User ID is required"));
+            return;
+        }
+        if (avatarUri == null) {
+            postRepositoryResponse(callback, BaseResponse.error("VALIDATION_ERROR", "Avatar URI is required"));
+            return;
+        }
+
+        StorageRepository.getInstance().uploadImage(context, avatarUri, "avatars", new RepositoryCallback<String>() {
+            @Override
+            public void onComplete(BaseResponse<String> response) {
+                if (!response.isSuccess()) {
+                    String errorCode = response.getError() != null ? response.getError().getCode() : "UPLOAD_ERROR";
+                postRepositoryResponse(callback, BaseResponse.error(errorCode, response.getMessage()));
+                    return;
+                }
+
+                String avatarUrl = response.getData();
+                updateUserAvatar(userId, avatarUrl, callback);
+            }
+        });
+    }
+
+    private void updateUserAvatar(String userId, String avatarUrl, RepositoryCallback<User> callback) {
+        String accessToken = AuthClient.getInstance().getAccessToken();
+        if (accessToken == null || accessToken.isBlank()) {
+            postRepositoryResponse(callback, BaseResponse.error("AUTH_ERROR", "Admin session is required"));
+            return;
+        }
+
+        String jsonBody = "{\"avatar_url\":\"" + avatarUrl + "\"}";
+        RequestBody requestBody = RequestBody.create(jsonBody, JSON);
+
+        String patchUrl = SupabaseConfig.REST_URL + "/user_accounts?id=eq." + userId;
+
+        Request httpRequest = new Request.Builder()
+                .url(patchUrl)
+                .patch(requestBody)
+                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
+                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
+                .addHeader(SupabaseConfig.HEADER_CONTENT_TYPE, SupabaseConfig.CONTENT_TYPE_JSON)
+                .addHeader("Prefer", "return=representation")
+                .build();
+
+        Log.d(TAG, "Update avatar request: " + httpRequest.url());
+
+        client.newCall(httpRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(TAG, "Update avatar request failed: " + e.getMessage());
+                postRepositoryResponse(callback, BaseResponse.error("NETWORK_ERROR", e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    Log.d(TAG, "Update avatar response code: " + response.code());
+
+                    String json = responseBody != null ? responseBody.string() : "";
+                    if (!response.isSuccessful()) {
+                        Log.d(TAG, "Update avatar response failed: " + json);
+                        postRepositoryResponse(callback, BaseResponse.error("UPDATE_AVATAR_FAILED", "Failed to update avatar"));
+                        return;
+                    }
+
+                    User user = parseUser(json);
+                    if (user == null) {
+                        user = new User();
+                        user.setId(userId);
+                        user.setAvatarUrl(avatarUrl);
+                    }
+                    postRepositoryResponse(callback, BaseResponse.success(user, "Avatar updated successfully"));
+                }
+            }
+        });
     }
 }
