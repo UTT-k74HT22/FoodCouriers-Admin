@@ -33,6 +33,7 @@ import com.utt.foodcouriers_admin.data.repository.StorageRepository;
 import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
+import com.utt.foodcouriers_admin.data.request.MenuUpsertRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,19 +160,19 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
     private void loadInitialData() {
         // Load Categories
-        menuRepository.getCategories(new BaseSupabaseClient.ApiCallback<Category[]>() {
+        menuRepository.getCategories(new RepositoryCallback<List<Category>>() {
             @Override
-            public void onSuccess(Category[] result) {
+            public void onComplete(BaseResponse<List<Category>> response) {
+                if (!response.isSuccess()) {
+                    Toast.makeText(MenuItemFormActivity.this, "Lỗi tải danh mục: " + response.getMessage(), Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 categories.clear();
+                List<Category> result = response.getData();
                 if (result != null) {
-                    for (Category c : result) categories.add(c);
+                    categories.addAll(result);
                     setupCategoryFilter();
                 }
-            }
-
-            @Override
-            public void onError(String error) {
-                Toast.makeText(MenuItemFormActivity.this, "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -375,33 +376,43 @@ public class MenuItemFormActivity extends AppCompatActivity {
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
         currentItem.setImageUrl(imageUrl);
 
+        MenuUpsertRequest request = new MenuUpsertRequest(
+                currentItem.getRestaurantId(),
+                currentItem.getCategoryId(),
+                currentItem.getName(),
+                currentItem.getDescription(),
+                currentItem.getPrice(),
+                currentItem.getImageUrl(),
+                currentItem.isAvailable(),
+                currentItem.isFeatured(),
+                currentItem.getSortOrder()
+        );
+
         btnSave.setEnabled(false);
         if (isEditMode) {
-            menuRepository.updateMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
+            menuRepository.update(currentItem.getId(), request, new RepositoryCallback<MenuItem>() {
                 @Override
-                public void onSuccess(MenuItem result) {
-                    Toast.makeText(MenuItemFormActivity.this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-
-                @Override
-                public void onError(String error) {
+                public void onComplete(BaseResponse<MenuItem> response) {
                     btnSave.setEnabled(true);
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + error, Toast.LENGTH_SHORT).show();
+                    if (response.isSuccess()) {
+                        Toast.makeText(MenuItemFormActivity.this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + response.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         } else {
-            menuRepository.createMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
+            menuRepository.create(request, new RepositoryCallback<MenuItem>() {
                 @Override
-                public void onSuccess(MenuItem result) {
-                    Toast.makeText(MenuItemFormActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-
-                @Override
-                public void onError(String error) {
+                public void onComplete(BaseResponse<MenuItem> response) {
                     btnSave.setEnabled(true);
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + error, Toast.LENGTH_SHORT).show();
+                    if (response.isSuccess()) {
+                        Toast.makeText(MenuItemFormActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + response.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
             });
         }

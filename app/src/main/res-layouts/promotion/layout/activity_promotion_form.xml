@@ -8,13 +8,22 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="@dimen/spacing_lg">
+
+        <TextView
+            android:id="@+id/tv_form_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thêm khuyến mãi"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="@dimen/radius_lg"
             app:cardElevation="@dimen/card_elevation">
@@ -212,11 +221,19 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_cancel"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_md"
+            android:text="@string/action_cancel" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save"
             style="@style/AdminButton.Primary"
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height"
-            android:layout_marginTop="@dimen/spacing_lg"
+            android:layout_marginTop="@dimen/spacing_md"
             android:text="Lưu khuyến mãi" />
 
     </LinearLayout>
