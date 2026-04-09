@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.TextView;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
+
 import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -65,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(new DashboardFragment(), "Dashboard");
             String loginSuccessMessage = getIntent().getStringExtra(LoginActivity.EXTRA_LOGIN_SUCCESS_MESSAGE);
             if (loginSuccessMessage != null && !loginSuccessMessage.isBlank()) {
-                Toast.makeText(this, loginSuccessMessage, Toast.LENGTH_LONG).show();
+                ToastBanner.showSuccess(loginSuccessMessage);
             }
         }
     }
@@ -86,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Boolean result) {
                         if (result != null && result) {
-                            Toast.makeText(MainActivity.this, "Session refreshed", Toast.LENGTH_SHORT).show();
+                            ToastBanner.showSuccess("Phiên làm việc đã được làm mới");
                         }
                     }
 
@@ -141,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 if (fragment != null) {
                     loadFragment(fragment, title);
                 } else {
-                    Toast.makeText(MainActivity.this, "Module \"" + title + "\" đang được phát triển", Toast.LENGTH_SHORT).show();
+                    ToastBanner.showWarning("Module \"" + title + "\" đang được phát triển");
                     if (toolbar != null) toolbar.setTitle(title);
                 }
 
@@ -194,6 +196,6 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
-        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+        ToastBanner.showSuccess("Đã đăng xuất");
     }
 }

@@ -71,6 +71,7 @@ android {
                 "src/main/res-layouts/auth",
                 "src/main/res-layouts/dashboard",
                 "src/main/res-layouts/menu",
+                "src/main/res-layouts/category",
                 "src/main/res-layouts/order",
                 "src/main/res-layouts/restaurant",
                 "src/main/res-layouts/user",

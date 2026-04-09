@@ -7,7 +7,7 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -158,7 +158,7 @@ public class RegisterActivity extends AppCompatActivity {
                 // Sync session to all clients
                 com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.updateAllClients(accessToken, refreshToken);
                 
-                Toast.makeText(RegisterActivity.this, "Account created successfully!", Toast.LENGTH_SHORT).show();
+                ToastBanner.showSuccess("Tài khoản đã được tạo thành công!");
                 
                 Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -169,7 +169,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onError(String error) {
                 showLoading(false);
-                Toast.makeText(RegisterActivity.this, error, Toast.LENGTH_LONG).show();
+                ToastBanner.showError(error);
             }
         });
     }
