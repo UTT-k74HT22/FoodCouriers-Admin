@@ -1,15 +1,13 @@
-package com.utt.foodcouriers_admin.ui.category;
+package com.utt.foodcouriers_admin.ui.restaurant;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -25,24 +23,25 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
-import com.utt.foodcouriers_admin.data.model.Category;
-import com.utt.foodcouriers_admin.data.repository.CategoryRepository;
-import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
-import com.utt.foodcouriers_admin.ui.category.adapter.CategoryAdapter;
-import com.utt.foodcouriers_admin.ui.category.dialog.CategoryFormDialogFragment;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
+import com.utt.foodcouriers_admin.data.repository.RestaurantRepository;
+import com.utt.foodcouriers_admin.data.request.RestaurantUpsertRequest;
+import com.utt.foodcouriers_admin.ui.main.MainActivity;
+import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
+import com.utt.foodcouriers_admin.ui.restaurant.adapter.RestaurantAdapter;
+import com.utt.foodcouriers_admin.ui.restaurant.dialog.RestaurantFormDialogFragment;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class CategoryFragment extends Fragment implements CategoryAdapter.CategoryActionListener {
+public class RestaurantFragment extends Fragment implements RestaurantAdapter.RestaurantActionListener {
 
     private static final int PAGE_LIMIT = 100;
 
-    private RecyclerView rvCategories;
-    private CategoryAdapter adapter;
+    private RecyclerView rvRestaurants;
+    private RestaurantAdapter adapter;
     private ExtendedFloatingActionButton fabAdd;
-    private CategoryRepository categoryRepository;
+    private RestaurantRepository restaurantRepository;
     private SwipeRefreshLayout swipeRefreshLayout;
     private SearchView searchView;
     private ChipGroup chipGroup;
@@ -55,7 +54,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
     private MaterialButton btnRetry;
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
-    private final List<Category> currentItems = new ArrayList<>();
+    private final List<Restaurant> currentItems = new ArrayList<>();
     private String currentQuery = "";
     private StatusFilter statusFilter = StatusFilter.ALL;
     private Runnable searchRunnable;
@@ -69,22 +68,22 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.activity_category_list, container, false);
+        return inflater.inflate(R.layout.activity_restaurant_list, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        categoryRepository = CategoryRepository.getInstance();
+        restaurantRepository = RestaurantRepository.getInstance();
         initViews(view);
         setupToolbar();
         setupRecyclerView();
         setupSearch();
         setupFilters();
         setupSwipeRefresh();
-        fabAdd.setOnClickListener(v -> openCategoryForm(null));
-        btnRetry.setOnClickListener(v -> loadCategories(true));
-        loadCategories(true);
+        fabAdd.setOnClickListener(v -> openRestaurantForm(null));
+        btnRetry.setOnClickListener(v -> loadRestaurants(true));
+        loadRestaurants(true);
     }
 
     @Override
@@ -94,8 +93,8 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
     }
 
     private void initViews(View view) {
-        rvCategories = view.findViewById(R.id.rv_categories);
-        fabAdd = view.findViewById(R.id.fab_add_category);
+        rvRestaurants = view.findViewById(R.id.rv_restaurants);
+        fabAdd = view.findViewById(R.id.fab_add_restaurant);
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh);
         searchView = view.findViewById(R.id.search_view);
         chipGroup = view.findViewById(R.id.chip_group_filter);
@@ -110,16 +109,16 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
 
     private void setupToolbar() {
         if (toolbar != null) {
-            toolbar.setTitle(R.string.category_title);
-            toolbar.setSubtitle(R.string.category_subtitle);
+            toolbar.setTitle(R.string.restaurant_title);
+            toolbar.setSubtitle(R.string.restaurant_subtitle);
         }
     }
 
     private void setupRecyclerView() {
-        rvCategories.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new CategoryAdapter();
+        rvRestaurants.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new RestaurantAdapter();
         adapter.setListener(this);
-        rvCategories.setAdapter(adapter);
+        rvRestaurants.setAdapter(adapter);
     }
 
     private void setupSearch() {
@@ -155,7 +154,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
     }
 
     private void setupSwipeRefresh() {
-        swipeRefreshLayout.setOnRefreshListener(() -> loadCategories(false));
+        swipeRefreshLayout.setOnRefreshListener(() -> loadRestaurants(false));
         swipeRefreshLayout.setColorSchemeResources(R.color.primary);
     }
 
@@ -163,18 +162,18 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
         if (searchRunnable != null) {
             searchHandler.removeCallbacks(searchRunnable);
         }
-        searchRunnable = () -> loadCategories(showLoader);
+        searchRunnable = () -> loadRestaurants(showLoader);
         searchHandler.postDelayed(searchRunnable, 350);
     }
 
-    private void loadCategories(boolean showLoading) {
+    private void loadRestaurants(boolean showLoading) {
         if (showLoading) {
             showLoadingState();
         }
         Boolean isActiveFilter = getFilterValue();
-        categoryRepository.getCategories(resolveQueryParam(), isActiveFilter, PAGE_LIMIT, 0, new RepositoryCallback<List<Category>>() {
+        restaurantRepository.getAll(resolveQueryParam(), isActiveFilter, PAGE_LIMIT, 0, new RepositoryCallback<List<Restaurant>>() {
             @Override
-            public void onComplete(BaseResponse<List<Category>> response) {
+            public void onComplete(BaseResponse<List<Restaurant>> response) {
                 swipeRefreshLayout.setRefreshing(false);
                 if (!response.isSuccess() || response.getData() == null) {
                     showErrorState(response.getMessage());
@@ -222,11 +221,11 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
         stateLoading.setVisibility(View.GONE);
         stateEmpty.setVisibility(View.GONE);
         swipeRefreshLayout.setVisibility(View.GONE);
-        tvErrorMessage.setText(TextUtils.isEmpty(message) ? getString(R.string.error_generic) : message);
+        tvErrorMessage.setText(message != null ? message : getString(R.string.error_generic));
     }
 
     private String resolveQueryParam() {
-        return TextUtils.isEmpty(currentQuery) ? null : currentQuery;
+        return currentQuery.isEmpty() ? null : currentQuery;
     }
 
     private Boolean getFilterValue() {
@@ -240,92 +239,102 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
         }
     }
 
-    private void openCategoryForm(@Nullable Category category) {
-        CategoryFormDialogFragment dialog = CategoryFormDialogFragment.newInstance(category);
-        dialog.setCategoryFormListener(this::handleFormSubmission);
-        dialog.show(getChildFragmentManager(), "category_form");
+    private void openRestaurantForm(@Nullable Restaurant restaurant) {
+        RestaurantFormDialogFragment dialog = RestaurantFormDialogFragment.newInstance(restaurant);
+        dialog.setRestaurantFormListener(this::handleFormSubmission);
+        dialog.show(getChildFragmentManager(), "restaurant_form");
     }
 
-    private void handleFormSubmission(@Nullable String categoryId, CategoryUpsertRequest request, CategoryFormDialogFragment dialog) {
+    private void handleFormSubmission(@Nullable String restaurantId, RestaurantUpsertRequest request, RestaurantFormDialogFragment dialog) {
         dialog.setLoading(true);
-        RepositoryCallback<Category> callback = new RepositoryCallback<Category>() {
+        RepositoryCallback<Restaurant> callback = new RepositoryCallback<Restaurant>() {
             @Override
-            public void onComplete(BaseResponse<Category> response) {
+            public void onComplete(BaseResponse<Restaurant> response) {
                 dialog.setLoading(false);
                 if (!response.isSuccess()) {
-                    Context context = getContext();
-                    if (context != null) {
-                        ToastBanner.showError(response.getMessage());
-                    }
+                    ToastBanner.showError(response.getMessage());
                     return;
                 }
                 dialog.dismissAllowingStateLoss();
-                boolean isCreate = TextUtils.isEmpty(categoryId);
-                ToastBanner.showSuccess(getString(isCreate ? R.string.toast_category_created : R.string.toast_category_updated));
-                loadCategories(true);
+                boolean isCreate = restaurantId == null || restaurantId.isEmpty();
+                String message = requireContext().getString(isCreate ? R.string.toast_restaurant_created : R.string.toast_restaurant_updated);
+                ToastBanner.showSuccess(message);
+                loadRestaurants(true);
             }
         };
 
-        if (TextUtils.isEmpty(categoryId)) {
-            categoryRepository.create(request, callback);
+        if (restaurantId == null || restaurantId.isEmpty()) {
+            restaurantRepository.create(request, callback);
         } else {
-            categoryRepository.update(categoryId, request, callback);
+            restaurantRepository.update(restaurantId, request, callback);
         }
     }
 
     @Override
-    public void onEdit(Category category) {
-        openCategoryForm(category);
+    public void onEdit(Restaurant restaurant) {
+        openRestaurantForm(restaurant);
     }
 
     @Override
-    public void onStatusChange(Category category, boolean isActive) {
-        categoryRepository.updateStatus(category.getId(), isActive, new RepositoryCallback<Category>() {
-            @Override
-            public void onComplete(BaseResponse<Category> response) {
-                Context context = getContext();
-                if (!response.isSuccess()) {
-                    if (context != null) {
-                        ToastBanner.showError(response.getMessage());
-                    }
-                    loadCategories(false);
-                    return;
-                }
-                ToastBanner.showSuccess(getString(R.string.toast_category_updated));
-                loadCategories(false);
-            }
-        });
-    }
-
-    @Override
-    public void onDelete(Category category) {
+    public void onStatusChange(Restaurant restaurant, boolean isActive) {
+        String message = isActive ? 
+                getString(R.string.dialog_confirm_activate, restaurant.getName()) :
+                getString(R.string.dialog_confirm_deactivate, restaurant.getName());
+        
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.dialog_delete_category_title)
-                .setMessage(getString(R.string.dialog_delete_category_message, category.getName()))
-                .setNegativeButton(R.string.action_cancel, null)
-                .setPositiveButton(R.string.action_delete, (dialog, which) -> deleteCategory(category))
+                .setTitle(R.string.dialog_status_title)
+                .setMessage(message)
+                .setNegativeButton(R.string.action_cancel, (dialog, which) -> loadRestaurants(false))
+                .setPositiveButton(R.string.action_confirm, (dialog, which) -> performStatusChange(restaurant, isActive))
                 .show();
     }
 
-    private void deleteCategory(Category category) {
-        categoryRepository.delete(category.getId(), new RepositoryCallback<Void>() {
+    private void performStatusChange(Restaurant restaurant, boolean isActive) {
+        RestaurantUpsertRequest request = new RestaurantUpsertRequest(
+                null, null, null, null, null, isActive, null, null, null, null, null
+        );
+        restaurantRepository.update(restaurant.getId(), request, new RepositoryCallback<Restaurant>() {
             @Override
-            public void onComplete(BaseResponse<Void> response) {
-                Context context = getContext();
+            public void onComplete(BaseResponse<Restaurant> response) {
                 if (!response.isSuccess()) {
-                    if (context != null) {
-                        ToastBanner.showError(response.getMessage());
-                    }
+                    ToastBanner.showError(response.getMessage());
+                    loadRestaurants(false);
                     return;
                 }
-                ToastBanner.showSuccess(getString(R.string.toast_category_deleted));
-                loadCategories(true);
+                ToastBanner.showSuccess(requireContext().getString(R.string.toast_restaurant_updated));
+                loadRestaurants(false);
             }
         });
     }
 
     @Override
-    public void onViewItems(Category category) {
-        ToastBanner.showSuccess(getString(R.string.action_view_items) + " - " + category.getName());
+    public void onDelete(Restaurant restaurant) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.dialog_delete_restaurant_title)
+                .setMessage(getString(R.string.dialog_delete_restaurant_message, restaurant.getName()))
+                .setNegativeButton(R.string.action_cancel, null)
+                .setPositiveButton(R.string.action_delete, (dialog, which) -> deleteRestaurant(restaurant))
+                .show();
+    }
+
+    private void deleteRestaurant(Restaurant restaurant) {
+        restaurantRepository.delete(restaurant.getId(), new RepositoryCallback<Void>() {
+            @Override
+            public void onComplete(BaseResponse<Void> response) {
+                if (!response.isSuccess()) {
+                    ToastBanner.showError(response.getMessage());
+                    return;
+                }
+                ToastBanner.showSuccess(requireContext().getString(R.string.toast_restaurant_deleted));
+                loadRestaurants(true);
+            }
+        });
+    }
+
+    @Override
+    public void onViewMenu(Restaurant restaurant) {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).navigateToMenuWithRestaurant(restaurant);
+        }
     }
 }

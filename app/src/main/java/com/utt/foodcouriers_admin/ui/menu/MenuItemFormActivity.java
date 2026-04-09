@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -55,7 +55,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
     private String preSelectedRestaurantId;
     private Uri selectedImageUri;
     private boolean isUploading = false;
-    
+
     private List<Category> categories = new ArrayList<>();
     private List<Restaurant> restaurants = new ArrayList<>();
     private Category selectedCategory;
@@ -70,7 +70,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
         menuRepository = MenuRepository.getInstance();
         storageRepository = StorageRepository.getInstance();
-        
+
         initViews();
         handleIntent();
         loadInitialData();
@@ -137,7 +137,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
         swAvailable.setChecked(currentItem.isAvailable());
         swFeatured.setChecked(currentItem.isFeatured());
         etImage.setText(currentItem.getImageUrl());
-        
+
         loadPreviewImage(currentItem.getImageUrl());
     }
 
@@ -171,7 +171,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
             @Override
             public void onError(String error) {
-                Toast.makeText(MenuItemFormActivity.this, "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
+                ToastBanner.showError("Lỗi tải danh mục: " + error);
             }
         });
 
@@ -186,7 +186,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         } else {
@@ -198,7 +198,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         }
@@ -238,7 +238,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
         btnSave.setOnClickListener(v -> saveMenuItem());
         btnChooseImage.setOnClickListener(v -> openImagePicker());
         ivMenuImage.setOnClickListener(v -> handleImageClick());
-        
+
         if (etImage != null) {
             etImage.addTextChangedListener(new android.text.TextWatcher() {
                 @Override
@@ -277,7 +277,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
         isUploading = true;
         setLoading(true);
-        Toast.makeText(this, R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+        ToastBanner.showWarning(getString(R.string.toast_uploading));
 
         storageRepository.uploadImage(this, selectedImageUri, "menu_items", new RepositoryCallback<String>() {
             @Override
@@ -292,10 +292,10 @@ public class MenuItemFormActivity extends AppCompatActivity {
                         etImage.setText(imageUrl);
                     }
                     loadPreviewImage(imageUrl);
-                    Toast.makeText(MenuItemFormActivity.this, R.string.toast_upload_success, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess(getString(R.string.toast_upload_success));
                 } else {
                     String errorMsg = response.getMessage();
-                    Toast.makeText(MenuItemFormActivity.this, getString(R.string.toast_upload_failed, errorMsg), Toast.LENGTH_LONG).show();
+                    ToastBanner.showError(getString(R.string.toast_upload_failed, errorMsg));
                 }
                 setLoading(false);
             }
@@ -353,9 +353,9 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
     private void saveMenuItem() {
         if (!validateInput()) return;
-        
+
         if (isUploading) {
-            Toast.makeText(this, R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+            ToastBanner.showWarning(getString(R.string.toast_uploading));
             return;
         }
 
@@ -371,7 +371,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
         
         String sortOrderStr = etSortOrder.getText().toString();
         currentItem.setSortOrder(TextUtils.isEmpty(sortOrderStr) ? 0 : Integer.parseInt(sortOrderStr));
-        
+
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
         currentItem.setImageUrl(imageUrl);
 
@@ -380,28 +380,28 @@ public class MenuItemFormActivity extends AppCompatActivity {
             menuRepository.updateMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
                 @Override
                 public void onSuccess(MenuItem result) {
-                    Toast.makeText(MenuItemFormActivity.this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess("Cập nhật thành công");
                     finish();
                 }
 
                 @Override
                 public void onError(String error) {
                     btnSave.setEnabled(true);
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi: " + error);
                 }
             });
         } else {
             menuRepository.createMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
                 @Override
                 public void onSuccess(MenuItem result) {
-                    Toast.makeText(MenuItemFormActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess("Thêm thành công");
                     finish();
                 }
 
                 @Override
                 public void onError(String error) {
                     btnSave.setEnabled(true);
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi: " + error);
                 }
             });
         }

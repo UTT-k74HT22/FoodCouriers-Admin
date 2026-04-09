@@ -12,7 +12,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -228,7 +229,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
         isUploading = true;
         setLoading(false);
-        Toast.makeText(requireContext(), R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+        ToastBanner.showWarning(getString(R.string.toast_uploading));
 
         storageRepository.uploadImage(requireContext(), selectedImageUri, "categories", new RepositoryCallback<String>() {
             @Override
@@ -238,10 +239,10 @@ public class CategoryFormDialogFragment extends DialogFragment {
                     String imageUrl = response.getData();
                     etImage.setText(imageUrl);
                     loadPreviewImage(imageUrl);
-                    Toast.makeText(requireContext(), R.string.toast_upload_success, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess(getString(R.string.toast_upload_success));
                 } else {
                     String errorMsg = response.getMessage();
-                    Toast.makeText(requireContext(), getString(R.string.toast_upload_failed, errorMsg), Toast.LENGTH_LONG).show();
+                    ToastBanner.showError(getString(R.string.toast_upload_failed, errorMsg));
                 }
                 setLoading(false);
             }
@@ -253,7 +254,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
             return;
         }
         if (isUploading) {
-            Toast.makeText(requireContext(), R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+            ToastBanner.showWarning(getString(R.string.toast_uploading));
             return;
         }
         String name = etName.getText() != null ? etName.getText().toString().trim() : null;
