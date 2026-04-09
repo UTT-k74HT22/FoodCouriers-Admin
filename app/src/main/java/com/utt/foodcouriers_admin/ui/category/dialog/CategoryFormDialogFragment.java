@@ -112,7 +112,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.dialog_category_form, container, false);
+        return inflater.inflate(R.layout.category_form, container, false);
     }
 
     @Override
