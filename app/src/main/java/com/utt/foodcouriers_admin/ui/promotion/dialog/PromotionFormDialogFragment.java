@@ -145,7 +145,7 @@ public class PromotionFormDialogFragment extends DialogFragment {
         if (etName != null && tilName != null && isEdit) {
             etName.setText(promotion.getName());
         }
-        if (etDescription != null && tilDescription != null) {
+        if (etDescription != null && tilDescription != null && isEdit) {
             etDescription.setText(promotion.getDescription());
         }
         if (swIsActive != null) {
