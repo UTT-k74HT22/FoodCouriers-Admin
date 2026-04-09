@@ -1,6 +1,7 @@
 package com.utt.foodcouriers_admin.ui.restaurant.dialog;
 
 import android.app.TimePickerDialog;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -12,14 +13,20 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import com.bumptech.glide.Glide;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
+import com.utt.foodcouriers_admin.data.common.BaseResponse;
+import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
+import com.utt.foodcouriers_admin.data.repository.StorageRepository;
 import com.utt.foodcouriers_admin.data.request.RestaurantUpsertRequest;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 public class RestaurantFormDialogFragment extends DialogFragment {
 
@@ -41,6 +48,9 @@ public class RestaurantFormDialogFragment extends DialogFragment {
 
     private Restaurant restaurant;
     private RestaurantFormListener listener;
+    private StorageRepository storageRepository;
+    private Uri selectedImageUri;
+    private boolean isUploading = false;
 
     private EditText etName;
     private EditText etDescription;
@@ -73,6 +83,16 @@ public class RestaurantFormDialogFragment extends DialogFragment {
     private int closeHour = 22;
     private int closeMinute = 0;
 
+    private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    selectedImageUri = uri;
+                    uploadSelectedImage();
+                }
+            }
+    );
+
     private final TextWatcher previewWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -104,6 +124,7 @@ public class RestaurantFormDialogFragment extends DialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        storageRepository = StorageRepository.getInstance();
         initViews(view);
         bindRestaurant();
         setupListeners();
@@ -129,7 +150,7 @@ public class RestaurantFormDialogFragment extends DialogFragment {
 
     public void setLoading(boolean loading) {
         if (btnSave != null) {
-            btnSave.setEnabled(!loading);
+            btnSave.setEnabled(!loading && !isUploading);
             btnSave.setText(loading ? getString(R.string.restaurant_saving) : getString(R.string.action_save));
         }
         if (progressSave != null) {
@@ -206,6 +227,7 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         etName.setHint(R.string.label_name_vi_en);
         etDescription.setHint(R.string.label_description_vi_en);
         etImage.setHint(R.string.label_image_url);
+        etImage.setEnabled(false);
         etAddress.setHint(R.string.label_address_vi_en);
         etPhone.setHint(R.string.label_phone_vi_en);
         tvOpenTime.setHint(R.string.label_open_time);
@@ -285,6 +307,8 @@ public class RestaurantFormDialogFragment extends DialogFragment {
 
         inputOpenTime.setOnClickListener(v -> showTimePicker(true));
         inputCloseTime.setOnClickListener(v -> showTimePicker(false));
+
+        ivPreview.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
 
         etName.addTextChangedListener(previewWatcher);
         etDescription.addTextChangedListener(previewWatcher);
@@ -420,5 +444,34 @@ public class RestaurantFormDialogFragment extends DialogFragment {
                 .error(R.drawable.ic_restaurant)
                 .centerCrop()
                 .into(ivPreview);
+    }
+
+    private void uploadSelectedImage() {
+        if (selectedImageUri == null) return;
+
+        isUploading = true;
+        setLoading(true);
+        ToastBanner.showWarning(getString(R.string.toast_uploading));
+
+        storageRepository.uploadImage(requireContext(), selectedImageUri, "restaurants", new RepositoryCallback<String>() {
+            @Override
+            public void onComplete(BaseResponse<String> response) {
+                isUploading = false;
+                if (response.isSuccess()) {
+                    String imageUrl = response.getData();
+                    if (restaurant != null) {
+                        restaurant.setImageUrl(imageUrl);
+                    }
+                    if (etImage != null) {
+                        etImage.setText(imageUrl);
+                    }
+                    loadPreviewImage(imageUrl);
+                    ToastBanner.showSuccess(getString(R.string.toast_upload_success));
+                } else {
+                    ToastBanner.showError(getString(R.string.toast_upload_failed, response.getMessage()));
+                }
+                setLoading(false);
+            }
+        });
     }
 }

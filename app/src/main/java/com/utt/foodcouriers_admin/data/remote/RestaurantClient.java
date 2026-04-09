@@ -1,7 +1,6 @@
 package com.utt.foodcouriers_admin.data.remote;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.annotations.SerializedName;
 import com.utt.foodcouriers_admin.data.model.Restaurant;

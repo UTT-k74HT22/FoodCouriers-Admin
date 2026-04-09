@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -277,7 +277,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
         isUploading = true;
         setLoading(true);
-        Toast.makeText(this, R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+        ToastBanner.showWarning(getString(R.string.toast_uploading));
 
         storageRepository.uploadImage(this, selectedImageUri, "menu_items", new RepositoryCallback<String>() {
             @Override
@@ -292,10 +292,10 @@ public class MenuItemFormActivity extends AppCompatActivity {
                         etImage.setText(imageUrl);
                     }
                     loadPreviewImage(imageUrl);
-                    Toast.makeText(MenuItemFormActivity.this, R.string.toast_upload_success, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showSuccess(getString(R.string.toast_upload_success));
                 } else {
                     String errorMsg = response.getMessage();
-                    Toast.makeText(MenuItemFormActivity.this, getString(R.string.toast_upload_failed, errorMsg), Toast.LENGTH_LONG).show();
+                    ToastBanner.showError(getString(R.string.toast_upload_failed, errorMsg));
                 }
                 setLoading(false);
             }
@@ -355,7 +355,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
         if (!validateInput()) return;
 
         if (isUploading) {
-            Toast.makeText(this, R.string.toast_uploading, Toast.LENGTH_SHORT).show();
+            ToastBanner.showWarning(getString(R.string.toast_uploading));
             return;
         }
 
