@@ -7,6 +7,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
+
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -112,6 +114,8 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
         menuRepository.getCategories(new RepositoryCallback<List<Category>>() {
             @Override
             public void onComplete(BaseResponse<List<Category>> response) {
+                if (!isAdded()) return;
+                
                 if (!response.isSuccess()) {
                     Toast.makeText(getContext(), "Lỗi tải danh mục: " + response.getMessage(), Toast.LENGTH_SHORT).show();
                     return;
@@ -124,11 +128,6 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                     adapter.setCategories(categories);
                 }
             }
-
-            @Override
-            public void onError(String error) {
-                ToastBanner.showError("Lỗi tải danh mục: " + error);
-            }
         });
 
         // Load Restaurants
@@ -136,24 +135,24 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
             menuRepository.getRestaurants(new BaseSupabaseClient.ApiCallback<Restaurant[]>() {
                 @Override
                 public void onSuccess(Restaurant[] result) {
-                    handleRestaurantsLoaded(result);
+                    if (isAdded()) handleRestaurantsLoaded(result);
                 }
 
                 @Override
                 public void onError(String error) {
-                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
+                    if (isAdded()) ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         } else {
             menuRepository.getRestaurantsForStaff(currentUser.getId(), new BaseSupabaseClient.ApiCallback<Restaurant[]>() {
                 @Override
                 public void onSuccess(Restaurant[] result) {
-                    handleRestaurantsLoaded(result);
+                    if (isAdded()) handleRestaurantsLoaded(result);
                 }
 
                 @Override
                 public void onError(String error) {
-                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
+                    if (isAdded()) ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         }
@@ -292,11 +291,11 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
         menuRepository.getMenuItems(restaurantId, categoryId, new RepositoryCallback<List<MenuItem>>() {
             @Override
             public void onComplete(BaseResponse<List<MenuItem>> response) {
+                if (!isAdded()) return;
+
                 if (!response.isSuccess()) {
-                    if (isAdded()) {
-                        Toast.makeText(getContext(), "Lỗi tải món ăn: " + response.getMessage(), Toast.LENGTH_SHORT).show();
-                        renderMenuItems(new ArrayList<>());
-                    }
+                    Toast.makeText(getContext(), "Lỗi tải món ăn: " + response.getMessage(), Toast.LENGTH_SHORT).show();
+                    renderMenuItems(new ArrayList<>());
                     return;
                 }
                 allMenuItems.clear();
@@ -317,14 +316,6 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                     }
                     renderMenuItems(displayItems);
                 } else {
-                    renderMenuItems(new ArrayList<>());
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                if (isAdded()) {
-                    ToastBanner.showError("Lỗi tải món ăn: " + error);
                     renderMenuItems(new ArrayList<>());
                 }
             }
@@ -355,20 +346,17 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
         menuRepository.updateAvailability(item.getId(), isAvailable, new RepositoryCallback<MenuItem>() {
             @Override
             public void onComplete(BaseResponse<MenuItem> response) {
-                if (isAdded()) {
+                if (!isAdded()) return;
+
+                if (response.isSuccess()) {
                     ToastBanner.showSuccess("Trạng thái đã được cập nhật");
                     int index = allMenuItems.indexOf(item);
                     if (index != -1) {
-                        allMenuItems.set(index, updatedItem);
+                        allMenuItems.set(index, item);
                     }
                     adapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onError(String error) {
-                if (isAdded()) {
-                    ToastBanner.showError("Lỗi cập nhật trạng thái: " + error);
+                } else {
+                    ToastBanner.showError("Lỗi cập nhật trạng thái: " + response.getMessage());
                     item.setAvailable(!isAvailable); 
                     adapter.notifyDataSetChanged();
                 }
@@ -385,16 +373,13 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
                     menuRepository.delete(item.getId(), new RepositoryCallback<Void>() {
                         @Override
                         public void onComplete(BaseResponse<Void> response) {
-                            if (isAdded()) {
+                            if (!isAdded()) return;
+
+                            if (response.isSuccess()) {
                                 ToastBanner.showSuccess("Món ăn đã được xóa");
                                 loadMenuItems();
-                            }
-                        }
-
-                        @Override
-                        public void onError(String error) {
-                            if (isAdded()) {
-                                ToastBanner.showError("Lỗi xóa món ăn: " + error);
+                            } else {
+                                ToastBanner.showError("Lỗi xóa món ăn: " + response.getMessage());
                             }
                         }
                     });

@@ -81,8 +81,6 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
         setupSearch();
         setupFilters();
         setupSwipeRefresh();
-        fabAdd.setOnClickListener(v -> openPromotionForm(null));
-        btnRetry.setOnClickListener(v -> loadPromotions(true));
         loadPromotions(true);
     }
 
@@ -105,6 +103,13 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
         stateError = view.findViewById(R.id.state_error);
         tvErrorMessage = view.findViewById(R.id.tv_state_error_message);
         btnRetry = view.findViewById(R.id.btn_retry);
+
+        if (fabAdd != null) {
+            fabAdd.setOnClickListener(v -> openPromotionForm(null));
+        }
+        if (btnRetry != null) {
+            btnRetry.setOnClickListener(v -> loadPromotions(true));
+        }
     }
 
     private void setupToolbar() {
@@ -115,6 +120,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void setupRecyclerView() {
+        if (getContext() == null || rvPromotions == null) return;
         rvPromotions.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new PromotionAdapter();
         adapter.setListener(this);
@@ -122,6 +128,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void setupSearch() {
+        if (searchView == null) return;
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -141,6 +148,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void setupFilters() {
+        if (chipGroup == null) return;
         chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.chip_active) {
                 statusFilter = StatusFilter.ACTIVE;
@@ -156,6 +164,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void setupSwipeRefresh() {
+        if (swipeRefreshLayout == null) return;
         swipeRefreshLayout.setOnRefreshListener(() -> loadPromotions(false));
         swipeRefreshLayout.setColorSchemeResources(R.color.primary);
     }
@@ -169,6 +178,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void loadPromotions(boolean showLoading) {
+        if (promotionRepository == null) return;
         if (showLoading) {
             showLoadingState();
         }
@@ -177,7 +187,9 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
         promotionRepository.getPromotions(resolveQueryParam(), isActiveFilter, isValidFilter, PAGE_LIMIT, 0, new RepositoryCallback<List<Promotion>>() {
             @Override
             public void onComplete(BaseResponse<List<Promotion>> response) {
-                swipeRefreshLayout.setRefreshing(false);
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
                 if (!response.isSuccess() || response.getData() == null) {
                     showErrorState(response.getMessage());
                     return;
@@ -188,43 +200,47 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
                     showEmptyState();
                 } else {
                     showContentState();
-                    adapter.submitList(new ArrayList<>(currentItems));
+                    if (adapter != null) {
+                        adapter.submitList(new ArrayList<>(currentItems));
+                    }
                 }
             }
         });
     }
 
     private void showLoadingState() {
-        stateContainer.setVisibility(View.VISIBLE);
-        stateLoading.setVisibility(View.VISIBLE);
-        stateEmpty.setVisibility(View.GONE);
-        stateError.setVisibility(View.GONE);
-        swipeRefreshLayout.setVisibility(View.GONE);
+        if (stateContainer != null) stateContainer.setVisibility(View.VISIBLE);
+        if (stateLoading != null) stateLoading.setVisibility(View.VISIBLE);
+        if (stateEmpty != null) stateEmpty.setVisibility(View.GONE);
+        if (stateError != null) stateError.setVisibility(View.GONE);
+        if (swipeRefreshLayout != null) swipeRefreshLayout.setVisibility(View.GONE);
     }
 
     private void showContentState() {
-        stateContainer.setVisibility(View.GONE);
-        swipeRefreshLayout.setVisibility(View.VISIBLE);
-        stateLoading.setVisibility(View.GONE);
-        stateEmpty.setVisibility(View.GONE);
-        stateError.setVisibility(View.GONE);
+        if (stateContainer != null) stateContainer.setVisibility(View.GONE);
+        if (swipeRefreshLayout != null) swipeRefreshLayout.setVisibility(View.VISIBLE);
+        if (stateLoading != null) stateLoading.setVisibility(View.GONE);
+        if (stateEmpty != null) stateEmpty.setVisibility(View.GONE);
+        if (stateError != null) stateError.setVisibility(View.GONE);
     }
 
     private void showEmptyState() {
-        stateContainer.setVisibility(View.VISIBLE);
-        stateEmpty.setVisibility(View.VISIBLE);
-        stateLoading.setVisibility(View.GONE);
-        stateError.setVisibility(View.GONE);
-        swipeRefreshLayout.setVisibility(View.GONE);
+        if (stateContainer != null) stateContainer.setVisibility(View.VISIBLE);
+        if (stateEmpty != null) stateEmpty.setVisibility(View.VISIBLE);
+        if (stateLoading != null) stateLoading.setVisibility(View.GONE);
+        if (stateError != null) stateError.setVisibility(View.GONE);
+        if (swipeRefreshLayout != null) swipeRefreshLayout.setVisibility(View.GONE);
     }
 
     private void showErrorState(String message) {
-        stateContainer.setVisibility(View.VISIBLE);
-        stateError.setVisibility(View.VISIBLE);
-        stateLoading.setVisibility(View.GONE);
-        stateEmpty.setVisibility(View.GONE);
-        swipeRefreshLayout.setVisibility(View.GONE);
-        tvErrorMessage.setText(TextUtils.isEmpty(message) ? getString(R.string.error_generic) : message);
+        if (stateContainer != null) stateContainer.setVisibility(View.VISIBLE);
+        if (stateError != null) stateError.setVisibility(View.VISIBLE);
+        if (stateLoading != null) stateLoading.setVisibility(View.GONE);
+        if (stateEmpty != null) stateEmpty.setVisibility(View.GONE);
+        if (swipeRefreshLayout != null) swipeRefreshLayout.setVisibility(View.GONE);
+        if (tvErrorMessage != null) {
+            tvErrorMessage.setText(TextUtils.isEmpty(message) ? getString(R.string.error_generic) : message);
+        }
     }
 
     private String resolveQueryParam() {
@@ -249,16 +265,19 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void openPromotionForm(@Nullable Promotion promotion) {
+        if (!isAdded() || getChildFragmentManager() == null) return;
         PromotionFormDialogFragment dialog = PromotionFormDialogFragment.newInstance(promotion);
         dialog.setPromotionFormListener(this::handleFormSubmission);
         dialog.show(getChildFragmentManager(), "promotion_form");
     }
 
     private void handleFormSubmission(@Nullable String promotionId, PromotionUpsertRequest request, PromotionFormDialogFragment dialog) {
+        if (promotionRepository == null || dialog == null) return;
         dialog.setLoading(true);
         RepositoryCallback<Promotion> callback = new RepositoryCallback<Promotion>() {
             @Override
             public void onComplete(BaseResponse<Promotion> response) {
+                if (dialog == null) return;
                 dialog.setLoading(false);
                 if (!response.isSuccess()) {
                     Context context = getContext();
@@ -292,6 +311,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
 
     @Override
     public void onStatusChange(Promotion promotion, boolean isActive) {
+        if (promotionRepository == null || promotion == null || promotion.getId() == null) return;
         promotionRepository.updateStatus(promotion.getId(), isActive, new RepositoryCallback<Promotion>() {
             @Override
             public void onComplete(BaseResponse<Promotion> response) {
@@ -313,7 +333,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
 
     @Override
     public void onDelete(Promotion promotion) {
-        if (getContext() == null) return;
+        if (getContext() == null || promotion == null || promotion.getName() == null) return;
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.dialog_delete_promotion_title)
                 .setMessage(getString(R.string.dialog_delete_promotion_message, promotion.getName()))
@@ -323,6 +343,7 @@ public class PromotionFragment extends Fragment implements PromotionAdapter.Prom
     }
 
     private void deletePromotion(Promotion promotion) {
+        if (promotionRepository == null || promotion == null || promotion.getId() == null) return;
         promotionRepository.delete(promotion.getId(), new RepositoryCallback<Void>() {
             @Override
             public void onComplete(BaseResponse<Void> response) {

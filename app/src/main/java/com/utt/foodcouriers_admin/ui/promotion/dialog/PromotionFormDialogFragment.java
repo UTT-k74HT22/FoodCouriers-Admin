@@ -58,7 +58,7 @@ public class PromotionFormDialogFragment extends DialogFragment {
     private CircularProgressIndicator progressSave;
     private TextView tvFormTitle;
 
-    private String selectedDiscountType = "percent";
+    private String selectedDiscountType = "fixed";
     private Calendar startDateCalendar = Calendar.getInstance();
     private Calendar endDateCalendar = Calendar.getInstance();
     private boolean isStartDateSelected = false;
@@ -158,7 +158,13 @@ public class PromotionFormDialogFragment extends DialogFragment {
                 etDiscountType.setText("percent".equals(selectedDiscountType) ? 
                     getString(R.string.label_discount_percent) : getString(R.string.label_discount_fixed));
             }
-            
+        } else {
+            if (etDiscountType != null) {
+                etDiscountType.setText(getString(R.string.label_discount_fixed));
+            }
+        }
+
+if (isEdit) {
             if (etDiscountValue != null && promotion.getDiscountValue() > 0) {
                 etDiscountValue.setText(String.valueOf(promotion.getDiscountValue()));
             }
@@ -203,29 +209,13 @@ public class PromotionFormDialogFragment extends DialogFragment {
         if (btnCancel != null) {
             btnCancel.setOnClickListener(v -> dismiss());
         }
-        if (etDiscountType != null) {
-            etDiscountType.setOnClickListener(v -> showDiscountTypeDialog());
-        }
+        
         if (etStartDate != null) {
             etStartDate.setOnClickListener(v -> showDatePicker(true));
         }
         if (etEndDate != null) {
             etEndDate.setOnClickListener(v -> showDatePicker(false));
         }
-    }
-
-    private void showDiscountTypeDialog() {
-        if (getContext() == null) return;
-        String[] options = {getString(R.string.label_discount_percent), getString(R.string.label_discount_fixed)};
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.label_discount_type)
-                .setItems(options, (dialog, which) -> {
-                    selectedDiscountType = which == 0 ? "percent" : "fixed";
-                    if (etDiscountType != null) {
-                        etDiscountType.setText(options[which]);
-                    }
-                })
-                .show();
     }
 
     private void showDatePicker(boolean isStartDate) {
@@ -317,10 +307,7 @@ public class PromotionFormDialogFragment extends DialogFragment {
                 if (tilDiscountValue != null) tilDiscountValue.setError(getString(R.string.error_discount_value_invalid));
                 isValid = false;
             }
-            if ("percent".equals(selectedDiscountType) && value != null && value > 100) {
-                if (tilDiscountValue != null) tilDiscountValue.setError(getString(R.string.error_discount_value_invalid));
-                isValid = false;
-            }
+            
         }
 
         if (!isStartDateSelected) {

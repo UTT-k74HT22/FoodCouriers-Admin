@@ -139,7 +139,7 @@
     <string name="label_discount_percent">Giảm theo %</string>
     <string name="label_discount_fixed">Giảm cố định</string>
     <string name="label_discount_value">Giá trị giảm / Discount value</string>
-    <string name="label_min_order">Đơn tối thiểu (VNĐ)</string>
+    <string name="label_min_order_vnd">Đơn tối thiểu (VNĐ)</string>
     <string name="label_max_discount">Giảm tối đa (VNĐ)</string>
     <string name="label_start_date">Ngày bắt đầu</string>
     <string name="label_end_date">Ngày kết thúc</string>

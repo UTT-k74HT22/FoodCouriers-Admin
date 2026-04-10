@@ -7,6 +7,8 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
+
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -46,6 +48,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
     private TextInputEditText etName, etDescription, etPrice, etCategory, etRestaurant, etSortOrder;
     private MaterialSwitch swAvailable, swFeatured;
     private MaterialButton btnSave;
+    private MaterialButton btnCancel;
     private MaterialButton btnChooseImage;
     private ImageView ivMenuImage;
     private TextInputEditText etImage;
@@ -105,6 +108,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
         swAvailable = findViewById(R.id.sw_is_available);
         swFeatured = findViewById(R.id.sw_is_featured);
+        btnCancel = findViewById(R.id.btn_cancel);
         btnSave = findViewById(R.id.btn_save);
         btnChooseImage = findViewById(R.id.btn_choose_image);
         ivMenuImage = findViewById(R.id.iv_menu_image);
@@ -174,11 +178,6 @@ public class MenuItemFormActivity extends AppCompatActivity {
                     setupCategoryFilter();
                 }
             }
-
-            @Override
-            public void onError(String error) {
-                ToastBanner.showError("Lỗi tải danh mục: " + error);
-            }
         });
 
         // Load Restaurants
@@ -241,6 +240,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
     private void setupListeners() {
         etCategory.setOnClickListener(v -> showCategoryPicker());
         etRestaurant.setOnClickListener(v -> showRestaurantPicker());
+        btnCancel.setOnClickListener(v -> finish());
         btnSave.setOnClickListener(v -> saveMenuItem());
         btnChooseImage.setOnClickListener(v -> openImagePicker());
         ivMenuImage.setOnClickListener(v -> handleImageClick());
@@ -397,9 +397,14 @@ public class MenuItemFormActivity extends AppCompatActivity {
         if (isEditMode) {
             menuRepository.update(currentItem.getId(), request, new RepositoryCallback<MenuItem>() {
                 @Override
-                public void onSuccess(MenuItem result) {
-                    ToastBanner.showSuccess("Cập nhật thành công");
-                    finish();
+                public void onComplete(BaseResponse<MenuItem> response) {
+                    btnSave.setEnabled(true);
+                    if (response.isSuccess()) {
+                        ToastBanner.showSuccess("Cập nhật thành công");
+                        finish();
+                    } else {
+                        ToastBanner.showError("Lỗi: " + response.getMessage());
+                    }
                 }
             });
         } else {
@@ -407,21 +412,12 @@ public class MenuItemFormActivity extends AppCompatActivity {
                 @Override
                 public void onComplete(BaseResponse<MenuItem> response) {
                     btnSave.setEnabled(true);
-                    ToastBanner.showError("Lỗi: " + error);
-                }
-            });
-        } else {
-            menuRepository.createMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
-                @Override
-                public void onSuccess(MenuItem result) {
-                    ToastBanner.showSuccess("Thêm thành công");
-                    finish();
-                }
-
-                @Override
-                public void onError(String error) {
-                    btnSave.setEnabled(true);
-                    ToastBanner.showError("Lỗi: " + error);
+                    if (response.isSuccess()) {
+                        ToastBanner.showSuccess("Thêm thành công");
+                        finish();
+                    } else {
+                        ToastBanner.showError("Lỗi: " + response.getMessage());
+                    }
                 }
             });
         }
@@ -455,7 +451,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        getOnBackPressedDispatcher().onBackPressed();
         return true;
     }
 }
