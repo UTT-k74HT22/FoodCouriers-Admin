@@ -7,12 +7,13 @@ public class SupabaseConfig {
     public static final String SUPABASE_URL = BuildConfig.SUPABASE_URL;
     public static final String SUPABASE_ANON_KEY = BuildConfig.SUPABASE_ANON_KEY;
     public static final String SUPABASE_STORAGE_BUCKET = BuildConfig.SUPABASE_STORAGE_BUCKET;
-    
+    public static final String ADMIN_API_BASE_URL = BuildConfig.ADMIN_API_BASE_URL;
+
     public static final String AUTH_URL = SUPABASE_URL + "/auth/v1";
     public static final String REST_URL = SUPABASE_URL + "/rest/v1";
     public static final String STORAGE_URL = SUPABASE_URL + "/storage/v1";
     public static final String STORAGE_OBJECT_URL = STORAGE_URL + "/object/public/" + SUPABASE_STORAGE_BUCKET;
-    
+
     public static final String HEADER_AUTH = "apikey";
     public static final String HEADER_AUTHORIZATION = "Authorization";
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
@@ -39,8 +40,16 @@ public class SupabaseConfig {
                 && SUPABASE_ANON_KEY != null && !SUPABASE_ANON_KEY.isBlank();
     }
 
+    public static boolean isAdminApiConfigured() {
+        return ADMIN_API_BASE_URL != null && !ADMIN_API_BASE_URL.isBlank();
+    }
+
     public static String debugSummary() {
         return "url=" + SUPABASE_URL + ", anonKeyPrefix=" + maskKey(SUPABASE_ANON_KEY);
+    }
+
+    public static String adminDebugSummary() {
+        return "adminApiBaseUrl=" + ADMIN_API_BASE_URL;
     }
 
     private static String maskKey(String value) {

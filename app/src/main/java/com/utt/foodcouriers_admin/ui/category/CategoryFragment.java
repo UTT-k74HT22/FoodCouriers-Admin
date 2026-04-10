@@ -9,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -30,6 +30,8 @@ import com.utt.foodcouriers_admin.data.repository.CategoryRepository;
 import com.utt.foodcouriers_admin.data.request.CategoryUpsertRequest;
 import com.utt.foodcouriers_admin.ui.category.adapter.CategoryAdapter;
 import com.utt.foodcouriers_admin.ui.category.dialog.CategoryFormDialogFragment;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -253,17 +255,13 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
                 if (!response.isSuccess()) {
                     Context context = getContext();
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     return;
                 }
                 dialog.dismissAllowingStateLoss();
                 boolean isCreate = TextUtils.isEmpty(categoryId);
-                Context context = getContext();
-                if (context != null) {
-                    String message = context.getString(isCreate ? R.string.toast_category_created : R.string.toast_category_updated);
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-                }
+                ToastBanner.showSuccess(getString(isCreate ? R.string.toast_category_created : R.string.toast_category_updated));
                 loadCategories(true);
             }
         };
@@ -288,14 +286,12 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
                 Context context = getContext();
                 if (!response.isSuccess()) {
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     loadCategories(false);
                     return;
                 }
-                if (context != null) {
-                    Toast.makeText(context, context.getString(R.string.toast_category_updated), Toast.LENGTH_SHORT).show();
-                }
+                ToastBanner.showSuccess(getString(R.string.toast_category_updated));
                 loadCategories(false);
             }
         });
@@ -318,13 +314,11 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
                 Context context = getContext();
                 if (!response.isSuccess()) {
                     if (context != null) {
-                        Toast.makeText(context, response.getMessage(), Toast.LENGTH_SHORT).show();
+                        ToastBanner.showError(response.getMessage());
                     }
                     return;
                 }
-                if (context != null) {
-                    Toast.makeText(context, context.getString(R.string.toast_category_deleted), Toast.LENGTH_SHORT).show();
-                }
+                ToastBanner.showSuccess(getString(R.string.toast_category_deleted));
                 loadCategories(true);
             }
         });
@@ -332,10 +326,6 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
 
     @Override
     public void onViewItems(Category category) {
-        Context context = getContext();
-        if (context != null) {
-            String label = context.getString(R.string.action_view_items) + " - " + category.getName();
-            Toast.makeText(context, label, Toast.LENGTH_SHORT).show();
-        }
+        ToastBanner.showSuccess(getString(R.string.action_view_items) + " - " + category.getName());
     }
 }

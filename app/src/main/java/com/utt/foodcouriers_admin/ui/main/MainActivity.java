@@ -7,7 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -19,11 +19,15 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.utt.foodcouriers_admin.R;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
+import com.utt.foodcouriers_admin.data.model.User;
 import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
 import com.utt.foodcouriers_admin.ui.shipper.ShipperFragment;
+import com.utt.foodcouriers_admin.ui.restaurant.RestaurantFragment;
+import com.utt.foodcouriers_admin.ui.user.UserFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -72,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
             loadFragment(new DashboardFragment(), "Dashboard");
             String loginSuccessMessage = getIntent().getStringExtra(LoginActivity.EXTRA_LOGIN_SUCCESS_MESSAGE);
             if (loginSuccessMessage != null && !loginSuccessMessage.isBlank()) {
-                Toast.makeText(this, loginSuccessMessage, Toast.LENGTH_LONG).show();
+                ToastBanner.showSuccess(loginSuccessMessage);
             }
         }
     }
@@ -93,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(Boolean result) {
                         if (result != null && result) {
-                            Toast.makeText(MainActivity.this, "Session refreshed", Toast.LENGTH_SHORT).show();
+                            ToastBanner.showSuccess("Phiên làm việc đã được làm mới");
                         }
                     }
 
@@ -123,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_orders) {
                     title = "Quản lý đơn hàng";
                 } else if (id == R.id.nav_restaurants) {
+                    fragment = new RestaurantFragment();
                     title = "Quản lý nhà hàng";
                 } else if (id == R.id.nav_categories) {
                     fragment = new CategoryFragment();
@@ -131,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new MenuItemFragment();
                     title = "Quản lý món ăn";
                 } else if (id == R.id.nav_users) {
+                    fragment = new UserFragment();
                     title = "Quản lý người dùng";
                 } else if (id == R.id.nav_shippers) {
                     fragment = new ShipperFragment();
@@ -149,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
                 if (fragment != null) {
                     loadFragment(fragment, title);
                 } else {
-                    Toast.makeText(MainActivity.this, "Module \"" + title + "\" đang được phát triển", Toast.LENGTH_SHORT).show();
+                    ToastBanner.showWarning("Module \"" + title + "\" đang được phát triển");
                     if (toolbar != null) toolbar.setTitle(title);
                 }
 
@@ -196,12 +202,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void navigateToMenuWithRestaurant(Restaurant restaurant) {
+        Fragment fragment = MenuItemFragment.newInstance(restaurant);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+        if (toolbar != null) {
+            toolbar.setTitle("Menu: " + restaurant.getName());
+        }
+        if (drawerLayout != null) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+    }
+
     private void performLogout() {
         sessionManager.clearSession();
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
-        Toast.makeText(this, "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+        ToastBanner.showSuccess("Đã đăng xuất");
     }
 }

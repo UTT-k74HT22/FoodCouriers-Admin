@@ -61,15 +61,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/AdminTextAppearance.Small"
                     android:textColor="@color/warning"
-                    tools:text="★ 4.5" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/spacing_sm"
-                    android:textAppearance="@style/AdminTextAppearance.Small"
-                    android:textColor="@color/text_secondary"
-                    tools:text="(128 đánh giá)" />
+                    tools:text="★ 4.5 (128)" />
 
             </LinearLayout>
 
@@ -94,12 +86,29 @@
                 android:textColor="@color/success"
                 tools:text="Mở cửa" />
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_is_active"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                app:showText="false" />
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:orientation="horizontal">
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/sw_is_active"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:showText="false" />
+
+                <ImageButton
+                    android:id="@+id/btn_more"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="@dimen/spacing_xs"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/action_more"
+                    android:src="@drawable/ic_more_vert"
+                    app:tint="@color/text_secondary" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

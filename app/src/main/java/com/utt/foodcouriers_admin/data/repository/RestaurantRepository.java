@@ -82,6 +82,25 @@ public class RestaurantRepository extends BaseSupabaseRepository implements Crud
         updateItem(TABLE, eqIdFilter(id.trim()), request, Restaurant[].class, callback);
     }
 
+    public void getAll(String searchQuery, Boolean isActive, int limit, int offset, RepositoryCallback<List<Restaurant>> callback) {
+        StringBuilder queryBuilder = new StringBuilder("?select=*&order=created_at.desc");
+
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            queryBuilder.append("&name=ilike.*").append(searchQuery.trim()).append("*");
+        }
+        if (isActive != null) {
+            queryBuilder.append("&is_active=eq.").append(isActive);
+        }
+        if (limit > 0) {
+            queryBuilder.append("&limit=").append(limit);
+        }
+        if (offset >= 0) {
+            queryBuilder.append("&offset=").append(offset);
+        }
+
+        fetchList(TABLE, queryBuilder.toString(), Restaurant[].class, callback);
+    }
+
     private BaseResponse<Void> validate(RestaurantUpsertRequest request, boolean requireMainFields) {
         if (request == null) {
             return BaseResponse.error("VALIDATION_ERROR", "Restaurant payload is required");

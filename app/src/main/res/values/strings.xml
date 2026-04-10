@@ -43,6 +43,41 @@
     <string name="dialog_delete_category_message">Danh mục %1$s sẽ bị xóa khỏi hệ thống.</string>
     <string name="error_field_required">Trường này là bắt buộc</string>
     <string name="category_saving">Đang lưu…</string>
+
+    <string name="restaurant_title">Nhà hàng</string>
+    <string name="restaurant_subtitle">Restaurant manager</string>
+    <string name="restaurant_search_hint">Tìm kiếm nhà hàng / Search restaurants</string>
+    <string name="restaurant_filter_all">Tất cả</string>
+    <string name="restaurant_filter_active">Đang hoạt động</string>
+    <string name="restaurant_filter_hidden">Đang ẩn</string>
+    <string name="restaurant_loading">Đang tải nhà hàng…</string>
+    <string name="restaurant_empty_title">Chưa có nhà hàng</string>
+    <string name="restaurant_empty_subtitle">Nhấn + để tạo nhà hàng đầu tiên</string>
+    <string name="restaurant_error_title">Không thể tải nhà hàng</string>
+    <string name="action_add_restaurant">Nhà hàng mới</string>
+    <string name="dialog_restaurant_title_create">Thêm nhà hàng</string>
+    <string name="dialog_restaurant_title_edit">Cập nhật nhà hàng</string>
+    <string name="dialog_status_title">Xác nhận thay đổi trạng thái</string>
+    <string name="dialog_confirm_activate">Bạn có muốn kích hoạt nhà hàng \"%1$s\"?</string>
+    <string name="dialog_confirm_deactivate">Bạn có muốn ẩn nhà hàng \"%1$s\"?</string>
+    <string name="action_confirm">Xác nhận</string>
+    <string name="restaurant_label_info">Nhập thông tin nhà hàng</string>
+    <string name="restaurant_label_name">Tên nhà hàng</string>
+    <string name="restaurant_label_description">Mô tả nhà hàng</string>
+    <string name="restaurant_saving">Đang lưu…</string>
+    <string name="toast_restaurant_created">Tạo nhà hàng thành công</string>
+    <string name="toast_restaurant_updated">Cập nhật nhà hàng thành công</string>
+    <string name="toast_restaurant_deleted">Đã xóa nhà hàng</string>
+    <string name="toast_restaurant_opened">Đã mở cửa nhà hàng</string>
+    <string name="toast_restaurant_closed">Đã đóng cửa nhà hàng</string>
+    <string name="dialog_delete_restaurant_title">Xóa nhà hàng?</string>
+    <string name="dialog_delete_restaurant_message">Nhà hàng %1$s sẽ bị xóa khỏi hệ thống.</string>
+    <string name="label_address_vi_en">Địa chỉ / Address</string>
+    <string name="label_phone_vi_en">Số điện thoại / Phone</string>
+    <string name="label_open_time">Giờ mở cửa</string>
+    <string name="label_close_time">Giờ đóng cửa</string>
+    <string name="label_delivery_fee">Phí giao hàng</string>
+    <string name="label_min_order">Đơn tối thiểu</string>
     <string name="status_inactive">Inactive</string>
     <string name="shipper_title">Quản lý shipper</string>
     <string name="shipper_subtitle">Shipper manager</string>
@@ -80,4 +115,49 @@
     <string name="toast_upload_failed">Tải ảnh lên thất bại: %1$s</string>
     <string name="toast_no_image_selected">Chưa chọn ảnh</string>
     <string name="toast_image_zoom_failed">Không thể tải ảnh</string>
+
+    <string name="user_empty_title">Chưa có người dùng</string>
+    <string name="user_empty_message">Hãy tạo tài khoản staff hoặc client đầu tiên</string>
+    <string name="user_error_load_title">Không thể tải danh sách người dùng</string>
+    <string name="user_status_active">Hoạt động</string>
+    <string name="user_status_inactive">Tạm khóa</string>
+    <string name="user_action_create_account">Tạo tài khoản</string>
+    <string name="user_action_creating">Đang tạo…</string>
+    <string name="user_dialog_title_create">Tạo User / Staff</string>
+    <string name="user_dialog_subtitle_create">Tạo auth account và profile người dùng từ màn Admin</string>
+    <string name="user_label_full_name">Họ tên</string>
+    <string name="user_label_email">Email</string>
+    <string name="user_label_phone">Số điện thoại</string>
+    <string name="user_label_password">Mật khẩu tạm</string>
+    <string name="user_label_confirm_password">Xác nhận mật khẩu</string>
+    <string name="user_label_role">Vai trò</string>
+    <string name="user_label_avatar_url">Avatar URL</string>
+    <string name="user_label_active">Kích hoạt ngay sau khi tạo</string>
+    <string name="user_role_client">Client</string>
+    <string name="user_role_staff">Staff</string>
+    <string name="user_error_password_min">Mật khẩu tối thiểu 6 ký tự</string>
+    <string name="user_error_password_mismatch">Mật khẩu xác nhận chưa khớp</string>
+    <string name="user_create_success">Tạo tài khoản thành công</string>
+    <string name="user_activate_success">Đã kích hoạt tài khoản</string>
+    <string name="user_deactivate_success">Đã vô hiệu hóa tài khoản</string>
+    <string name="dialog_create_user_title">Tạo User / Staff</string>
+    <string name="dialog_create_user_subtitle">Tạo auth account và profile người dùng từ màn Admin</string>
+    <string name="action_choose_avatar">Chọn ảnh đại diện</string>
+    <string name="label_full_name">Họ tên</string>
+    <string name="label_password">Mật khẩu</string>
+    <string name="label_confirm_password">Xác nhận mật khẩu</string>
+    <string name="label_role">Vai trò</string>
+    <string name="label_active">Kích hoạt</string>
+
+    <!-- User edit dialog -->
+    <string name="user_dialog_title_edit">Chỉnh sửa người dùng</string>
+    <string name="user_dialog_subtitle_edit">Cập nhật thông tin tài khoản</string>
+    <string name="user_action_save_changes">Lưu thay đổi</string>
+    <string name="user_action_saving">Đang lưu…</string>
+    <string name="user_update_success">Cập nhật người dùng thành công</string>
+    <string name="user_label_email_readonly">Email không thể thay đổi tại đây</string>
+
+    <!-- Confirm toggle active -->
+    <string name="user_confirm_activate">Kích hoạt tài khoản \"%1$s\"? Người dùng sẽ có thể đăng nhập trở lại.</string>
+    <string name="user_confirm_deactivate">Vô hiệu hóa tài khoản \"%1$s\"? Người dùng sẽ không thể đăng nhập.</string>
 </resources>
