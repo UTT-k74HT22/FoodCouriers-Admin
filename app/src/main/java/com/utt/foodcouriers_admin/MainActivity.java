@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.TextView;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
-
-import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +17,7 @@ import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
+import com.utt.foodcouriers_admin.ui.order.OrderFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -116,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new DashboardFragment();
                     title = "Dashboard";
                 } else if (id == R.id.nav_orders) {
+                    fragment = new OrderFragment();
                     title = "Quản lý đơn hàng";
                 } else if (id == R.id.nav_restaurants) {
                     title = "Quản lý nhà hàng";

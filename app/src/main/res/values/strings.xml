@@ -160,4 +160,24 @@
     <!-- Confirm toggle active -->
     <string name="user_confirm_activate">Kích hoạt tài khoản \"%1$s\"? Người dùng sẽ có thể đăng nhập trở lại.</string>
     <string name="user_confirm_deactivate">Vô hiệu hóa tài khoản \"%1$s\"? Người dùng sẽ không thể đăng nhập.</string>
+
+    <string name="order_accept">Nhận đơn</string>
+    <string name="order_reject">Từ chối</string>
+    <string name="order_next_step">Bước tiếp</string>
+    <string name="order_assign_shipper">Gán shipper</string>
+    <string name="order_change_shipper">Đổi shipper</string>
+    <string name="order_shipper_unassigned">Chưa gán shipper</string>
+    <string name="order_shipper_section">Phân công giao hàng</string>
+    <string name="order_meta_summary">%1$d món • %2$s</string>
+    <string name="order_empty_title">Chưa có đơn hàng</string>
+    <string name="order_empty_message">Không có đơn ở trạng thái %1$s</string>
+    <string name="order_unknown_customer">Khách chưa xác định</string>
+    <string name="order_unknown_restaurant">Nhà hàng chưa xác định</string>
+    <string name="order_action_next_template">Chuyển sang %1$s</string>
+    <string name="order_assign_shipper_success">Đã cập nhật shipper cho đơn hàng</string>
+    <string name="order_locked_message">Đơn hàng đã khóa, không thể thao tác</string>
+    <string name="order_not_found">Không tìm thấy đơn hàng</string>
+    <string name="order_note_empty">Không có ghi chú</string>
+    <string name="order_base_mock_warning">Khung base đang dùng dữ liệu mock, logic realtime sẽ nối sau</string>
+    <string name="order_base_mock_updated">Đã cập nhật trạng thái trên base flow mock</string>
 </resources>

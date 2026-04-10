@@ -25,6 +25,7 @@ import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
+import com.utt.foodcouriers_admin.ui.order.OrderFragment;
 import com.utt.foodcouriers_admin.ui.shipper.ShipperFragment;
 import com.utt.foodcouriers_admin.ui.restaurant.RestaurantFragment;
 import com.utt.foodcouriers_admin.ui.user.UserFragment;
@@ -125,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new DashboardFragment();
                     title = "Dashboard";
                 } else if (id == R.id.nav_orders) {
+                    fragment = new OrderFragment();
                     title = "Quản lý đơn hàng";
                 } else if (id == R.id.nav_restaurants) {
                     fragment = new RestaurantFragment();

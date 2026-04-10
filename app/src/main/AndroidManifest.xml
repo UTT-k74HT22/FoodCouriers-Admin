@@ -33,6 +33,11 @@
             android:label="Món ăn"
             android:theme="@style/Theme.FoodCouriersAdmin" />
         <activity
+            android:name=".ui.order.OrderDetailActivity"
+            android:exported="false"
+            android:label="Chi tiết đơn hàng"
+            android:theme="@style/Theme.FoodCouriersAdmin" />
+        <activity
             android:name=".ui.auth.RegisterActivity"
             android:exported="false" />
 
