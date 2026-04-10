@@ -2,23 +2,19 @@ package com.utt.foodcouriers_admin;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SubMenu;
 import android.widget.TextView;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
+import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
-import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;

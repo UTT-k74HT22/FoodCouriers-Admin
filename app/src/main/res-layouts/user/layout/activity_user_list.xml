@@ -68,6 +68,17 @@
             android:layout_height="match_parent"
             android:visibility="gone" />
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_add_user"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/spacing_lg"
+            android:contentDescription="@string/user_action_create_account"
+            android:src="@android:drawable/ic_input_add"
+            app:backgroundTint="@color/primary"
+            app:tint="@android:color/white" />
+
     </FrameLayout>
 
 </LinearLayout>
