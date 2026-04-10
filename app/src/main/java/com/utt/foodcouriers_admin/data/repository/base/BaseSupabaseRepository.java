@@ -180,7 +180,7 @@ public abstract class BaseSupabaseRepository {
                 .build();
     }
 
-    private Request.Builder withDefaultHeaders(Request.Builder builder) {
+    protected Request.Builder withDefaultHeaders(Request.Builder builder) {
         builder.addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
                 .addHeader(SupabaseConfig.HEADER_CONTENT_TYPE, SupabaseConfig.CONTENT_TYPE_JSON);
 
@@ -234,7 +234,7 @@ public abstract class BaseSupabaseRepository {
      * @param fallbackMessage thông báo lỗi
      * @param <T> kiểu dữ liệu trả về
      */
-    private <T> void executeMutation(
+    protected <T> void executeMutation(
             Request request,
             Class<T[]> clazz,
             RepositoryCallback<T> callback,
