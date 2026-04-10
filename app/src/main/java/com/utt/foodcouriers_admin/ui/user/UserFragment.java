@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.utt.foodcouriers_admin.R;
@@ -30,6 +31,7 @@ import com.utt.foodcouriers_admin.data.request.AdminCreateUserAccountRequest;
 import com.utt.foodcouriers_admin.data.request.UserUpdateRequest;
 import com.utt.foodcouriers_admin.ui.user.adapter.UserAdapter;
 import com.utt.foodcouriers_admin.ui.user.dialog.CreateUserDialogFragment;
+import com.utt.foodcouriers_admin.ui.user.dialog.EditUserDialogFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -222,22 +224,37 @@ public class UserFragment extends Fragment implements UserAdapter.UserActionList
 
     @Override
     public void onUserClick(User user) {
-        Toast.makeText(requireContext(), user.getFullName(), Toast.LENGTH_SHORT).show();
+        EditUserDialogFragment dialog = EditUserDialogFragment.newInstance(user);
+        dialog.setEditUserListener(this::loadUsers);
+        dialog.show(getChildFragmentManager(), "edit_user_dialog");
     }
 
     @Override
     public void onStatusChange(User user, boolean isActive) {
+        String message = isActive
+                ? getString(R.string.user_confirm_activate, user.getFullName())
+                : getString(R.string.user_confirm_deactivate, user.getFullName());
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.dialog_status_title)
+                .setMessage(message)
+                .setNegativeButton(R.string.action_cancel, (dialog, which) -> loadUsers())
+                .setPositiveButton(R.string.action_confirm, (dialog, which) -> performStatusChange(user, isActive))
+                .show();
+    }
+
+    private void performStatusChange(User user, boolean isActive) {
         UserUpdateRequest request = new UserUpdateRequest();
         request.setIsActive(isActive);
         userRepository.update(user.getId(), request, new RepositoryCallback<User>() {
             @Override
             public void onComplete(BaseResponse<User> response) {
+                if (!isAdded()) return;
                 if (!response.isSuccess()) {
                     Toast.makeText(requireContext(), response.getMessage(), Toast.LENGTH_SHORT).show();
-                    loadUsers();
-                    return;
+                } else {
+                    Toast.makeText(requireContext(), isActive ? R.string.user_activate_success : R.string.user_deactivate_success, Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(requireContext(), isActive ? R.string.user_activate_success : R.string.user_deactivate_success, Toast.LENGTH_SHORT).show();
                 loadUsers();
             }
         });
