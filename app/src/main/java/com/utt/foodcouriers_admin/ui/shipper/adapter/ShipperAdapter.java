@@ -16,15 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
-import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.model.ShipperProfile;
 import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 
-public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperViewHolder> {
+public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.ShipperViewHolder> {
 
     public interface ShipperActionListener {
-        void onEdit(Shipper shipper);
-        void onStatusChange(Shipper shipper, boolean isActive);
-        void onDelete(Shipper shipper);
+        void onEdit(ShipperProfile shipper);
+        void onStatusChange(ShipperProfile shipper, boolean isActive);
+        void onDelete(ShipperProfile shipper);
     }
 
     private ShipperActionListener listener;
@@ -49,9 +49,9 @@ public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperV
         holder.bind(getItem(position));
     }
 
-    private static final DiffUtil.ItemCallback<Shipper> DIFF_CALLBACK = new DiffUtil.ItemCallback<Shipper>() {
+    private static final DiffUtil.ItemCallback<ShipperProfile> DIFF_CALLBACK = new DiffUtil.ItemCallback<ShipperProfile>() {
         @Override
-        public boolean areItemsTheSame(@NonNull Shipper oldItem, @NonNull Shipper newItem) {
+        public boolean areItemsTheSame(@NonNull ShipperProfile oldItem, @NonNull ShipperProfile newItem) {
             if (oldItem.getId() == null || newItem.getId() == null) {
                 return false;
             }
@@ -59,7 +59,7 @@ public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperV
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull Shipper oldItem, @NonNull Shipper newItem) {
+        public boolean areContentsTheSame(@NonNull ShipperProfile oldItem, @NonNull ShipperProfile newItem) {
             return TextUtils.equals(oldItem.getFullName(), newItem.getFullName())
                     && TextUtils.equals(oldItem.getPhone(), newItem.getPhone())
                     && TextUtils.equals(oldItem.getAvatarUrl(), newItem.getAvatarUrl())
@@ -89,10 +89,10 @@ public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperV
             btnMore = itemView.findViewById(R.id.btn_more);
         }
 
-        void bind(Shipper shipper) {
+        void bind(ShipperProfile shipper) {
             tvName.setText(shipper.getFullName());
             tvPhone.setText(TextUtils.isEmpty(shipper.getPhone()) ? "--" : shipper.getPhone());
-            tvOrdersCompleted.setText(itemView.getContext().getString(R.string.shipper_orders_count, 0));
+            tvOrdersCompleted.setText(itemView.getContext().getString(R.string.shipper_orders_count, shipper.getTotalDelivered()));
 
             tvStatus.setText(shipper.isActive() ? R.string.shipper_status_available : R.string.shipper_status_unavailable);
             tvStatus.setBackgroundResource(shipper.isActive() ? R.drawable.admin_badge_success : R.drawable.admin_badge_pending);
@@ -124,14 +124,14 @@ public class ShipperAdapter extends ListAdapter<Shipper, ShipperAdapter.ShipperV
             itemView.setContentDescription(shipper.getFullName() + ", " + (shipper.isActive() ? itemView.getContext().getString(R.string.status_active) : itemView.getContext().getString(R.string.status_inactive)));
         }
 
-        private void showPopupMenu(View anchor, Shipper shipper) {
+        private void showPopupMenu(View anchor, ShipperProfile shipper) {
             PopupMenu popupMenu = new PopupMenu(anchor.getContext(), anchor);
             popupMenu.inflate(R.menu.menu_shipper_item);
             popupMenu.setOnMenuItemClickListener(menuItem -> handleMenuItem(menuItem, shipper));
             popupMenu.show();
         }
 
-        private boolean handleMenuItem(MenuItem menuItem, Shipper shipper) {
+        private boolean handleMenuItem(MenuItem menuItem, ShipperProfile shipper) {
             if (listener == null) {
                 return false;
             }
