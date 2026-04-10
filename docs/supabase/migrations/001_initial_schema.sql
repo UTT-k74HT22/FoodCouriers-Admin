@@ -1,3 +1,4 @@
+
 -- =====================================================
 -- Food Ordering App - Database Schema Migration
 -- Version: 1.0
@@ -97,6 +98,7 @@ CREATE INDEX idx_restaurant_staff_restaurant ON public.restaurant_staff(restaura
 CREATE TABLE public.categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
+    description TEXT,
     image_url TEXT,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT true,

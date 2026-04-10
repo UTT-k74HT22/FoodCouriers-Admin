@@ -160,4 +160,58 @@
     <!-- Confirm toggle active -->
     <string name="user_confirm_activate">Kích hoạt tài khoản \"%1$s\"? Người dùng sẽ có thể đăng nhập trở lại.</string>
     <string name="user_confirm_deactivate">Vô hiệu hóa tài khoản \"%1$s\"? Người dùng sẽ không thể đăng nhập.</string>
+
+    <!-- Promotion -->
+    <string name="promotion_title">Khuyến mãi</string>
+    <string name="promotion_subtitle">Promotion manager</string>
+    <string name="promotion_search_hint">Tìm kiếm mã KM / Search promotions</string>
+    <string name="promotion_filter_all">Tất cả</string>
+    <string name="promotion_filter_active">Đang hoạt động</string>
+    <string name="promotion_filter_inactive">Đang ẩn</string>
+    <string name="promotion_filter_valid">Còn hiệu lực</string>
+    <string name="promotion_loading">Đang tải khuyến mãi…</string>
+    <string name="promotion_empty_title">Chưa có khuyến mãi</string>
+    <string name="promotion_empty_subtitle">Nhấn + để tạo khuyến mãi đầu tiên</string>
+    <string name="promotion_error_title">Không thể tải khuyến mãi</string>
+    <string name="action_add_promotion">Khuyến mãi mới</string>
+    <string name="dialog_promotion_title_create">Thêm khuyến mãi</string>
+    <string name="dialog_promotion_title_edit">Cập nhật khuyến mãi</string>
+
+    <string name="label_promotion_code">Mã khuyến mãi / Code</string>
+    <string name="label_promotion_name">Tên khuyến mãi / Name</string>
+    <string name="label_promotion_description">Mô tả / Description</string>
+    <string name="label_discount_type">Loại giảm giá</string>
+    <string name="label_discount_percent">Giảm theo %</string>
+    <string name="label_discount_fixed">Giảm cố định</string>
+    <string name="label_discount_value">Giá trị giảm / Discount value</string>
+    <string name="label_min_order_vnd">Đơn tối thiểu (VNĐ)</string>
+    <string name="label_max_discount">Giảm tối đa (VNĐ)</string>
+    <string name="label_start_date">Ngày bắt đầu</string>
+    <string name="label_end_date">Ngày kết thúc</string>
+    <string name="label_usage_limit">Số lần sử dụng tối đa</string>
+    <string name="label_usage_unlimited">Không giới hạn</string>
+    <string name="label_promotion_status">Trạng thái hiển thị</string>
+
+    <string name="discount_percent">Giảm %1$d%%</string>
+    <string name="discount_fixed">Giảm %1$s</string>
+    <string name="min_order">Đơn tối thiểu: %1$s</string>
+    <string name="usage_count">Đã dùng: %1$d/%2$d</string>
+    <string name="usage_unlimited">Đã dùng: %1$d (%2$s)</string>
+    <string name="status_expired">Hết hạn</string>
+
+    <string name="toast_promotion_created">Tạo khuyến mãi thành công</string>
+    <string name="toast_promotion_updated">Cập nhật khuyến mãi thành công</string>
+    <string name="toast_promotion_deleted">Đã xóa khuyến mãi</string>
+    <string name="toast_promotion_status_updated">Cập nhật trạng thái thành công</string>
+    <string name="dialog_delete_promotion_title">Xóa khuyến mãi?</string>
+    <string name="dialog_delete_promotion_message">Khuyến mãi %1$s sẽ bị xóa khỏi hệ thống.</string>
+    <string name="promotion_saving">Đang lưu…</string>
+
+    <string name="error_code_required">Mã khuyến mãi là bắt buộc</string>
+    <string name="error_code_exists">Mã khuyến mãi đã tồn tại</string>
+    <string name="error_invalid_date_range">Ngày kết thúc phải lớn hơn ngày bắt đầu</string>
+    <string name="error_discount_value_invalid">Giá trị giảm phải lớn hơn 0</string>
+
+    <string name="more_options">Thêm tùy chọn</string>
+    <string name="edit">Sửa</string>
 </resources>
