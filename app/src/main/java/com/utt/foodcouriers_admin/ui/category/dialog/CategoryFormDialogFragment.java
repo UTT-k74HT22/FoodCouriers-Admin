@@ -40,7 +40,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
     }
 
     private static final String ARG_CATEGORY = "arg_category";
-    private static final int PICK_IMAGE_REQUEST = 1001;
 
     public static CategoryFormDialogFragment newInstance(@Nullable Category category) {
         CategoryFormDialogFragment fragment = new CategoryFormDialogFragment();
@@ -59,9 +58,10 @@ public class CategoryFormDialogFragment extends DialogFragment {
     private boolean isUploading = false;
 
     private TextInputLayout tilName;
+    private TextInputLayout tilDescription;
     private TextInputLayout tilSortOrder;
     private TextInputEditText etName;
-
+    private TextInputEditText etDescription;
     private TextInputEditText etImage;
     private TextInputEditText etSortOrder;
     private MaterialSwitch switchActive;
@@ -129,9 +129,8 @@ public class CategoryFormDialogFragment extends DialogFragment {
         if (etName != null) {
             etName.removeTextChangedListener(previewWatcher);
         }
-
-        if (etImage != null) {
-            etImage.removeTextChangedListener(previewWatcher);
+        if (etDescription != null) {
+            etDescription.removeTextChangedListener(previewWatcher);
         }
     }
 
@@ -157,8 +156,10 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
     private void initViews(View view) {
         tilName = view.findViewById(R.id.til_name);
+        tilDescription = view.findViewById(R.id.til_description);
         tilSortOrder = view.findViewById(R.id.til_sort_order);
         etName = view.findViewById(R.id.et_name);
+        etDescription = view.findViewById(R.id.et_description);
         etImage = view.findViewById(R.id.et_image);
         etSortOrder = view.findViewById(R.id.et_sort_order);
         switchActive = view.findViewById(R.id.switch_active);
@@ -181,6 +182,7 @@ public class CategoryFormDialogFragment extends DialogFragment {
         switchActive.setChecked(isEdit ? category.isActive() : true);
         if (isEdit) {
             etName.setText(category.getName());
+            etDescription.setText(category.getDescription());
             etImage.setText(category.getImageUrl());
             etSortOrder.setText(String.valueOf(category.getSortOrder()));
             loadPreviewImage(category.getImageUrl());
@@ -196,6 +198,8 @@ public class CategoryFormDialogFragment extends DialogFragment {
         ivPreview.setOnClickListener(v -> handleImageClick());
 
         etName.addTextChangedListener(previewWatcher);
+        etDescription.addTextChangedListener(previewWatcher);
+        
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -258,9 +262,10 @@ public class CategoryFormDialogFragment extends DialogFragment {
             return;
         }
         String name = etName.getText() != null ? etName.getText().toString().trim() : null;
+        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : null;
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
         Integer sortOrder = parseSortOrder();
-        CategoryUpsertRequest request = new CategoryUpsertRequest(name, imageUrl, sortOrder, switchActive.isChecked());
+        CategoryUpsertRequest request = new CategoryUpsertRequest(name, description, imageUrl, sortOrder, switchActive.isChecked());
         if (listener != null) {
             listener.onSubmit(category != null ? category.getId() : null, request, this);
         }
@@ -306,8 +311,9 @@ public class CategoryFormDialogFragment extends DialogFragment {
 
     private void updatePreview() {
         String name = etName.getText() != null ? etName.getText().toString().trim() : "";
+        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
         tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_name_vi_en) : name);
-        tvPreviewDescription.setText("");
+        tvPreviewDescription.setText(TextUtils.isEmpty(description) ? "" : description);
     }
 
     private void loadPreviewImage(@Nullable String url) {

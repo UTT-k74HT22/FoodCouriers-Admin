@@ -24,7 +24,7 @@ public class CategoryRepository extends BaseSupabaseRepository implements CrudRe
 
     @Override
     public void getAll(RepositoryCallback<List<Category>> callback) {
-        getCategories(null, null, 50, 0, callback);
+        getCategories(null, null, 100, 0, callback);
     }
 
     public void getCategories(String searchQuery,
@@ -41,7 +41,8 @@ public class CategoryRepository extends BaseSupabaseRepository implements CrudRe
         }
         if (!TextUtils.isEmpty(searchQuery)) {
             String encoded = Uri.encode("%" + searchQuery.trim() + "%");
-            query.append("&name=ilike.").append(encoded);
+            // Tìm kiếm trong cả tên và mô tả bằng toán tử OR của PostgREST
+            query.append("&or=(name.ilike.").append(encoded).append(",description.ilike.").append(encoded).append(")");
         }
         if (isActive != null) {
             query.append("&is_active=eq.").append(isActive ? "true" : "false");
@@ -102,7 +103,7 @@ public class CategoryRepository extends BaseSupabaseRepository implements CrudRe
         updateItem(
                 TABLE,
                 eqIdFilter(id.trim()),
-                new CategoryUpsertRequest(null, null, null, isActive),
+                new CategoryUpsertRequest(null, null, null, null, isActive),
                 Category[].class,
                 callback
         );
