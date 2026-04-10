@@ -4,23 +4,38 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.utt.foodcouriers_admin.R;
+import com.utt.foodcouriers_admin.data.model.DashboardStats;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+
+import androidx.core.content.ContextCompat;
 
 public class DashboardFragment extends Fragment {
 
+    private DashboardViewModel viewModel;
+    
+    // Khai báo các view thống kê
+    private View cardOrders, cardRevenue, cardProcessing, cardCompleted;
     private RecyclerView rvRecentOrders;
     private RecyclerView rvTopItems;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // Nạp giao diện activity_dashboard.xml
         return inflater.inflate(R.layout.activity_dashboard, container, false);
     }
 
@@ -28,20 +43,108 @@ public class DashboardFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        rvRecentOrders = view.findViewById(R.id.rv_recent_orders);
-        rvTopItems = view.findViewById(R.id.rv_top_items);
+        // 1. Ánh xạ các View từ XML
+        initViews(view);
+        
+        // 2. Cấu hình ban đầu cho các thẻ (Đặt icon và nhãn)
+        setupStatsCards();
 
+        // 3. Khởi tạo ViewModel
+        viewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+
+        // 4. "Đăng ký" lắng nghe dữ liệu từ ViewModel
+        observeViewModel();
+
+        // 5. Bắt đầu tải dữ liệu từ Supabase
+        viewModel.loadDashboardData();
+        
         setupRecentOrders();
         setupTopItems();
     }
 
+    private void initViews(View view) {
+        // Ánh xạ các thẻ include từ XML
+        cardOrders = view.findViewById(R.id.stat_orders_today);
+        cardRevenue = view.findViewById(R.id.stat_revenue);
+        cardProcessing = view.findViewById(R.id.stat_processing);
+        cardCompleted = view.findViewById(R.id.stat_completed);
+        
+        rvRecentOrders = view.findViewById(R.id.rv_recent_orders);
+        rvTopItems = view.findViewById(R.id.rv_top_items);
+    }
+
+    private void setupStatsCards() {
+        if (getContext() == null) return;
+        // Cấu hình thẻ Tổng đơn
+        updateStatCard(cardOrders, R.drawable.ic_orders, "Tổng đơn hôm nay", "0", R.color.primary);
+        // Cấu hình thẻ Doanh thu
+        updateStatCard(cardRevenue, R.drawable.ic_revenue, "Doanh thu", "0đ", R.color.success);
+        // Cấu hình thẻ Đang xử lý
+        updateStatCard(cardProcessing, R.drawable.ic_pending, "Đang xử lý", "0", R.color.warning);
+        // Cấu hình thẻ Hoàn thành
+        updateStatCard(cardCompleted, R.drawable.ic_completed, "Hoàn thành", "0", R.color.info);
+    }
+
+    private void observeViewModel() {
+        // Khi có dữ liệu thống kê mới
+        viewModel.getStats().observe(getViewLifecycleOwner(), stats -> {
+            if (stats != null) {
+                displayStats(stats);
+            }
+        });
+
+        // Khi có lỗi xảy ra
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null) {
+                Toast.makeText(getContext(), "Lỗi: " + error, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void displayStats(DashboardStats stats) {
+        // Cập nhật con số thực tế vào các thẻ
+        updateStatValue(cardOrders, String.valueOf(stats.getTotalOrders()));
+        updateStatValue(cardRevenue, formatCurrency(stats.getTotalRevenue()));
+        updateStatValue(cardProcessing, String.valueOf(stats.getPendingOrders()));
+        updateStatValue(cardCompleted, String.valueOf(stats.getCompletedOrders()));
+    }
+
+    /**
+     * Hàm tiện ích để cập nhật nội dung cho 1 thẻ thống kê (stat_card)
+     */
+    private void updateStatCard(View card, int iconRes, String label, String value, int colorRes) {
+        if (getContext() == null) return;
+        
+        ImageView icon = card.findViewById(R.id.stat_icon);
+        TextView tvLabel = card.findViewById(R.id.stat_label);
+        TextView tvValue = card.findViewById(R.id.stat_value);
+
+        int color = ContextCompat.getColor(getContext(), colorRes);
+
+        icon.setImageResource(iconRes);
+        icon.setColorFilter(color);
+        tvLabel.setText(label);
+        tvValue.setText(value);
+        tvValue.setTextColor(color);
+    }
+
+    private void updateStatValue(View card, String value) {
+        TextView tvValue = card.findViewById(R.id.stat_value);
+        tvValue.setText(value);
+    }
+
+    private String formatCurrency(double amount) {
+        NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        return formatter.format(amount);
+    }
+
     private void setupRecentOrders() {
         rvRecentOrders.setLayoutManager(new LinearLayoutManager(getContext()));
-        // TODO: Set adapter with real data from API
+        // TODO: Viết Adapter cho đơn hàng sau
     }
 
     private void setupTopItems() {
         rvTopItems.setLayoutManager(new LinearLayoutManager(getContext()));
-        // TODO: Set adapter with real data from API
+        // TODO: Viết Adapter cho top món ăn sau
     }
 }
