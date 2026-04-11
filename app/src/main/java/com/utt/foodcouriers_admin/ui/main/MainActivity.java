@@ -22,6 +22,7 @@ import com.utt.foodcouriers_admin.ui.auth.LoginActivity;
 import com.utt.foodcouriers_admin.ui.dashboard.DashboardFragment;
 import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
+import com.utt.foodcouriers_admin.ui.order.OrderFragment;
 import com.utt.foodcouriers_admin.ui.shipper.ShipperFragment;
 import com.utt.foodcouriers_admin.ui.shipper.ShipperProfileFragment;
 import com.utt.foodcouriers_admin.ui.promotion.PromotionFragment;
@@ -161,6 +162,8 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new ShipperProfileFragment();
                     title = "Hồ sơ của tôi";
                 } else if (id == R.id.nav_orders) {
+                    fragment = new OrderFragment();
+                    title = "Quản lý đơn hàng";
                     title = isShipper ? "Đơn hàng của tôi" : "Quản lý đơn hàng";
                 } else if (id == R.id.nav_restaurants) {
                     fragment = new RestaurantFragment();
