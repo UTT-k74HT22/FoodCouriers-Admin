@@ -162,9 +162,13 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new ShipperProfileFragment();
                     title = "Hồ sơ của tôi";
                 } else if (id == R.id.nav_orders) {
-                    fragment = new OrderFragment();
-                    title = "Quản lý đơn hàng";
-                    title = isShipper ? "Đơn hàng của tôi" : "Quản lý đơn hàng";
+                    if (isShipper) {
+                        fragment = new com.utt.foodcouriers_admin.ui.shipper.DeliveryManagementFragment();
+                        title = "Đơn hàng của tôi";
+                    } else {
+                        fragment = new com.utt.foodcouriers_admin.ui.order.OrderFragment();
+                        title = "Quản lý đơn hàng";
+                    }
                 } else if (id == R.id.nav_restaurants) {
                     fragment = new RestaurantFragment();
                     title = "Quản lý nhà hàng";

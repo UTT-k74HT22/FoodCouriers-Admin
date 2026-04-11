@@ -25,6 +25,8 @@ public final class OrderMockDataSource {
             ORDERS.add(buildOrder("order-001", "ORD20260410001", OrderStatus.PENDING, "Cơm Tấm 79", "Nguyễn Minh Anh", "0901000001", 145000, "Ít đá", null));
             ORDERS.add(buildOrder("order-002", "ORD20260410002", OrderStatus.CONFIRMED, "Bún Bò Quận 1", "Trần Quốc Việt", "0901000002", 92000, "Gọi trước khi giao", null));
             ORDERS.add(buildOrder("order-003", "ORD20260410003", OrderStatus.PREPARING, "Phở Ngon 24h", "Lê Hà My", "0901000003", 168000, "", null));
+            ORDERS.add(buildOrder("order-007", "ORD20260410007", OrderStatus.READY_FOR_PICKUP, "Bún Đậu Mắm Tôm", "Đặng Văn Lâm", "0901000007", 120000, "Nhiều mắm tôm", null));
+            ORDERS.add(buildOrder("order-008", "ORD20260410008", OrderStatus.READY_FOR_PICKUP, "Gà Rán Popeyes", "Nguyễn Công Phượng", "0901000008", 250000, "", null));
             ORDERS.add(buildOrder("order-004", "ORD20260410004", OrderStatus.DELIVERING, "Cơm Gà Hải Nam", "Phạm Khánh", "0901000004", 110000, "", "shipper-01"));
             ORDERS.add(buildOrder("order-005", "ORD20260410005", OrderStatus.DELIVERED, "Mì Cay Sài Gòn", "Hoàng Thu", "0901000005", 76000, "", "shipper-02"));
             ORDERS.add(buildOrder("order-006", "ORD20260410006", OrderStatus.CANCELLED, "Bánh Mì Chảo 5 Sao", "Ngô Thảo", "0901000006", 54000, "", null));
