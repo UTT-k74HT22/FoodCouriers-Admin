@@ -92,7 +92,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse(
       {
         error: "Validation failed",
-        message: "Role must be one of customer, client, or staff",
+        message: "Role must be one of customer, staff, admin, or shipper",
       },
       400,
       req,
@@ -218,13 +218,19 @@ function validatePayload(payload: CreateUserAccountRequest): string | null {
   return null;
 }
 
-function normalizeRole(role: string): "customer" | "staff" | null {
+function normalizeRole(role: string): "customer" | "staff" | "admin" | "shipper" | null {
   const normalized = role.trim().toLowerCase();
   if (normalized === "client" || normalized === "customer") {
     return "customer";
   }
   if (normalized === "staff") {
     return "staff";
+  }
+  if (normalized === "admin") {
+    return "admin";
+  }
+  if (normalized === "shipper") {
+    return "shipper";
   }
   return null;
 }

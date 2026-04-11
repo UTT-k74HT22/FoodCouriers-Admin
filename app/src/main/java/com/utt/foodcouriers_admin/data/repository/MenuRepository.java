@@ -9,17 +9,12 @@ import com.utt.foodcouriers_admin.data.model.MenuItem;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
 import com.utt.foodcouriers_admin.data.remote.SupabaseConfig;
+import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.data.repository.base.BaseSupabaseRepository;
 import com.utt.foodcouriers_admin.data.repository.base.CrudRepository;
 import com.utt.foodcouriers_admin.data.request.MenuUpsertRequest;
-import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 public class MenuRepository extends BaseSupabaseRepository implements CrudRepository<MenuItem, MenuUpsertRequest> {
 
@@ -28,16 +23,6 @@ public class MenuRepository extends BaseSupabaseRepository implements CrudReposi
     private static final String TABLE_CATEGORY = "categories";
     private static final String TABLE_RESTAURANT = "restaurants";
     private static MenuRepository instance;
-
-    private final BaseSupabaseClient apiClient = new BaseSupabaseClient() {}.getClass().getEnclosingClass().getSimpleName() != null 
-            ? new com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient() {}
-            : null;
-    
-    private static final okhttp3.OkHttpClient HTTP_CLIENT = new okhttp3.OkHttpClient.Builder()
-            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .build();
 
     public static synchronized MenuRepository getInstance() {
         if (instance == null) {
@@ -160,83 +145,54 @@ public class MenuRepository extends BaseSupabaseRepository implements CrudReposi
         fetchSingle(TABLE_CATEGORY, eqIdFilter(id), Category[].class, callback);
     }
 
-    // --- Restaurant Operations (Giữ nguyên pattern cũ để tương thích) ---
+    // --- Restaurant Operations (Fixed 401 Error) ---
 
+    /**
+     * Lấy danh sách tất cả nhà hàng (Dành cho Admin)
+     */
     public void getRestaurants(BaseSupabaseClient.ApiCallback<Restaurant[]> callback) {
-        String url = SupabaseConfig.REST_URL + "/restaurants?select=*&order=name.asc";
-        Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
-                .build();
-
-        HTTP_CLIENT.newCall(request).enqueue(new Callback() {
+        fetchList(TABLE_RESTAURANT, "?select=*&order=name.asc", Restaurant[].class, new RepositoryCallback<List<Restaurant>>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                postError(callback, "Network error: " + e.getMessage());
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try (ResponseBody responseBody = response.body()) {
-                    String json = responseBody != null ? responseBody.string() : "[]";
-                    if (response.isSuccessful()) {
-                        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setLenient().create();
-                        Restaurant[] restaurants = gson.fromJson(json, Restaurant[].class);
-                        postSuccess(callback, restaurants);
-                    } else {
-                        postError(callback, "Failed to fetch restaurants: " + response.code());
-                    }
+            public void onComplete(BaseResponse<List<Restaurant>> response) {
+                if (response.isSuccess() && response.getData() != null) {
+                    callback.onSuccess(response.getData().toArray(new Restaurant[0]));
+                } else {
+                    callback.onError(response.getMessage());
                 }
             }
         });
     }
 
+    /**
+     * Lấy danh sách nhà hàng được gán cho Staff
+     */
     public void getRestaurantsForStaff(String userId, BaseSupabaseClient.ApiCallback<Restaurant[]> callback) {
-        String url = SupabaseConfig.REST_URL + "/restaurant_staff?user_id=eq." + userId + "&select=restaurant_id,restaurant:restaurants(*)";
+        // Query through the join table restaurant_staff
+        String query = "?user_id=eq." + userId + "&select=restaurant:restaurants(*)";
         
-        Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
-                .build();
-
-        HTTP_CLIENT.newCall(request).enqueue(new Callback() {
+        fetchList("restaurant_staff", query, StaffRestaurantJoin[].class, new RepositoryCallback<List<StaffRestaurantJoin>>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                postError(callback, "Network error: " + e.getMessage());
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                try (ResponseBody responseBody = response.body()) {
-                    String json = responseBody != null ? responseBody.string() : "[]";
-                    if (response.isSuccessful()) {
-                        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setLenient().create();
-                        StaffRestaurantJoin[] joins = gson.fromJson(json, StaffRestaurantJoin[].class);
-                        Restaurant[] restaurants = new Restaurant[joins.length];
-                        for (int i = 0; i < joins.length; i++) {
-                            restaurants[i] = joins[i].restaurant;
+            public void onComplete(BaseResponse<List<StaffRestaurantJoin>> response) {
+                if (response.isSuccess() && response.getData() != null) {
+                    List<StaffRestaurantJoin> joins = response.getData();
+                    List<Restaurant> restaurants = new ArrayList<>();
+                    for (StaffRestaurantJoin join : joins) {
+                        if (join.restaurant != null) {
+                            restaurants.add(join.restaurant);
                         }
-                        postSuccess(callback, restaurants);
-                    } else {
-                        postError(callback, "Failed to fetch assigned restaurants: " + response.code());
                     }
+                    callback.onSuccess(restaurants.toArray(new Restaurant[0]));
+                } else {
+                    callback.onError(response.getMessage());
                 }
             }
         });
     }
 
-    private <T> void postError(BaseSupabaseClient.ApiCallback<T> callback, String error) {
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> callback.onError(error));
-    }
-
-    private <T> void postSuccess(BaseSupabaseClient.ApiCallback<T> callback, T result) {
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> callback.onSuccess(result));
-    }
-
+    /**
+     * Helper class for parsing the nested restaurant object in the join table
+     */
     private static class StaffRestaurantJoin {
-        String restaurantId;
         Restaurant restaurant;
     }
 }

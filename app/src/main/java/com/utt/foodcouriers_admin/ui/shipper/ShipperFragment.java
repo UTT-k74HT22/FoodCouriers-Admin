@@ -23,7 +23,7 @@ import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
-import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.model.ShipperProfile;
 import com.utt.foodcouriers_admin.data.repository.RestaurantRepository;
 import com.utt.foodcouriers_admin.data.repository.ShipperRepository;
 import com.utt.foodcouriers_admin.data.request.ShipperUpsertRequest;
@@ -43,7 +43,7 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
     private RestaurantRepository restaurantRepository;
 
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
-    private final List<Shipper> currentItems = new ArrayList<>();
+    private final List<ShipperProfile> currentItems = new ArrayList<>();
     private List<Restaurant> restaurantList = new ArrayList<>();
     private String currentQuery = "";
     private Runnable searchRunnable;
@@ -108,6 +108,10 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
             public void onComplete(BaseResponse<List<Restaurant>> response) {
                 if (response.isSuccess() && response.getData() != null) {
                     restaurantList = response.getData();
+                } else {
+                    if (getContext() != null) {
+                        ToastBanner.showError("Lỗi tải nhà hàng: " + response.getMessage());
+                    }
                 }
                 loadShippers(true);
             }
@@ -123,9 +127,9 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
     }
 
     private void loadShippers(boolean showLoading) {
-        shipperRepository.getAll(new RepositoryCallback<List<Shipper>>() {
+        shipperRepository.getAll(new RepositoryCallback<List<ShipperProfile>>() {
             @Override
-            public void onComplete(BaseResponse<List<Shipper>> response) {
+            public void onComplete(BaseResponse<List<ShipperProfile>> response) {
                 if (!response.isSuccess() || response.getData() == null) {
                     Context context = getContext();
                     if (context != null) {
@@ -134,7 +138,7 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
                     return;
                 }
                 currentItems.clear();
-                List<Shipper> filtered = filterList(response.getData());
+                List<ShipperProfile> filtered = filterList(response.getData());
                 currentItems.addAll(filtered);
                 if (currentItems.isEmpty()) {
                     if (emptyState != null) {
@@ -151,9 +155,9 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
         });
     }
 
-    private List<Shipper> filterList(List<Shipper> items) {
-        List<Shipper> result = new ArrayList<>();
-        for (Shipper shipper : items) {
+    private List<ShipperProfile> filterList(List<ShipperProfile> items) {
+        List<ShipperProfile> result = new ArrayList<>();
+        for (ShipperProfile shipper : items) {
             if (!TextUtils.isEmpty(currentQuery)) {
                 String query = currentQuery.toLowerCase();
                 boolean matchName = shipper.getFullName() != null && shipper.getFullName().toLowerCase().contains(query);
@@ -167,7 +171,7 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
         return result;
     }
 
-    private void openShipperForm(@Nullable Shipper shipper) {
+    private void openShipperForm(@Nullable ShipperProfile shipper) {
         ShipperFormDialogFragment dialog = ShipperFormDialogFragment.newInstance(shipper, restaurantList);
         dialog.setShipperFormListener(this::handleFormSubmission);
         dialog.show(getChildFragmentManager(), "shipper_form");
@@ -175,9 +179,9 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
 
     private void handleFormSubmission(@Nullable String shipperId, ShipperUpsertRequest request, ShipperFormDialogFragment dialog) {
         dialog.setLoading(true);
-        RepositoryCallback<Shipper> callback = new RepositoryCallback<Shipper>() {
+        RepositoryCallback<ShipperProfile> callback = new RepositoryCallback<ShipperProfile>() {
             @Override
-            public void onComplete(BaseResponse<Shipper> response) {
+            public void onComplete(BaseResponse<ShipperProfile> response) {
                 dialog.setLoading(false);
                 if (!response.isSuccess()) {
                     Context context = getContext();
@@ -204,42 +208,31 @@ public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperA
     }
 
     @Override
-    public void onEdit(Shipper shipper) {
+    public void onEdit(ShipperProfile shipper) {
         openShipperForm(shipper);
     }
 
-    @Override
-    public void onStatusChange(Shipper shipper, boolean isActive) {
-        shipperRepository.updateStatus(shipper.getId(), isActive, new RepositoryCallback<Shipper>() {
+    public void onStatusChange(ShipperProfile shipper, boolean isActive) {
+        shipperRepository.updateStatus(shipper.getId(), isActive, new RepositoryCallback<ShipperProfile>() {
             @Override
-            public void onComplete(BaseResponse<Shipper> response) {
-                Context context = getContext();
+            public void onComplete(BaseResponse<ShipperProfile> response) {
                 if (!response.isSuccess()) {
+                    Context context = getContext();
                     if (context != null) {
                         ToastBanner.showError(response.getMessage());
                     }
-                    loadShippers(false);
                     return;
-                }
-                if (context != null) {
-                    ToastBanner.showSuccess(context.getString(R.string.toast_shipper_updated));
                 }
                 loadShippers(false);
             }
         });
     }
 
-    @Override
-    public void onDelete(Shipper shipper) {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.dialog_delete_shipper_title)
-                .setMessage(getString(R.string.dialog_delete_shipper_message, shipper.getFullName()))
-                .setNegativeButton(R.string.action_cancel, null)
-                .setPositiveButton(R.string.action_delete, (dialog, which) -> deleteShipper(shipper))
-                .show();
+    public void onDelete(ShipperProfile shipper) {
+        deleteShipper(shipper);
     }
 
-    private void deleteShipper(Shipper shipper) {
+    private void deleteShipper(ShipperProfile shipper) {
         shipperRepository.delete(shipper.getId(), new RepositoryCallback<Void>() {
             @Override
             public void onComplete(BaseResponse<Void> response) {

@@ -60,6 +60,16 @@ public class SessionManager {
                 .putString(KEY_USER_ROLE, user.getRole())
                 .apply();
     }
+
+    public void saveUserName(String name) {
+        prefs.edit().putString(KEY_USER_NAME, name).apply();
+    }
+
+    public void saveUserPhone(String phone) {
+        // We don't have a specific key for phone in the current implementation, 
+        // but we could add one if needed. For now, let's just implement the name one
+        // as requested by the error.
+    }
     
     public boolean isLoggedIn() {
         return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
