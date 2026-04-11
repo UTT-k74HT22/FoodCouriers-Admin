@@ -19,6 +19,7 @@ import com.utt.foodcouriers_admin.ui.category.CategoryFragment;
 import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
 import com.utt.foodcouriers_admin.ui.order.OrderFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
+import com.utt.foodcouriers_admin.data.model.User;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,8 +63,15 @@ public class MainActivity extends AppCompatActivity {
         setupBackPressedCallback();
 
         if (savedInstanceState == null) {
-            navigationView.setCheckedItem(R.id.nav_dashboard);
-            loadFragment(new DashboardFragment(), "Dashboard");
+            User user = sessionManager.getCurrentUser();
+            if (user != null && "shipper".equalsIgnoreCase(user.getRole())) {
+                navigationView.setCheckedItem(R.id.nav_shipper_profile);
+                loadFragment(new com.utt.foodcouriers_admin.ui.shipper.ShipperProfileFragment(), "Hồ sơ của tôi");
+            } else {
+                navigationView.setCheckedItem(R.id.nav_dashboard);
+                loadFragment(new DashboardFragment(), "Dashboard");
+            }
+
             String loginSuccessMessage = getIntent().getStringExtra(LoginActivity.EXTRA_LOGIN_SUCCESS_MESSAGE);
             if (loginSuccessMessage != null && !loginSuccessMessage.isBlank()) {
                 ToastBanner.showSuccess(loginSuccessMessage);
@@ -103,6 +111,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupNavigationDrawer() {
+        User user = sessionManager.getCurrentUser();
+        String role = user != null ? user.getRole() : "";
+        android.util.Log.d("MainActivity", "Current user role: " + role);
+
+        boolean isShipper = "shipper".equalsIgnoreCase(role);
+
+        // Hide/Show items based on role
+        navigationView.getMenu().findItem(R.id.nav_shipper_profile).setVisible(isShipper);
+        
+        // Admin only items
+        navigationView.getMenu().findItem(R.id.nav_dashboard).setVisible(!isShipper);
+        navigationView.getMenu().findItem(R.id.nav_restaurants).setVisible(!isShipper);
+        navigationView.getMenu().findItem(R.id.nav_categories).setVisible(!isShipper);
+        navigationView.getMenu().findItem(R.id.nav_menu_items).setVisible(!isShipper);
+        
+        // Sections
+        if (navigationView.getMenu().findItem(R.id.group_management) != null) {
+            navigationView.getMenu().findItem(R.id.group_management).setVisible(!isShipper);
+        }
+        if (navigationView.getMenu().findItem(R.id.group_reports) != null) {
+            navigationView.getMenu().findItem(R.id.group_reports).setVisible(!isShipper);
+        }
+
+        // Shared items (Always visible or handled specifically)
+        navigationView.getMenu().findItem(R.id.nav_orders).setVisible(true);
+        navigationView.getMenu().findItem(R.id.nav_notifications).setVisible(true);
+
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -117,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_orders) {
                     fragment = new OrderFragment();
                     title = "Quản lý đơn hàng";
+                    title = isShipper ? "Đơn hàng của tôi" : "Quản lý đơn hàng";
                 } else if (id == R.id.nav_restaurants) {
                     title = "Quản lý nhà hàng";
                 } else if (id == R.id.nav_categories) {
@@ -129,6 +165,9 @@ public class MainActivity extends AppCompatActivity {
                     title = "Quản lý người dùng";
                 } else if (id == R.id.nav_shippers) {
                     title = "Quản lý shipper";
+                } else if (id == R.id.nav_shipper_profile) {
+                    fragment = new com.utt.foodcouriers_admin.ui.shipper.ShipperProfileFragment();
+                    title = "Hồ sơ của tôi";
                 } else if (id == R.id.nav_promotions) {
                     title = "Khuyến mãi";
                 } else if (id == R.id.nav_reports) {

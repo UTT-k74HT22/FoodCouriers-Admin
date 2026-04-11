@@ -132,7 +132,7 @@ public class UserRepository extends BaseSupabaseRepository {
             return phoneValidation;
         }
 
-        return validateRequired(request.getEmail(), "Email");
+        return null;
     }
 
     private BaseResponse<Void> validateUpdate(UserUpdateRequest request) {
