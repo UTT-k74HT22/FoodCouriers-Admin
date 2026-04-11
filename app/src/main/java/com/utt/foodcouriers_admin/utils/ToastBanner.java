@@ -87,13 +87,25 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
             return;
         }
 
-        View rootView = activity.findViewById(android.R.id.content);
-        if (rootView == null) {
-            return;
+        ViewGroup rootView = null;
+        android.view.Window dialogWindow = null;
+
+        if (activity.getWindow() != null && activity.getWindow().getDecorView() != null) {
+            View decorView = activity.getWindow().getDecorView();
+            if (decorView instanceof ViewGroup) {
+                rootView = (ViewGroup) decorView;
+                dialogWindow = activity.getWindow();
+            }
         }
 
-        ViewGroup viewGroup = (rootView instanceof ViewGroup) ? (ViewGroup) rootView : null;
-        if (viewGroup == null) {
+        if (rootView == null) {
+            View contentView = activity.findViewById(android.R.id.content);
+            if (contentView instanceof ViewGroup) {
+                rootView = (ViewGroup) contentView;
+            }
+        }
+
+        if (rootView == null) {
             return;
         }
 
@@ -102,10 +114,10 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
             bannerId = 12345;
         }
 
-        for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            View child = viewGroup.getChildAt(i);
+        for (int i = 0; i < rootView.getChildCount(); i++) {
+            View child = rootView.getChildAt(i);
             if (child.getId() == bannerId) {
-                viewGroup.removeView(child);
+                rootView.removeView(child);
                 break;
             }
         }
@@ -123,27 +135,48 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
         drawable.setColor(backgroundColor);
         banner.setBackground(drawable);
 
-        ViewGroup.LayoutParams params;
-        if (rootView instanceof CoordinatorLayout) {
-            CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
-                    CoordinatorLayout.LayoutParams.WRAP_CONTENT,
-                    CoordinatorLayout.LayoutParams.WRAP_CONTENT
-            );
-            layoutParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-            layoutParams.topMargin = getStatusBarHeight(activity) + 16;
-            params = layoutParams;
-        } else {
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT
-            );
-            layoutParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-            layoutParams.topMargin = getStatusBarHeight(activity) + 16;
-            params = layoutParams;
+        int statusBarHeight = getStatusBarHeight(activity);
+        int topMargin = statusBarHeight + 16;
+
+        if (dialogWindow != null) {
+            View decorView = dialogWindow.getDecorView();
+            final ViewGroup decor = decorView instanceof ViewGroup ? (ViewGroup) decorView : null;
+            final int finalTopMargin = topMargin;
+            if (decor != null) {
+                decor.post(() -> {
+                    FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    params.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                    params.topMargin = finalTopMargin;
+                    decor.addView(banner, params);
+                    animateBanner(banner, decor);
+                });
+            } else {
+                if (rootView instanceof CoordinatorLayout) {
+                    CoordinatorLayout.LayoutParams layoutParams = new CoordinatorLayout.LayoutParams(
+                            CoordinatorLayout.LayoutParams.WRAP_CONTENT,
+                            CoordinatorLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    layoutParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                    layoutParams.topMargin = topMargin;
+                    rootView.addView(banner, layoutParams);
+                } else {
+                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    layoutParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                    layoutParams.topMargin = topMargin;
+                    rootView.addView(banner, layoutParams);
+                }
+                animateBanner(banner, rootView);
+            }
         }
+    }
 
-        viewGroup.addView(banner, params);
-
+    private static void animateBanner(View banner, ViewGroup parent) {
         banner.setAlpha(0f);
         banner.setTranslationY(-100f);
         banner.animate()
@@ -158,7 +191,7 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
                         .alpha(0f)
                         .translationY(-100f)
                         .setDuration(300)
-                        .withEndAction(() -> viewGroup.removeView(banner))
+                        .withEndAction(() -> parent.removeView(banner))
                         .start();
             }
         }, DURATION_MS);
