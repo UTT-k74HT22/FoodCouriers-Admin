@@ -142,7 +142,7 @@ public class LoginActivity extends AppCompatActivity {
                     return;
                 }
 
-                if (user.isAdmin() || user.isStaff()) {
+                if (user.isAdmin() || user.isStaff() || user.isShipper()) {
                     String accessToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getAccessToken();
                     String refreshToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getRefreshToken();
 

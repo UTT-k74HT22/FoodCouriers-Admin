@@ -215,6 +215,33 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
         updateItem(TABLE, eqIdFilter(id.trim()), request, ShipperProfile[].class, callback);
     }
 
+    public void getProfileByUserId(String userId, RepositoryCallback<ShipperProfile> callback) {
+        if (userId == null || userId.trim().isEmpty()) {
+            postResponse(callback, BaseResponse.error("VALIDATION_ERROR", "User id is required"));
+            return;
+        }
+        fetchSingle(TABLE, "?user_id=eq." + userId + "&select=*,user:users!shippers_user_id_fkey(full_name,phone,email,avatar_url),restaurant:restaurants(name)", ShipperProfile[].class, callback);
+    }
+
+    /**
+     * Shipper tự cập nhật thông tin cá nhân (biển số xe, loại xe)
+     */
+    public void updateSelf(String shipperId, String licensePlate, String vehicleType, RepositoryCallback<ShipperProfile> callback) {
+        ShipperUpsertRequest request = new ShipperUpsertRequest();
+        request.setLicensePlate(licensePlate);
+        request.setVehicleType(vehicleType);
+        updateItem(TABLE, eqIdFilter(shipperId), request, ShipperProfile[].class, callback);
+    }
+
+    /**
+     * Cập nhật trạng thái sẵn sàng giao hàng (Online/Offline)
+     */
+    public void updateAvailability(String shipperId, boolean isAvailable, RepositoryCallback<ShipperProfile> callback) {
+        ShipperUpsertRequest request = new ShipperUpsertRequest();
+        request.setIsAvailable(isAvailable);
+        updateItem(TABLE, eqIdFilter(shipperId), request, ShipperProfile[].class, callback);
+    }
+
     private BaseResponse<Void> validate(ShipperUpsertRequest request, boolean requireMainFields) {
         if (request == null) {
             return BaseResponse.error("VALIDATION_ERROR", "Shipper payload is required");

@@ -93,6 +93,13 @@ public class ShipperProfile implements Serializable {
         return user != null ? user.avatarUrl : null;
     }
 
+    public void setAvatarUrl(String avatarUrl) {
+        if (user == null) {
+            user = new NestedUser();
+        }
+        user.avatarUrl = avatarUrl;
+    }
+
     public String getRestaurantName() {
         return restaurant != null ? restaurant.name : null;
     }
