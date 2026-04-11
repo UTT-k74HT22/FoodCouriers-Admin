@@ -4,6 +4,7 @@ public enum OrderStatus {
     PENDING("pending", "Chờ xác nhận"),
     CONFIRMED("confirmed", "Đã xác nhận"),
     PREPARING("preparing", "Đang chuẩn bị"),
+    READY_FOR_PICKUP("ready_for_pickup", "Chờ shipper"),
     DELIVERING("delivering", "Đang giao"),
     DELIVERED("delivered", "Hoàn thành"),
     CANCELLED("cancelled", "Đã hủy");
@@ -35,6 +36,8 @@ public enum OrderStatus {
             case CONFIRMED:
                 return PREPARING;
             case PREPARING:
+                return READY_FOR_PICKUP;
+            case READY_FOR_PICKUP:
                 return DELIVERING;
             case DELIVERING:
                 return DELIVERED;

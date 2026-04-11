@@ -29,6 +29,8 @@ public class ShipperProfile implements Serializable {
     private String createdAt;
     @SerializedName("updated_at")
     private String updatedAt;
+    @SerializedName("delivery_status")
+    private String deliveryStatus;
 
     @SerializedName("user")
     private NestedUser user;
@@ -76,6 +78,9 @@ public class ShipperProfile implements Serializable {
 
     public String getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getDeliveryStatus() { return deliveryStatus; }
+    public void setDeliveryStatus(String deliveryStatus) { this.deliveryStatus = deliveryStatus; }
 
     public String getFullName() {
         return user != null ? user.fullName : null;
