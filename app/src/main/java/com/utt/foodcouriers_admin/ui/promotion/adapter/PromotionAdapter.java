@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Promotion;
@@ -144,28 +143,10 @@ public class PromotionAdapter extends ListAdapter<Promotion, PromotionAdapter.Pr
 
             swIsActive.setOnCheckedChangeListener(null);
             swIsActive.setChecked(isActive);
-            final var thisListener = listener;
             swIsActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                String title = isChecked ? "Kích hoạt khuyến mãi" : "Vô hiệu khuyến mãi";
-                String message = isChecked ? "Bạn có muốn kích hoạt khuyến mãi này?"
-                        : "Khuyến mãi sẽ bị vô hiệu hóa. Bạn có chắc chắn?";
-                new MaterialAlertDialogBuilder(itemView.getContext())
-                        .setTitle(title)
-                        .setMessage(message)
-                        .setPositiveButton("Đồng ý", (dialog, which) -> {
-                            if (thisListener != null) {
-                                thisListener.onStatusChange(promotion, isChecked);
-                            }
-                        })
-                        .setNegativeButton("Hủy", (dialog, which) -> {
-                            swIsActive.setOnCheckedChangeListener(null);
-                            swIsActive.setChecked(!isChecked);
-                        })
-                        .setOnCancelListener(dialog -> {
-                            swIsActive.setOnCheckedChangeListener(null);
-                            swIsActive.setChecked(!isChecked);
-                        })
-                        .show();
+                if (listener != null) {
+                    listener.onStatusChange(promotion, isChecked);
+                }
             });
 
             btnEdit.setOnClickListener(v -> {

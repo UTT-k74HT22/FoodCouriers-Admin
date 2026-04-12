@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
@@ -130,28 +129,10 @@ public class RestaurantAdapter extends ListAdapter<Restaurant, RestaurantAdapter
 
 swIsActive.setOnCheckedChangeListener(null);
             swIsActive.setChecked(restaurant.isActive());
-            final var thisListener = listener;
             swIsActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                String title = isChecked ? "Kích hoạt nhà hàng" : "Vô hiệu nhà hàng";
-                String message = isChecked ? "Bạn có muốn kích hoạt nhà hàng này?"
-                        : "Nhà hàng sẽ bị ẩn khỏi ứng dụng. Bạn có chắc chắn?";
-                new MaterialAlertDialogBuilder(itemView.getContext())
-                        .setTitle(title)
-                        .setMessage(message)
-                        .setPositiveButton("Đồng ý", (dialog, which) -> {
-                            if (thisListener != null) {
-                                thisListener.onStatusChange(restaurant, isChecked);
-                            }
-                        })
-                        .setNegativeButton("Hủy", (dialog, which) -> {
-                            swIsActive.setOnCheckedChangeListener(null);
-                            swIsActive.setChecked(!isChecked);
-                        })
-                        .setOnCancelListener(dialog -> {
-                            swIsActive.setOnCheckedChangeListener(null);
-                            swIsActive.setChecked(!isChecked);
-                        })
-                        .show();
+                if (listener != null) {
+                    listener.onStatusChange(restaurant, isChecked);
+                }
             });
 
             itemView.setOnClickListener(v -> {

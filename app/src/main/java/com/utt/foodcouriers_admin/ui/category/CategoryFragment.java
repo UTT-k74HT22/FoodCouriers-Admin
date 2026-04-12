@@ -279,6 +279,8 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.Catego
 
     @Override
     public void onStatusChange(Category category, boolean isActive) {
+        String msg = isActive ? "Đã kích hoạt danh mục" : "Đã vô hiệu danh mục";
+        ToastBanner.showSuccess(msg);
         categoryRepository.updateStatus(category.getId(), isActive, new RepositoryCallback<Category>() {
             @Override
             public void onComplete(BaseResponse<Category> response) {

@@ -113,17 +113,16 @@ public class CategoryAdapter extends ListAdapter<Category, CategoryAdapter.Categ
 
             swIsActive.setOnCheckedChangeListener(null);
             swIsActive.setChecked(category.isActive());
-            final var thisListener = listener;
+            final Category thisCategory = category;
             swIsActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 String title = isChecked ? "Kích hoạt danh mục" : "Ẩn danh mục";
-                String message = isChecked ? "Bạn có muốn kích hoạt danh mục này?"
-                        : "Danh mục sẽ bị ẩn khỏi menu. Bạn có chắc chắn?";
+                String message = isChecked ? "Hiển thị danh mục này trên menu?" : "Danh mục sẽ bị ẩn khỏi menu. Bạn có chắc chắn?";
                 new MaterialAlertDialogBuilder(itemView.getContext())
                         .setTitle(title)
                         .setMessage(message)
                         .setPositiveButton("Đồng ý", (dialog, which) -> {
-                            if (thisListener != null) {
-                                thisListener.onStatusChange(category, isChecked);
+                            if (listener != null) {
+                                listener.onStatusChange(thisCategory, isChecked);
                             }
                         })
                         .setNegativeButton("Hủy", (dialog, which) -> {

@@ -131,18 +131,16 @@ public class MenuItemAdapter extends RecyclerView.Adapter<MenuItemAdapter.ViewHo
             swAvailable.setOnCheckedChangeListener(null);
             swAvailable.setChecked(item.isAvailable());
             final MenuItem thisItem = item;
-            final var thisListener = listener;
             swAvailable.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 String title = isChecked ? "Hiển thị món ăn" : "Ẩn món ăn";
-                String message = isChecked ? "Hiển thị món ăn này trên menu?"
-                        : "Món ăn sẽ bị ẩn khỏi menu. Bạn có chắc chắn?";
+                String message = isChecked ? "Hiển thị món ăn này trên menu?" : "Món ăn sẽ bị ẩn khỏi menu. Bạn có chắc chắn?";
                 new MaterialAlertDialogBuilder(itemView.getContext())
                         .setTitle(title)
                         .setMessage(message)
                         .setPositiveButton("Đồng ý", (dialog, which) -> {
                             int pos = getAdapterPosition();
-                            if (pos != RecyclerView.NO_POSITION && thisListener != null) {
-                                thisListener.onAvailabilityChange(thisItem, isChecked);
+                            if (pos != RecyclerView.NO_POSITION && listener != null) {
+                                listener.onAvailabilityChange(thisItem, isChecked);
                             }
                         })
                         .setNegativeButton("Hủy", (dialog, which) -> {

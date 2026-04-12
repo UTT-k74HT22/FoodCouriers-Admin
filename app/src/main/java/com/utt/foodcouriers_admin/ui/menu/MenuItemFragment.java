@@ -354,6 +354,8 @@ public class MenuItemFragment extends Fragment implements MenuItemAdapter.OnMenu
 
     @Override
     public void onAvailabilityChange(MenuItem item, boolean isAvailable) {
+        String msg = isAvailable ? "Đã hiển thị món ăn" : "Đã ẩn món ăn";
+        ToastBanner.showSuccess(msg);
         item.setAvailable(isAvailable); 
         menuRepository.updateAvailability(item.getId(), isAvailable, new RepositoryCallback<MenuItem>() {
             @Override
