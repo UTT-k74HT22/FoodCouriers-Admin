@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
@@ -105,10 +106,28 @@ public class UserAdapter extends ListAdapter<User, UserAdapter.UserViewHolder> {
 
             switchActive.setOnCheckedChangeListener(null);
             switchActive.setChecked(user.isActive());
+            final var thisListener = listener;
             switchActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (listener != null) {
-                    listener.onStatusChange(user, isChecked);
-                }
+                String title = isChecked ? "Kích hoạt tài khoản" : "Vô hiệu tài khoản";
+                String message = isChecked ? "Bạn có muốn kích hoạt tài khoản này?"
+                        : "Tài khoản sẽ bị vô hiệu hóa. Bạn có chắc chắn?";
+                new MaterialAlertDialogBuilder(itemView.getContext())
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setPositiveButton("Đồng ý", (dialog, which) -> {
+                            if (thisListener != null) {
+                                thisListener.onStatusChange(user, isChecked);
+                            }
+                        })
+                        .setNegativeButton("Hủy", (dialog, which) -> {
+                            switchActive.setOnCheckedChangeListener(null);
+                            switchActive.setChecked(!isChecked);
+                        })
+                        .setOnCancelListener(dialog -> {
+                            switchActive.setOnCheckedChangeListener(null);
+                            switchActive.setChecked(!isChecked);
+                        })
+                        .show();
             });
 
             itemView.setOnClickListener(v -> {

@@ -49,16 +49,21 @@ public final class OrderUiFormatter {
     public static int badgeTextColorRes(OrderStatus status) {
         switch (status) {
             case CONFIRMED:
+                return R.color.black;
             case PREPARING:
+                return R.color.black;
             case DELIVERING:
-                return R.color.primary;
+                return R.color.black;
             case DELIVERED:
-                return R.color.success;
+                return R.color.white;
             case CANCELLED:
-                return R.color.error;
+                return R.color.white;
             case PENDING:
-            default:
-                return R.color.warning;
+                return R.color.black;
+            case READY_FOR_PICKUP:
+                return R.color.black;
+                default:
+                return R.color.white;
         }
     }
 }

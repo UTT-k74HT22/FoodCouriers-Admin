@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.bumptech.glide.Glide;
 import com.utt.foodcouriers_admin.R;
@@ -129,11 +130,30 @@ public class MenuItemAdapter extends RecyclerView.Adapter<MenuItemAdapter.ViewHo
             // Prevent listener from triggering during bind
             swAvailable.setOnCheckedChangeListener(null);
             swAvailable.setChecked(item.isAvailable());
+            final MenuItem thisItem = item;
+            final var thisListener = listener;
             swAvailable.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                int pos = getAdapterPosition();
-                if (pos != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onAvailabilityChange(items.get(pos), isChecked);
-                }
+                String title = isChecked ? "Hiển thị món ăn" : "Ẩn món ăn";
+                String message = isChecked ? "Hiển thị món ăn này trên menu?"
+                        : "Món ăn sẽ bị ẩn khỏi menu. Bạn có chắc chắn?";
+                new MaterialAlertDialogBuilder(itemView.getContext())
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setPositiveButton("Đồng ý", (dialog, which) -> {
+                            int pos = getAdapterPosition();
+                            if (pos != RecyclerView.NO_POSITION && thisListener != null) {
+                                thisListener.onAvailabilityChange(thisItem, isChecked);
+                            }
+                        })
+                        .setNegativeButton("Hủy", (dialog, which) -> {
+                            swAvailable.setOnCheckedChangeListener(null);
+                            swAvailable.setChecked(!isChecked);
+                        })
+                        .setOnCancelListener(dialog -> {
+                            swAvailable.setOnCheckedChangeListener(null);
+                            swAvailable.setChecked(!isChecked);
+                        })
+                        .show();
             });
             
             // TODO: Load image with Glide/Picasso if URL is not null

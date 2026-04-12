@@ -89,7 +89,7 @@
             android:paddingHorizontal="@dimen/spacing_sm"
             android:paddingVertical="@dimen/spacing_xs"
             android:textAppearance="@style/AdminTextAppearance.Small"
-            android:textColor="@color/success"
+            android:textColor="@color/white"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

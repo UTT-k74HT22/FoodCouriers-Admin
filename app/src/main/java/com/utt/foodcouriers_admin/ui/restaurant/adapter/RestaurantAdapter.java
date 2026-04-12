@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
@@ -120,19 +121,37 @@ public class RestaurantAdapter extends ListAdapter<Restaurant, RestaurantAdapter
             if (restaurant.isOpen()) {
                 tvStatus.setText("Mở cửa");
                 tvStatus.setBackgroundResource(R.drawable.admin_badge_success);
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.success));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.white));
             } else {
                 tvStatus.setText("Đóng cửa");
                 tvStatus.setBackgroundResource(R.drawable.admin_badge_pending);
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.warning));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.white));
             }
 
-            swIsActive.setOnCheckedChangeListener(null);
+swIsActive.setOnCheckedChangeListener(null);
             swIsActive.setChecked(restaurant.isActive());
+            final var thisListener = listener;
             swIsActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (listener != null) {
-                    listener.onStatusChange(restaurant, isChecked);
-                }
+                String title = isChecked ? "Kích hoạt nhà hàng" : "Vô hiệu nhà hàng";
+                String message = isChecked ? "Bạn có muốn kích hoạt nhà hàng này?"
+                        : "Nhà hàng sẽ bị ẩn khỏi ứng dụng. Bạn có chắc chắn?";
+                new MaterialAlertDialogBuilder(itemView.getContext())
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setPositiveButton("Đồng ý", (dialog, which) -> {
+                            if (thisListener != null) {
+                                thisListener.onStatusChange(restaurant, isChecked);
+                            }
+                        })
+                        .setNegativeButton("Hủy", (dialog, which) -> {
+                            swIsActive.setOnCheckedChangeListener(null);
+                            swIsActive.setChecked(!isChecked);
+                        })
+                        .setOnCancelListener(dialog -> {
+                            swIsActive.setOnCheckedChangeListener(null);
+                            swIsActive.setChecked(!isChecked);
+                        })
+                        .show();
             });
 
             itemView.setOnClickListener(v -> {
