@@ -83,8 +83,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
     private CircularProgressIndicator progressSave;
     private ImageView ivPreview;
     private TextView tvStatusHelper;
-    private TextView tvPreviewName;
-    private TextView tvPreviewPhone;
     private TextView tvFormTitle;
     private TextView tvFormSubtitle;
 
@@ -99,19 +97,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
                 }
             }
     );
-
-    private final TextWatcher previewWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            updatePreview();
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) { }
-    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -137,20 +122,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
         setupRestaurantDropdown();
         bindShipper();
         setupListeners();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (etName != null) {
-            etName.removeTextChangedListener(previewWatcher);
-        }
-        if (etPhone != null) {
-            etPhone.removeTextChangedListener(previewWatcher);
-        }
-        if (etEmail != null) {
-            etEmail.removeTextChangedListener(previewWatcher);
-        }
     }
 
     public void setShipperFormListener(ShipperFormListener listener) {
@@ -193,8 +164,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
         progressSave = view.findViewById(R.id.progress_save);
         ivPreview = view.findViewById(R.id.iv_form_avatar);
         tvStatusHelper = view.findViewById(R.id.tv_status_helper);
-        tvPreviewName = view.findViewById(R.id.tv_preview_name);
-        tvPreviewPhone = view.findViewById(R.id.tv_preview_phone);
         tvFormTitle = view.findViewById(R.id.tv_form_title);
         tvFormSubtitle = view.findViewById(R.id.tv_form_subtitle);
     }
@@ -236,7 +205,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
             }
         }
         tvStatusHelper.setText(switchActive.isChecked() ? R.string.label_active_vi_en : R.string.label_inactive_vi_en);
-        updatePreview();
     }
 
     private void setupListeners() {
@@ -245,9 +213,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
         btnChooseImage.setOnClickListener(v -> openImagePicker());
         ivPreview.setOnClickListener(v -> handleImageClick());
 
-        etName.addTextChangedListener(previewWatcher);
-        etPhone.addTextChangedListener(previewWatcher);
-        etEmail.addTextChangedListener(previewWatcher);
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -356,13 +321,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
             isValid = false;
         }
         return isValid;
-    }
-
-    private void updatePreview() {
-        String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
-        tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_shipper_name) : name);
-        tvPreviewPhone.setText(TextUtils.isEmpty(phone) ? getString(R.string.label_phone) : phone);
     }
 
     private void loadPreviewImage(@Nullable String url) {

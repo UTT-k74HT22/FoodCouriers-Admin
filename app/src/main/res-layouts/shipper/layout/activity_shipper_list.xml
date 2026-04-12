@@ -11,6 +11,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <!-- Search Card synchronized with Menu module -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -19,22 +20,30 @@
             app:cardCornerRadius="@dimen/radius_lg"
             app:cardElevation="@dimen/card_elevation">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_search"
-                style="@style/AdminInputLayout"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Tìm kiếm shipper..."
-                app:endIconDrawable="@drawable/ic_search"
-                app:endIconMode="custom">
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_md">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_search"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_search"
+                    style="@style/AdminInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text" />
+                    android:hint="Tìm kiếm shipper..."
+                    app:endIconDrawable="@drawable/ic_search"
+                    app:endIconMode="custom">
 
-            </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_search"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
@@ -48,7 +57,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:padding="@dimen/spacing_md"
+                android:paddingHorizontal="@dimen/spacing_md"
+                android:paddingBottom="80dp"
                 tools:itemCount="5"
                 tools:listitem="@layout/item_shipper" />
 

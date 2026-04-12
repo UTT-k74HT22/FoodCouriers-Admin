@@ -7,55 +7,62 @@
     android:layout_marginBottom="@dimen/spacing_sm"
     app:cardBackgroundColor="@color/surface"
     app:cardCornerRadius="@dimen/radius_lg"
-    app:cardElevation="@dimen/card_elevation">
+    app:cardElevation="@dimen/card_elevation"
+    app:strokeColor="@color/border"
+    app:strokeWidth="1dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:padding="@dimen/spacing_md">
 
-        <ImageView
+        <!-- Leading Image: 56dp Rounded -->
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/iv_item_image"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/admin_card"
-            android:contentDescription="@null"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_menu_item" />
+            android:src="@drawable/ic_menu_item"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent" />
 
-        <ImageView
-            android:id="@+id/iv_delete_item"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="@dimen/spacing_sm"
-            android:src="@android:drawable/ic_menu_delete"
-            android:contentDescription="Xóa"
-            app:tint="@color/error" />
-
-        <LinearLayout
+        <!-- Item Name (Bold) -->
+        <TextView
+            android:id="@+id/tv_item_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/spacing_md"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_marginEnd="@dimen/spacing_sm"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/AdminTextAppearance.Body"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/sw_available"
+            app:layout_constraintStart_toEndOf="@id/iv_item_image"
+            app:layout_constraintTop_toTopOf="@id/iv_item_image"
+            tools:text="Cơm tấm sườn bì chả" />
 
-            <TextView
-                android:id="@+id/tv_item_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@style/AdminTextAppearance.Body"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold"
-                tools:text="Cơm tấm sườn bì chả" />
+        <!-- Metadata Pills Row -->
+        <LinearLayout
+            android:id="@+id/layout_item_meta"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toStartOf="@+id/sw_available"
+            app:layout_constraintStart_toStartOf="@+id/tv_item_name"
+            app:layout_constraintTop_toBottomOf="@+id/tv_item_name">
 
             <TextView
                 android:id="@+id/tv_item_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:textAppearance="@style/AdminTextAppearance.Small"
-                android:textColor="@color/primary"
+                android:background="@drawable/admin_badge_success"
+                android:paddingHorizontal="@dimen/spacing_sm"
+                android:paddingVertical="2dp"
+                android:textColor="@color/white"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 tools:text="35.000đ" />
 
@@ -63,27 +70,56 @@
                 android:id="@+id/tv_item_category"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:layout_marginStart="@dimen/spacing_xs"
+                android:background="@drawable/admin_badge_info"
+                android:paddingHorizontal="@dimen/spacing_sm"
+                android:paddingVertical="2dp"
                 android:textColor="@color/text_secondary"
+                android:textSize="10sp"
                 tools:text="Món chính" />
 
         </LinearLayout>
 
-        <LinearLayout
+        <!-- Secondary Metadata (Timestamp) -->
+        <TextView
+            android:id="@+id/tv_updated_at"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:background="@drawable/admin_badge_info"
+            android:paddingHorizontal="@dimen/spacing_sm"
+            android:paddingVertical="2dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            app:layout_constraintStart_toStartOf="@+id/tv_item_name"
+            app:layout_constraintTop_toBottomOf="@+id/layout_item_meta"
+            tools:text="Cập nhật: 2024-04-11" />
 
-            <CheckBox
-                android:id="@+id/sw_available"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:buttonTint="@color/primary" />
+        <!-- Action Button (Top Right) -->
+        <ImageView
+            android:id="@+id/iv_delete_item"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Xóa"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_delete"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/error" />
 
-        </LinearLayout>
+        <!-- Availability Switch (Bottom Right) -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/sw_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scaleX="0.8"
+            android:scaleY="0.8"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/iv_delete_item"
+            app:layout_constraintVertical_bias="1.0" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

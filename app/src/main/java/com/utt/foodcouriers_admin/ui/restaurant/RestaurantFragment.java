@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
+import com.google.android.material.textfield.TextInputEditText;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -43,7 +43,7 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
     private ExtendedFloatingActionButton fabAdd;
     private RestaurantRepository restaurantRepository;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private SearchView searchView;
+    private TextInputEditText etSearch;
     private ChipGroup chipGroup;
     private MaterialToolbar toolbar;
     private View stateContainer;
@@ -96,7 +96,7 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
         rvRestaurants = view.findViewById(R.id.rv_restaurants);
         fabAdd = view.findViewById(R.id.fab_add_restaurant);
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh);
-        searchView = view.findViewById(R.id.search_view);
+        etSearch = view.findViewById(R.id.et_search);
         chipGroup = view.findViewById(R.id.chip_group_filter);
         toolbar = view.findViewById(R.id.toolbar);
         stateContainer = view.findViewById(R.id.state_container);
@@ -122,22 +122,21 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
     }
 
     private void setupSearch() {
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                currentQuery = query;
-                triggerSearch(false);
-                searchView.clearFocus();
-                return true;
-            }
+        if (etSearch != null) {
+            etSearch.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                currentQuery = newText;
-                triggerSearch(false);
-                return true;
-            }
-        });
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    currentQuery = s.toString();
+                    triggerSearch(false);
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {}
+            });
+        }
     }
 
     private void setupFilters() {

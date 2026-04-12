@@ -5,6 +5,8 @@
 
     <string name="category_title">Danh mục</string>
     <string name="category_subtitle">Category manager</string>
+    <string name="menu_title_vi_en">Món ăn / Menu</string>
+    <string name="menu_subtitle_vi_en">Quản lý thực đơn / Menu manager</string>
     <string name="category_search_hint">Tìm kiếm danh mục / Search categories</string>
     <string name="category_filter_all">Tất cả</string>
     <string name="category_filter_active">Đang hoạt động</string>
