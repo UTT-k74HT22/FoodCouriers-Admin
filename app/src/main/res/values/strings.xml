@@ -158,6 +158,26 @@
     <string name="user_action_saving">Đang lưu…</string>
     <string name="user_update_success">Cập nhật người dùng thành công</string>
     <string name="user_label_email_readonly">Email không thể thay đổi tại đây</string>
+    <string name="profile_title">Hồ sơ của tôi</string>
+    <string name="profile_summary_staff">Tài khoản nội bộ đang đăng nhập trên app admin</string>
+    <string name="profile_summary_shipper">Tài khoản giao hàng đang đăng nhập trên app admin</string>
+    <string name="profile_chip_active">Đang hoạt động</string>
+    <string name="profile_chip_inactive">Tạm khóa</string>
+    <string name="profile_section_personal">Thông tin cá nhân</string>
+    <string name="profile_section_personal_subtitle">Cập nhật thông tin hiển thị trong hệ thống quản trị.</string>
+    <string name="profile_section_vehicle">Thông tin phương tiện</string>
+    <string name="profile_section_security">Bảo mật</string>
+    <string name="profile_section_security_subtitle">Đổi mật khẩu cho tài khoản hiện tại. Phiên đăng nhập hiện tại sẽ tiếp tục được giữ nguyên.</string>
+    <string name="profile_label_email_readonly">Email đăng nhập</string>
+    <string name="profile_label_new_password">Mật khẩu mới</string>
+    <string name="profile_label_confirm_new_password">Xác nhận mật khẩu mới</string>
+    <string name="profile_action_save_profile">Lưu thông tin cá nhân</string>
+    <string name="profile_action_edit_profile">Chỉnh sửa thông tin</string>
+    <string name="profile_action_cancel_edit">Hủy chỉnh sửa</string>
+    <string name="profile_action_change_password">Đổi mật khẩu</string>
+    <string name="profile_action_changing_password">Đang đổi mật khẩu…</string>
+    <string name="profile_password_changed">Đổi mật khẩu thành công</string>
+    <string name="profile_error_vehicle_required">Vui lòng nhập đầy đủ thông tin phương tiện</string>
 
     <!-- Confirm toggle active -->
     <string name="user_confirm_activate">Kích hoạt tài khoản \"%1$s\"? Người dùng sẽ có thể đăng nhập trở lại.</string>

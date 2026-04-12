@@ -2,6 +2,8 @@ package com.utt.foodcouriers_admin.ui.main;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.widget.ImageView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
@@ -14,6 +16,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
 import com.utt.foodcouriers_admin.R;
@@ -69,13 +72,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         setupNavigationDrawer();
+        setupNavigationHeader();
         setupBackPressedCallback();
 
         if (savedInstanceState == null) {
             String userRole = sessionManager.getUserRole();
             if ("shipper".equalsIgnoreCase(userRole)) {
-                navigationView.setCheckedItem(R.id.nav_dashboard);
-                loadFragment(new ShipperProfileFragment(), "Hồ sơ của tôi");
+                navigateToCurrentUserProfile();
             } else {
                 navigationView.setCheckedItem(R.id.nav_dashboard);
                 loadFragment(new DashboardFragment(), "Dashboard");
@@ -124,9 +127,9 @@ public class MainActivity extends AppCompatActivity {
         boolean isShipper = "shipper".equalsIgnoreCase(userRole);
 
         Menu menu = navigationView.getMenu();
-        
-        // Shipper visibility logic
-        menu.findItem(R.id.nav_shipper_profile).setVisible(isShipper);
+
+        // Shared self-service profile
+        menu.findItem(R.id.nav_shipper_profile).setVisible(true);
         menu.findItem(R.id.nav_dashboard).setVisible(!isShipper);
         menu.findItem(R.id.nav_restaurants).setVisible(!isShipper);
         menu.findItem(R.id.nav_categories).setVisible(!isShipper);
@@ -159,14 +162,15 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new DashboardFragment();
                     title = "Dashboard";
                 } else if (id == R.id.nav_shipper_profile) {
-                    fragment = new ShipperProfileFragment();
-                    title = "Hồ sơ của tôi";
+                    navigateToCurrentUserProfile();
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                    return true;
                 } else if (id == R.id.nav_orders) {
                     if (isShipper) {
                         fragment = new com.utt.foodcouriers_admin.ui.shipper.DeliveryManagementFragment();
                         title = "Đơn hàng của tôi";
                     } else {
-                        fragment = new com.utt.foodcouriers_admin.ui.order.OrderFragment();
+                        fragment = new OrderFragment();
                         title = "Quản lý đơn hàng";
                     }
                 } else if (id == R.id.nav_restaurants) {
@@ -208,18 +212,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (navigationView.getHeaderView(0) != null) {
-            TextView tvName = navigationView.getHeaderView(0).findViewById(R.id.nav_header_name);
-            TextView tvEmail = navigationView.getHeaderView(0).findViewById(R.id.nav_header_email);
-            if (tvName != null) {
-                String userName = sessionManager.getUserName();
-                tvName.setText(userName != null ? userName : "Admin");
-            }
-            if (tvEmail != null) {
-                String userEmail = sessionManager.getUserEmail();
-                tvEmail.setText(userEmail != null ? userEmail : "");
-            }
+        refreshNavigationHeader();
+    }
+
+    private void setupNavigationHeader() {
+        if (navigationView.getHeaderView(0) == null) {
+            return;
         }
+
+        navigationView.getHeaderView(0).setOnClickListener(v -> {
+            navigateToCurrentUserProfile();
+            drawerLayout.closeDrawer(GravityCompat.START);
+        });
     }
 
     private void setupBackPressedCallback() {
@@ -243,6 +247,46 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
         if (toolbar != null) {
             toolbar.setTitle(title);
+        }
+    }
+
+    private void navigateToCurrentUserProfile() {
+        navigationView.setCheckedItem(R.id.nav_shipper_profile);
+        loadFragment(new ShipperProfileFragment(), "Hồ sơ của tôi");
+    }
+
+    public void refreshNavigationHeader() {
+        if (navigationView.getHeaderView(0) == null) {
+            return;
+        }
+
+        ImageView ivAvatar = navigationView.getHeaderView(0).findViewById(R.id.nav_header_avatar);
+        TextView tvName = navigationView.getHeaderView(0).findViewById(R.id.nav_header_name);
+        TextView tvEmail = navigationView.getHeaderView(0).findViewById(R.id.nav_header_email);
+
+        String userRole = sessionManager.getUserRole();
+        int avatarPlaceholder = "shipper".equalsIgnoreCase(userRole) ? R.drawable.ic_shipper : R.drawable.ic_admin_avatar;
+
+        if (ivAvatar != null) {
+            String userAvatar = sessionManager.getUserAvatar();
+            if (!TextUtils.isEmpty(userAvatar)) {
+                Glide.with(this)
+                        .load(userAvatar)
+                        .placeholder(avatarPlaceholder)
+                        .error(avatarPlaceholder)
+                        .circleCrop()
+                        .into(ivAvatar);
+            } else {
+                ivAvatar.setImageResource(avatarPlaceholder);
+            }
+        }
+        if (tvName != null) {
+            String userName = sessionManager.getUserName();
+            tvName.setText(userName != null ? userName : "Admin");
+        }
+        if (tvEmail != null) {
+            String userEmail = sessionManager.getUserEmail();
+            tvEmail.setText(userEmail != null ? userEmail : "");
         }
     }
 

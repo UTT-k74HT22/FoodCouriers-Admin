@@ -4,13 +4,6 @@
     tools:showIn="navigation_view">
 
     <group android:checkableBehavior="single">
-        <!-- Shipper-only items (Hidden by default, shown for shippers in Java) -->
-        <item
-            android:id="@+id/nav_shipper_profile"
-            android:icon="@drawable/ic_admin_avatar"
-            android:title="Hồ sơ của tôi"
-            android:visible="false" />
-
         <!-- Admin/Shared items -->
         <item
             android:id="@+id/nav_dashboard"
@@ -66,6 +59,11 @@
 
     <item android:title="Tài khoản">
         <menu>
+            <item
+                android:id="@+id/nav_shipper_profile"
+                android:icon="@drawable/ic_admin_avatar"
+                android:title="Hồ sơ của tôi"
+                android:visible="false" />
             <item
                 android:id="@+id/nav_logout"
                 android:icon="@drawable/ic_logout"

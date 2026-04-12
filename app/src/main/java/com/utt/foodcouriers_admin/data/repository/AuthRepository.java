@@ -90,6 +90,37 @@ public class AuthRepository {
             }
         });
     }
+
+    public void changePassword(String newPassword, String confirmPassword, PasswordChangeCallback callback) {
+        String trimmedNewPassword = newPassword != null ? newPassword.trim() : "";
+        String trimmedConfirmPassword = confirmPassword != null ? confirmPassword.trim() : "";
+
+        if (trimmedNewPassword.isEmpty() || trimmedConfirmPassword.isEmpty()) {
+            callback.onError("New password and confirm password are required");
+            return;
+        }
+        if (trimmedNewPassword.length() < 6) {
+            callback.onError("New password must be at least 6 characters");
+            return;
+        }
+
+        if (!trimmedNewPassword.equals(trimmedConfirmPassword)) {
+            callback.onError("New password and confirm password do not match");
+            return;
+        }
+
+        authClient.updatePassword(trimmedNewPassword, new AuthClient.ApiCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
     
     public void getCurrentUser(GetUserCallback callback) {
         if (!authClient.isAuthenticated()) { // Check authentication status via AuthClient
@@ -128,6 +159,11 @@ public class AuthRepository {
     
     public interface GetUserCallback {
         void onSuccess(User user);
+        void onError(String error);
+    }
+
+    public interface PasswordChangeCallback {
+        void onSuccess();
         void onError(String error);
     }
 }
