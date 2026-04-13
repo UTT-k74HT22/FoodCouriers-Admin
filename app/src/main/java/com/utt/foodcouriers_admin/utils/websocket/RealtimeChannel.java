@@ -17,12 +17,24 @@ public class RealtimeChannel {
         this.id = id;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public void addListener(RealtimeListener listener) {
         listeners.add(listener);
     }
 
     public void removeListener(RealtimeListener listener) {
         listeners.remove(listener);
+    }
+
+    public void removeAllListeners() {
+        listeners.clear();
+    }
+
+    public int getListenerCount() {
+        return listeners.size();
     }
 
     public void notifyInsert(JsonObject data) {

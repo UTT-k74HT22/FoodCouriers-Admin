@@ -3,7 +3,31 @@ package com.utt.foodcouriers_admin.utils.websocket;
 import com.google.gson.JsonObject;
 
 /**
- * Sử dụng để lắng nghe sự kiện của một channel.
+ * Interface định nghĩa các callback để lắng nghe sự kiện realtime từ Supabase.
+ * 
+ * Sử dụng khi subscribe vào một database table để nhận thông báo khi có
+ * INSERT, UPDATE, hoặc DELETE xảy ra.
+ * 
+ * Ví dụ sử dụng:
+ * <pre>
+ * RealtimeListener listener = new RealtimeListener() {
+ *     {@literal @}Override
+ *     public void onInsert(JsonObject record) {
+ *         String id = record.get("id").getAsString();
+ *         Log.d("New record:", id);
+ *     }
+ *     
+ *     {@literal @}Override
+ *     public void onUpdate(JsonObject record, JsonObject oldRecord) {
+ *         Log.d("Updated:", record.toString());
+ *     }
+ *     
+ *     {@literal @}Override
+ *     public void onDelete(JsonObject oldRecord) {
+ *         Log.d("Deleted:", oldRecord.toString());
+ *     }
+ * };
+ * </pre>
  */
 public interface RealtimeListener {
     /**
