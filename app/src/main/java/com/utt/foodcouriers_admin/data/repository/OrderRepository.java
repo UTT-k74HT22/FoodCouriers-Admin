@@ -30,21 +30,26 @@ public class OrderRepository {
     /**
      * Lấy danh sách đơn hàng thực tế từ Supabase
      */
-    public void getOrders(OrderStatus status, String query, RepositoryCallback<List<Order>> callback) {
+    public void getOrders(OrderStatus status, String query, String shipperId, RepositoryCallback<List<Order>> callback) {
         // Cấu trúc select để lấy thông tin join
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*)";
         
-        // Tạo filter theo status nếu có
-        String filter = "";
+        // Tạo filter
+        StringBuilder filterBuilder = new StringBuilder();
         if (status != null) {
-            filter = "status=eq." + status.getValue();
+            filterBuilder.append("status=eq.").append(status.getValue());
         }
         
-        // Sắp xếp đơn mới nhất lên đầu
-        if (!filter.isEmpty()) filter += "&";
-        filter += "order=created_at.desc";
+        if (shipperId != null && !shipperId.isEmpty()) {
+            if (filterBuilder.length() > 0) filterBuilder.append("&");
+            filterBuilder.append("shipper_id=eq.").append(shipperId);
+        }
 
-        orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
+        // Sắp xếp đơn mới nhất lên đầu
+        if (filterBuilder.length() > 0) filterBuilder.append("&");
+        filterBuilder.append("order=created_at.desc");
+
+        orderClient.getOrders(selectClause, filterBuilder.toString(), new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
             public void onSuccess(List<Order> result) {
                 // Bạn có thể lọc thêm theo query ở đây nếu Supabase filter phức tạp

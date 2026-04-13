@@ -87,6 +87,7 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new OrderAdapter();
+        adapter.setShipperMode(true);
         adapter.setListener(this);
         recyclerView.setAdapter(adapter);
     }
@@ -159,6 +160,16 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
 
     @Override
     public void onAssignShipper(Order order) {
+    }
+
+    @Override
+    public void onPickup(Order order) {
+        pickupOrder(order);
+    }
+
+    @Override
+    public void onComplete(Order order) {
+        completeDelivery(order);
     }
 
     private void acceptOrder(Order order) {

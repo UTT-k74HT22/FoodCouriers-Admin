@@ -42,6 +42,8 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
 
     private OrderViewModel viewModel;
     private OrderAdapter adapter;
+    private com.utt.foodcouriers_admin.utils.SessionManager sessionManager;
+    private boolean isShipper = false;
 
     // Các thành phần UI
     private TextInputEditText etSearch;
@@ -53,6 +55,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     // Trạng thái cục bộ để quản lý việc tìm kiếm và lọc
     private String currentQuery = "";
     private OrderStatus currentStatus = OrderStatus.PENDING;
+    private boolean isViewingAvailable = false;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
 
     @Nullable
@@ -66,6 +69,10 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
+        sessionManager = com.utt.foodcouriers_admin.utils.SessionManager.getInstance(requireContext());
+        com.utt.foodcouriers_admin.data.model.User currentUser = sessionManager.getCurrentUser();
+        isShipper = currentUser != null && "shipper".equalsIgnoreCase(currentUser.getRole());
+
         // 1. Khởi tạo ViewModel (Sử dụng ViewModelProvider để ViewModel sống sót khi quay màn hình)
         viewModel = new ViewModelProvider(this).get(OrderViewModel.class);
         
@@ -105,7 +112,8 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             
             if (isEmpty) {
                 tvEmptyTitle.setText(R.string.order_empty_title);
-                tvEmptyMessage.setText(getString(R.string.order_empty_message, currentStatus.getLabel()));
+                String msg = isViewingAvailable ? "Không có đơn hàng mới nào quanh đây" : getString(R.string.order_empty_message, currentStatus.getLabel());
+                tvEmptyMessage.setText(msg);
             }
         });
 
@@ -128,30 +136,44 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     private void setupRecycler() {
         rvOrders.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new OrderAdapter();
+        adapter.setShipperMode(isShipper);
         adapter.setListener(this); // Fragment đóng vai trò xử lý các nút bấm trên mỗi Item
         rvOrders.setAdapter(adapter);
     }
 
     private void setupTabs() {
         tabLayout.removeAllTabs();
-        for (OrderStatus status : OrderStatus.values()) {
-            tabLayout.addTab(tabLayout.newTab().setText(status.getLabel()).setTag(status));
+        
+        if (isShipper) {
+            // Shippers only care about specific statuses
+            tabLayout.addTab(tabLayout.newTab().setText("Đơn hàng mới").setTag("AVAILABLE"));
+            tabLayout.addTab(tabLayout.newTab().setText("Đang giao").setTag(OrderStatus.DELIVERING));
+            tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành").setTag(OrderStatus.DELIVERED));
+            isViewingAvailable = true;
+        } else {
+            for (OrderStatus status : OrderStatus.values()) {
+                tabLayout.addTab(tabLayout.newTab().setText(status.getLabel()).setTag(status));
+            }
+            currentStatus = OrderStatus.PENDING;
+            isViewingAvailable = false;
         }
+
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getTag() instanceof OrderStatus) {
-                    currentStatus = (OrderStatus) tab.getTag();
+                Object tag = tab.getTag();
+                if (tag instanceof OrderStatus) {
+                    currentStatus = (OrderStatus) tag;
+                    isViewingAvailable = false;
+                    reloadOrders();
+                } else if ("AVAILABLE".equals(tag)) {
+                    isViewingAvailable = true;
                     reloadOrders();
                 }
             }
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
             @Override public void onTabReselected(TabLayout.Tab tab) { reloadOrders(); }
         });
-        
-        // Chọn Tab Pending làm mặc định
-        TabLayout.Tab pendingTab = tabLayout.getTabAt(0);
-        if (pendingTab != null) pendingTab.select();
     }
 
     private void setupSearch() {
@@ -168,7 +190,12 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     }
 
     private void reloadOrders() {
-        viewModel.fetchOrders(currentStatus, currentQuery);
+        if (isViewingAvailable) {
+            viewModel.fetchAvailableOrders();
+        } else {
+            String shipperId = isShipper ? sessionManager.getCurrentUser().getId() : null;
+            viewModel.fetchOrders(currentStatus, currentQuery, shipperId);
+        }
     }
 
     // --- Triển khai các hành động từ giao diện (OrderActionListener) ---
@@ -182,7 +209,11 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
 
     @Override
     public void onAccept(Order order) {
-        viewModel.updateStatus(order.getId(), OrderStatus.CONFIRMED);
+        if (isShipper) {
+            viewModel.acceptOrder(order.getId(), sessionManager.getCurrentUser().getId());
+        } else {
+            viewModel.updateStatus(order.getId(), OrderStatus.CONFIRMED);
+        }
     }
 
     @Override
@@ -193,6 +224,16 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     @Override
     public void onNextStep(Order order) {
         viewModel.updateStatus(order.getId(), order.getOrderStatus().next());
+    }
+
+    @Override
+    public void onPickup(Order order) {
+        viewModel.pickupOrder(order.getId(), sessionManager.getCurrentUser().getId());
+    }
+
+    @Override
+    public void onComplete(Order order) {
+        viewModel.completeOrder(order.getId(), sessionManager.getCurrentUser().getId());
     }
 
     @Override

@@ -37,13 +37,51 @@ public class OrderViewModel extends ViewModel {
 
     // Lấy danh sách đơn hàng
     public void fetchOrders(OrderStatus status, String query) {
+        fetchOrders(status, query, null);
+    }
+
+    public void fetchOrders(OrderStatus status, String query, String shipperId) {
         _isLoading.setValue(true);
-        orderRepository.getOrders(status, query, new RepositoryCallback<List<Order>>() {
+        orderRepository.getOrders(status, query, shipperId, new RepositoryCallback<List<Order>>() {
             @Override
             public void onComplete(BaseResponse<List<Order>> response) {
                 _isLoading.setValue(false);
                 if (response.isSuccess()) {
                     _orders.setValue(response.getData());
+                } else {
+                    _errorMessage.setValue(response.getMessage());
+                }
+            }
+        });
+    }
+
+    /** Lấy danh sách đơn hàng đang chờ Shipper nhận (Dành cho Shipper) */
+    public void fetchAvailableOrders() {
+        _isLoading.setValue(true);
+        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+                .getAvailableOrders(new RepositoryCallback<List<Order>>() {
+            @Override
+            public void onComplete(BaseResponse<List<Order>> response) {
+                _isLoading.setValue(false);
+                if (response.isSuccess()) {
+                    _orders.setValue(response.getData());
+                } else {
+                    _errorMessage.setValue(response.getMessage());
+                }
+            }
+        });
+    }
+
+    /** Shipper tự nhận đơn hàng */
+    public void acceptOrder(String orderId, String shipperUserId) {
+        _isLoading.setValue(true);
+        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+                .acceptOrder(orderId, shipperUserId, new RepositoryCallback<Void>() {
+            @Override
+            public void onComplete(BaseResponse<Void> response) {
+                _isLoading.setValue(false);
+                if (response.isSuccess()) {
+                    _errorMessage.setValue(null);
                 } else {
                     _errorMessage.setValue(response.getMessage());
                 }
@@ -59,8 +97,39 @@ public class OrderViewModel extends ViewModel {
             public void onComplete(BaseResponse<Void> response) {
                 _isLoading.setValue(false);
                 if (response.isSuccess()) {
-                    // Cập nhật thành công, gửi tín hiệu null hoặc một chuỗi đặc biệt
                     _errorMessage.setValue(null); 
+                } else {
+                    _errorMessage.setValue(response.getMessage());
+                }
+            }
+        });
+    }
+
+    /** Shipper xác nhận lấy hàng */
+    public void pickupOrder(String orderId, String shipperUserId) {
+        _isLoading.setValue(true);
+        orderRepository.pickupOrder(orderId, shipperUserId, new RepositoryCallback<Void>() {
+            @Override
+            public void onComplete(BaseResponse<Void> response) {
+                _isLoading.setValue(false);
+                if (response.isSuccess()) {
+                    _errorMessage.setValue(null);
+                } else {
+                    _errorMessage.setValue(response.getMessage());
+                }
+            }
+        });
+    }
+
+    /** Shipper xác nhận giao hàng thành công */
+    public void completeOrder(String orderId, String shipperUserId) {
+        _isLoading.setValue(true);
+        orderRepository.completeOrder(orderId, shipperUserId, new RepositoryCallback<Void>() {
+            @Override
+            public void onComplete(BaseResponse<Void> response) {
+                _isLoading.setValue(false);
+                if (response.isSuccess()) {
+                    _errorMessage.setValue(null);
                 } else {
                     _errorMessage.setValue(response.getMessage());
                 }
