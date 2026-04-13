@@ -30,6 +30,8 @@ public class Order implements Serializable {
     @SerializedName("payment_method")
     private String paymentMethod;
     private String status;
+    @SerializedName("delivery_status")
+    private String deliveryStatus;
     @SerializedName("created_at")
     private String createdAt;
     @SerializedName("updated_at")
@@ -155,6 +157,14 @@ public class Order implements Serializable {
         this.status = status;
     }
 
+    public String getDeliveryStatus() {
+        return deliveryStatus;
+    }
+
+    public void setDeliveryStatus(String deliveryStatus) {
+        this.deliveryStatus = deliveryStatus;
+    }
+
     public String getCreatedAt() {
         return createdAt;
     }
@@ -213,6 +223,10 @@ public class Order implements Serializable {
 
     public OrderStatus getOrderStatus() {
         return OrderStatus.fromValue(status);
+    }
+
+    public DeliveryStatus getDeliveryStatusEnum() {
+        return DeliveryStatus.fromValue(deliveryStatus);
     }
 
     public boolean isLocked() {

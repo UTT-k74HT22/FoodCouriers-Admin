@@ -149,7 +149,11 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         if (type == TYPE_AVAILABLE) {
             acceptOrder(order);
         } else if (type == TYPE_ONGOING) {
-            completeDelivery(order);
+            if (order.getOrderStatus() == OrderStatus.READY_FOR_PICKUP || order.getOrderStatus() == OrderStatus.PREPARING) {
+                pickupOrder(order);
+            } else if (order.getOrderStatus() == OrderStatus.DELIVERING) {
+                completeDelivery(order);
+            }
         }
     }
 
@@ -172,10 +176,25 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         });
     }
 
-    private void completeDelivery(Order order) {
-        repository.updateStatus(order.getId(), OrderStatus.DELIVERED, new RepositoryCallback<Order>() {
+    private void pickupOrder(Order order) {
+        repository.pickupOrder(order.getId(), sessionManager.getUserId(), new RepositoryCallback<Void>() {
             @Override
-            public void onComplete(BaseResponse<Order> response) {
+            public void onComplete(BaseResponse<Void> response) {
+                if (!isAdded()) return;
+                if (response.isSuccess()) {
+                    ToastBanner.showSuccess("Đã lấy hàng thành công!");
+                    loadData();
+                } else {
+                    ToastBanner.showError(response.getMessage());
+                }
+            }
+        });
+    }
+
+    private void completeDelivery(Order order) {
+        repository.completeOrder(order.getId(), sessionManager.getUserId(), new RepositoryCallback<Void>() {
+            @Override
+            public void onComplete(BaseResponse<Void> response) {
                 if (!isAdded()) return;
                 if (response.isSuccess()) {
                     ToastBanner.showSuccess("Đã giao hàng thành công!");

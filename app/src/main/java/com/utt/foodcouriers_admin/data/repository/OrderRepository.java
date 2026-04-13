@@ -1,20 +1,24 @@
 package com.utt.foodcouriers_admin.data.repository;
 
 import android.text.TextUtils;
-
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.data.model.Shipper;
-import com.utt.foodcouriers_admin.ui.order.OrderMockDataSource;
+import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
+import com.utt.foodcouriers_admin.data.remote.OrderClient;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class OrderRepository {
 
     private static OrderRepository instance;
+    private final OrderClient orderClient;
+
+    private OrderRepository() {
+        this.orderClient = OrderClient.getInstance();
+    }
 
     public static synchronized OrderRepository getInstance() {
         if (instance == null) {
@@ -23,63 +27,176 @@ public class OrderRepository {
         return instance;
     }
 
+    /**
+     * Lấy danh sách đơn hàng thực tế từ Supabase
+     */
     public void getOrders(OrderStatus status, String query, RepositoryCallback<List<Order>> callback) {
-        List<Order> filtered = new ArrayList<>();
-        for (Order order : OrderMockDataSource.getOrders()) {
-            if (status != null && order.getOrderStatus() != status) {
-                continue;
-            }
-            if (!matchesQuery(order, query)) {
-                continue;
-            }
-            filtered.add(order);
+        // Cấu trúc select để lấy thông tin join
+        String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*)";
+        
+        // Tạo filter theo status nếu có
+        String filter = "";
+        if (status != null) {
+            filter = "status=eq." + status.getValue();
         }
-        callback.onComplete(BaseResponse.success(filtered));
+        
+        // Sắp xếp đơn mới nhất lên đầu
+        if (!filter.isEmpty()) filter += "&";
+        filter += "order=created_at.desc";
+
+        orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
+            @Override
+            public void onSuccess(List<Order> result) {
+                // Bạn có thể lọc thêm theo query ở đây nếu Supabase filter phức tạp
+                callback.onComplete(BaseResponse.success(result));
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
+            }
+        });
     }
 
+    /**
+     * Lấy chi tiết một đơn hàng theo ID
+     */
     public void getOrderById(String orderId, RepositoryCallback<Order> callback) {
-        Order order = OrderMockDataSource.getOrderById(orderId);
-        if (order == null) {
-            callback.onComplete(BaseResponse.error("NOT_FOUND", "Order not found"));
-            return;
-        }
-        callback.onComplete(BaseResponse.success(order));
+        String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*)";
+        String filter = "id=eq." + orderId;
+
+        orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
+            @Override
+            public void onSuccess(List<Order> result) {
+                if (result != null && !result.isEmpty()) {
+                    callback.onComplete(BaseResponse.success(result.get(0)));
+                } else {
+                    callback.onComplete(BaseResponse.error("NOT_FOUND", "Order not found"));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
+            }
+        });
     }
 
-    public void updateStatus(String orderId, OrderStatus status, RepositoryCallback<Order> callback) {
-        Order order = OrderMockDataSource.updateStatus(orderId, status);
-        if (order == null) {
-            callback.onComplete(BaseResponse.error("UPDATE_FAILED", "Unable to update order"));
-            return;
+    /**
+     * Cập nhật trạng thái đơn hàng (PATCH đơn giản)
+     */
+    public void updateStatus(String orderId, OrderStatus status, RepositoryCallback<Void> callback) {
+        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+        updates.put("status", status.getValue());
+        
+        // Nếu chuyển sang confirmed, tự động chuyển delivery_status sang searching theo BA
+        if (status == OrderStatus.CONFIRMED) {
+            updates.put("delivery_status", "searching");
         }
-        callback.onComplete(BaseResponse.success(order));
+
+        orderClient.updateOrder(orderId, updates, new BaseSupabaseClient.ApiCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                callback.onComplete(BaseResponse.success(null));
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("UPDATE_ERROR", error));
+            }
+        });
     }
 
-    public void assignShipper(String orderId, Shipper shipper, RepositoryCallback<Order> callback) {
-        Order order = OrderMockDataSource.assignShipper(orderId, shipper);
-        if (order == null) {
-            callback.onComplete(BaseResponse.error("UPDATE_FAILED", "Unable to assign shipper"));
+    /**
+     * Gán Shipper (Admin thực hiện gán thủ công)
+     */
+    public void assignShipper(String orderId, Shipper shipper, RepositoryCallback<Void> callback) {
+        if (shipper == null || shipper.getUserId() == null) {
+            callback.onComplete(BaseResponse.error("INVALID_SHIPPER", "Shipper information is missing"));
             return;
         }
-        callback.onComplete(BaseResponse.success(order));
+        
+        // Sử dụng hàm acceptOrder nhưng gọi từ phía Admin để gán
+        acceptOrder(orderId, shipper.getUserId(), callback);
     }
 
+    /**
+     * Lấy danh sách Shipper có sẵn để gán đơn (Dữ liệu thật từ Supabase)
+     */
     public void getAssignableShippers(RepositoryCallback<List<Shipper>> callback) {
-        callback.onComplete(BaseResponse.success(OrderMockDataSource.getShippers()));
+        orderClient.getShippers(new BaseSupabaseClient.ApiCallback<List<Shipper>>() {
+            @Override
+            public void onSuccess(List<Shipper> result) {
+                callback.onComplete(BaseResponse.success(result));
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
+            }
+        });
     }
 
-    private boolean matchesQuery(Order order, String query) {
-        if (TextUtils.isEmpty(query)) {
-            return true;
-        }
-        String normalized = query.trim().toLowerCase();
-        boolean matchCode = order.getOrderCode() != null && order.getOrderCode().toLowerCase().contains(normalized);
-        boolean matchCustomer = order.getUser() != null && order.getUser().getFullName() != null
-                && order.getUser().getFullName().toLowerCase().contains(normalized);
-        boolean matchPhone = order.getUser() != null && order.getUser().getPhone() != null
-                && order.getUser().getPhone().contains(normalized);
-        boolean matchRestaurant = order.getRestaurant() != null && order.getRestaurant().getName() != null
-                && order.getRestaurant().getName().toLowerCase().contains(normalized);
-        return matchCode || matchCustomer || matchPhone || matchRestaurant;
+    /**
+     * Chấp nhận đơn hàng qua RPC accept_order_v2
+     */
+    public void acceptOrder(String orderId, String shipperUserId, RepositoryCallback<Void> callback) {
+        orderClient.acceptOrder(orderId, shipperUserId, new BaseSupabaseClient.ApiCallback<OrderClient.RpcResponse>() {
+            @Override
+            public void onSuccess(OrderClient.RpcResponse result) {
+                if (result.isSuccess()) {
+                    callback.onComplete(BaseResponse.success(null));
+                } else {
+                    callback.onComplete(BaseResponse.error("RPC_ERROR", result.getMessage()));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("NETWORK_ERROR", error));
+            }
+        });
+    }
+
+    /**
+     * Xác nhận lấy hàng qua RPC pickup_order
+     */
+    public void pickupOrder(String orderId, String shipperUserId, RepositoryCallback<Void> callback) {
+        orderClient.pickupOrder(orderId, shipperUserId, new BaseSupabaseClient.ApiCallback<OrderClient.RpcResponse>() {
+            @Override
+            public void onSuccess(OrderClient.RpcResponse result) {
+                if (result.isSuccess()) {
+                    callback.onComplete(BaseResponse.success(null));
+                } else {
+                    callback.onComplete(BaseResponse.error("RPC_ERROR", result.getMessage()));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("NETWORK_ERROR", error));
+            }
+        });
+    }
+
+    /**
+     * Hoàn tất đơn hàng qua RPC complete_order
+     */
+    public void completeOrder(String orderId, String shipperUserId, RepositoryCallback<Void> callback) {
+        orderClient.completeOrder(orderId, shipperUserId, new BaseSupabaseClient.ApiCallback<OrderClient.RpcResponse>() {
+            @Override
+            public void onSuccess(OrderClient.RpcResponse result) {
+                if (result.isSuccess()) {
+                    callback.onComplete(BaseResponse.success(null));
+                } else {
+                    callback.onComplete(BaseResponse.error("RPC_ERROR", result.getMessage()));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("NETWORK_ERROR", error));
+            }
+        });
     }
 }

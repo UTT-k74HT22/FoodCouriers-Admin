@@ -1,264 +1,376 @@
-# Module: Quản lý đơn hàng - App Admin
+# Module: Quản lý đơn hàng - Admin App
 
-## 1. Overview
-Module quản lý đơn hàng cho phép admin/staff xem danh sách, chi tiết và cập nhật trạng thái đơn hàng.
+## 1. Mục tiêu
 
-## 2. Features
+Module Order Management dùng cho `admin` và `staff` để:
 
-| # | Feature | Description |
-|---|---------|-------------|
-| 1 | Order List | Danh sách đơn với tab lọc theo trạng thái |
-| 2 | Search | Tìm theo mã đơn, tên khách, SĐT |
-| 3 | Order Detail | Xem chi tiết đầy đủ |
-| 4 | Update Status | Cập nhật trạng thái với validation |
-| 5 | Cancel Order | Hủy đơn với lý do |
-| 6 | Status Timeline | Lịch sử thay đổi trạng thái |
-| 7 | Realtime | Nhận đơn mới tự động |
+- Theo dõi toàn bộ vòng đời đơn hàng.
+- Xử lý vận hành nhà hàng.
+- Theo dõi quá trình điều phối tài xế.
+- Phát hiện sớm rủi ro "không có shipper" trước khi món ăn hoàn tất.
 
-## 3. Order Status Machine
+Tài liệu này chuẩn hóa nghiệp vụ theo hướng mới:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│              ORDER STATUS TRANSITIONS                       │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   pending ──────────▶ confirmed ──────────▶ preparing    │
-│   (chờ xác nhận)      (đã xác nhận)       (đang chuẩn bị) │
-│        │                    │                    │          │
-│        │                    │                    ▼          │
-│        │                    │              delivering        │
-│        │                    │             (đang giao)        │
-│        │                    │                    │          │
-│        ▼                    ▼                    ▼          │
-│   ┌───────────────────────────────────────────┐            │
-│   │              CANCELLED                    │            │
-│   │       (hủy từ pending/confirmed)         │            │
-│   └───────────────────────────────────────────┘            │
-│                          │                                  │
-│                          ▼                                  │
-│                   ┌────────────┐                           │
-│                   │ delivered  │                           │
-│                   │ (hoàn thành)│                           │
-│                   └────────────┘                           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+- Tìm/gán shipper bắt đầu sớm, song song với lúc nhà hàng chuẩn bị món.
+- Không đợi đến khi món xong mới tìm tài xế.
+- Tách rõ `order status` và `delivery status`.
 
-## 4. Data Flow
+## 2. Vấn đề của flow cũ
 
-### 4.1 Order List
-```
-Activity/Fragment
-       │
-       ▼
-OrderViewModel.loadOrders(status)
-       │
-       ▼
-OrderRepository.getOrders(status)
-       │
-       ▼
-Supabase: orders?status=eq.{status}&order=created_at.desc
-       │
-       ▼
-LiveData<List<Order>> ──▶ UI Update
-```
+Flow cũ kiểu:
 
-### 4.2 Update Status
-```
-User clicks "Confirm"
-       │
-       ▼
-Validate State Machine
-(pending → confirmed? YES)
-       │
-       ▼
-OrderRepository.updateStatus(orderId, "confirmed")
-       │
-       ▼
-Supabase RPC: rpc_update_order_status
-       │
-       ▼
-On Success:
-  - Insert order_status_logs
-  - Create notification
-  - Refresh list
-  - Show success message
-On Error:
-  - Show error from server
-```
+`co don -> nha hang lam xong -> moi tim shipper`
 
-## 5. API Endpoints
+có nhiều rủi ro:
 
-### 5.1 Get Orders by Status
-```
-GET /rest/v1/orders?status=eq.pending&select=*,user:users(*),restaurant:restaurants(*)
-```
+- Nhà hàng làm xong nhưng không có shipper online.
+- Đơn bị trễ ngay tại quán.
+- ETA giao hàng vô nghĩa vì chỉ sau khi món xong mới bắt đầu dispatch.
+- Khách hàng có trải nghiệm xấu và bỏ đơn.
 
-### 5.2 Get Order Detail
-```
-GET /rest/v1/orders?id=eq.{orderId}&select=*,user:users(*),restaurant:restaurants(*),items:order_items(*)
-```
+Vi vậy, flow nghiệp vụ mới phải chuyển sang:
 
-### 5.3 Update Status (RPC)
-```sql
-SELECT rpc_update_order_status(
-    p_order_id := 'uuid',
-    p_new_status := 'confirmed',
-    p_changed_by := 'uuid',
-    p_note := null
-);
-```
+`co don -> xac nhan don -> bat dau tim shipper -> shipper duoc gan/chap nhan -> nha hang tiep tuc chuan bi -> mon san sang -> shipper lay hang -> giao hang`
 
-### 5.4 Get Status Logs
-```
-GET /rest/v1/order_status_logs?order_id=eq.{orderId}&order=created_at.asc
-```
+## 3. Vai trò và phạm vi
 
-## 6. UI Components
+### 3.1 Admin
 
-### 6.1 Order List (fragment_order_list.xml)
-```xml
-<androidx.coordinatorlayout.widget.CoordinatorLayout>
-    <com.google.android.material.appbar.AppBarLayout>
-        <com.google.android.material.tabs.TabLayout>
-            <Tab android:text="All"/>
-            <Tab android:text="Chờ xác nhận"/>
-            <Tab android:text="Đã xác nhận"/>
-            <Tab android:text="Đang nấu"/>
-            <Tab android:text="Đang giao"/>
-            <Tab android:text="Hoàn thành"/>
-            <Tab android:text="Đã hủy"/>
-        </com.google.android.material.tabs.TabLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+- Xem tất cả đơn.
+- Theo dõi cả trạng thái order và trạng thái delivery.
+- Can thiệp khi hệ thống không tìm được shipper.
+- Có thể gán lại shipper nếu cần.
+- Giám sát SLA vận hành.
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefresh">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvOrders"/>
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
-```
+### 3.2 Staff
 
-### 6.2 Order Item Layout (item_order.xml)
-```xml
-<com.google.android.material.card.MaterialCardView>
-    <LinearLayout>
-        <TextView android:id="@+id/tvOrderCode"/>
-        <TextView android:id="@+id/tvCustomerName"/>
-        <TextView android:id="@+id/tvRestaurantName"/>
-        <TextView android:id="@+id/tvTotal"/>
-        <TextView android:id="@+id/tvStatus"/>
-        <TextView android:id="@+id/tvCreatedAt"/>
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
-```
+- Xác nhận đơn.
+- Chuyển đơn sang chuẩn bị.
+- Cập nhật món đã sẵn sàng lấy.
+- Theo dõi tài xế đã được gán hay chưa để phối hợp giao nhận.
 
-### 6.3 Order Detail (activity_order_detail.xml)
-```xml
-<ScrollView>
-    <!-- Order Info Section -->
-    <LinearLayout android:id="@+id/orderInfoSection">
-        <TextView android:id="@+id/tvOrderCode"/>
-        <TextView android:id="@+id/tvStatus"/>
-        <TextView android:id="@+id/tvCreatedAt"/>
-    </LinearLayout>
+### 3.3 Shipper
 
-    <!-- Customer Info -->
-    <LinearLayout android:id="@+id/customerSection">
-        <TextView android:text="Thông tin khách hàng"/>
-        <TextView android:id="@+id/tvCustomerName"/>
-        <TextView android:id="@+id/tvCustomerPhone"/>
-        <TextView android:id="@+id/tvDeliveryAddress"/>
-    </LinearLayout>
+- Nhận cuốc/nhận đơn từ flow delivery.
+- Đi tới nhà hàng.
+- Lấy hàng khi món đã sẵn sàng.
+- Giao cho khách và xác nhận hoàn tất.
 
-    <!-- Items List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvItems"/>
+## 4. Hai nhóm trạng thái cần tách biệt
 
-    <!-- Summary -->
-    <LinearLayout android:id="@+id/summarySection">
-        <TextView android:id="@+id/tvSubtotal"/>
-        <TextView android:id="@+id/tvDeliveryFee"/>
-        <TextView android:id="@+id/tvDiscount"/>
-        <TextView android:id="@+id/tvTotal"/>
-    </LinearLayout>
+## 4.1 Order status
 
-    <!-- Note -->
-    <TextView android:id="@+id/tvNote"/>
+`orders.status` phản ánh vòng đời nghiệp vụ của đơn:
 
-    <!-- Action Buttons -->
-    <LinearLayout android:id="@+id/actionButtons">
-        <Button android:id="@+id/btnConfirm"/>
-        <Button android:id="@+id/btnCancel"/>
-    </LinearLayout>
+| Trạng thái | Ý nghĩa |
+|---|---|
+| `pending` | Đơn mới tạo, chờ xác nhận |
+| `confirmed` | Đơn đã được chấp nhận |
+| `preparing` | Nhà hàng đang chuẩn bị món |
+| `ready_for_pickup` | Món đã sẵn sàng để lấy |
+| `delivering` | Hàng đã được shipper lấy và đang giao |
+| `delivered` | Giao thành công |
+| `cancelled` | Đơn bị hủy |
 
-    <!-- Status Timeline -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvStatusLogs"/>
-</ScrollView>
-```
+## 4.2 Delivery status
 
-## 7. ViewModel
+Cần có một luồng delivery tách riêng, để xác định tài xế đang ở giai đoạn nào.
 
-```java
-public class OrderViewModel extends ViewModel {
-    private MutableLiveData<List<Order>> orders = new MutableLiveData<>();
-    private MutableLiveData<Order> selectedOrder = new MutableLiveData<>();
-    private MutableLiveData<List<OrderStatusLog>> statusLogs = new MutableLiveData<>();
-    private MutableLiveData<String> error = new MutableLiveData<>();
-    private MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
-    private MutableLiveData<UpdateStatusResult> updateResult = new MutableLiveData<>();
+Đề xuất `orders.delivery_status` hoặc một mô hình tương đương:
 
-    public void loadOrders(String status) { }
-    public void loadOrderDetail(String orderId) { }
-    public void updateStatus(String orderId, String newStatus, String note) { }
-    public void cancelOrder(String orderId, String reason) { }
-}
-```
+| Delivery status | Ý nghĩa |
+|---|---|
+| `unassigned` | Chưa bắt đầu tìm tài xế |
+| `searching` | Hệ thống đang tìm tài xế |
+| `assigned` | Đã có tài xế nhận/được gán |
+| `arriving_pickup` | Tài xế đang đi tới nhà hàng |
+| `waiting_pickup` | Tài xế đã đến, đang chờ món |
+| `picked_up` | Tài xế đã lấy hàng |
+| `completed` | Flow giao hàng đã xong |
+| `failed` | Điều phối thất bại/can can thiệp |
 
-## 8. Validation Rules
+Nếu chưa đổi DB ngay, tài liệu vẫn coi đây là nghiệp vụ cần tồn tại ở cấp sản phẩm.
 
-| Current Status | Allowed Next Status |
-|----------------|---------------------|
-| pending | confirmed, cancelled |
-| confirmed | preparing, cancelled |
-| preparing | delivering, cancelled |
-| delivering | delivered |
-| delivered | (none - final) |
-| cancelled | (none - final) |
+## 5. Flow nghiệp vụ chuẩn mới
 
-## 9. Edge Cases
+### 5.1 Luồng tổng thể
 
-| Case | Handling |
-|------|----------|
-| Invalid transition | Show error: "Không thể chuyển sang trạng thái này" |
-| Network error | Show error, giữ nguyên trạng thái |
-| Order already cancelled | Disable all buttons, show "Đơn đã hủy" |
-| Empty list | Show "Không có đơn hàng" |
-| Concurrent update | Show "Đơn hàng đang được xử lý" |
-| Cancel with active orders | Allow, no restriction |
+`pending -> confirmed -> preparing -> ready_for_pickup -> delivering -> delivered`
 
-## 10. Realtime Subscription
+song song với:
 
-```java
-// Subscribe to orders table
-supabase.channel("orders")
-    .on("postgres_changes", 
-        filter: "table=orders", 
-        filter: "status=eq.pending"
-    )
-    .subscribe((event) {
-        // Add new order to list
-        // Play notification sound
-        // Update badge count
-    });
-```
+`unassigned -> searching -> assigned -> arriving_pickup/waiting_pickup -> picked_up -> completed`
 
-## 11. Error Messages
+### 5.2 Ý nghĩa flow mới
 
-| Error | Message |
-|-------|---------|
-| Network error | "Không thể kết nối máy chủ" |
-| Invalid transition | "Không thể chuyển sang trạng thái này" |
-| Server error | "Lỗi máy chủ: {message}" |
-| Token expired | "Phiên làm việc hết hạn, vui lòng đăng nhập lại" |
+- `order status` trả lời câu hỏi: đơn đang ở bước vận hành nào.
+- `delivery status` trả lời câu hỏi: tài xế đang ở bước điều phối nào.
+
+Như vậy có thể xảy ra tình huống hợp lệ:
+
+- Đơn đang `preparing`
+- Nhưng delivery đã `assigned`
+
+Đây là tình huống mong muốn, không phải lỗi.
+
+## 6. Luồng nghiệp vụ chi tiết
+
+### 6.1 Có đơn mới
+
+Khi khách tạo đơn:
+
+- `orders.status = pending`
+- `delivery_status = unassigned`
+- Chưa có `shipper_id`
+
+### 6.2 Xác nhận đơn
+
+Khi nhà hàng/admin chấp nhận:
+
+- `orders.status = confirmed`
+- Hệ thống có thể bắt đầu dispatch ngay hoặc chuyển sang `searching`
+
+Khuyến nghị:
+
+- Sau khi xác nhận đơn, hệ thống bắt đầu tìm shipper sớm.
+
+### 6.3 Nhà hàng chuẩn bị món
+
+Khi bắt đầu làm món:
+
+- `orders.status = preparing`
+- `delivery_status` có thể đang là `searching` hoặc `assigned`
+
+Đây là điểm thay đổi quan trọng của nghiệp vụ mới:
+
+- Không đợi món xong mới tìm shipper.
+- Tìm shipper song song với `preparing`.
+
+### 6.4 Tìm shipper
+
+Hệ thống hoặc điều phối viên sẽ:
+
+- Tìm shipper phù hợp
+- Gửi cuốc/phân bố đơn
+- Theo dõi timeout, retry, reassign nếu cần
+
+Khi đang tìm:
+
+- `delivery_status = searching`
+
+### 6.5 Đã có shipper
+
+Khi một shipper chấp nhận hoặc được gán thành công:
+
+- `shipper_id = <shipper_user_id>`
+- `delivery_status = assigned`
+
+Đơn lúc này vẫn có thể đang `preparing`.
+
+Nghĩa là:
+
+- Tài xế đã có
+- Nhà hàng vẫn đang nấu
+
+Đây là trạng thái rất bình thường và cần hỗ trợ tốt trên UI.
+
+### 6.6 Shipper đi tới nhà hàng
+
+Sau khi đã assigned:
+
+- `delivery_status = arriving_pickup`
+
+Nếu shipper đến sớm và món chưa xong:
+
+- `delivery_status = waiting_pickup`
+
+### 6.7 Nhà hàng xác nhận món sẵn sàng
+
+Khi món xong:
+
+- `orders.status = ready_for_pickup`
+
+Nếu shipper đến rồi, họ có thể lấy hàng gần như ngay lập tức.
+
+Nếu shipper chưa tới, hệ thống vẫn biết đã có ai phụ trách đơn này.
+
+### 6.8 Shipper lấy hàng
+
+Khi shipper nhận hàng từ quán:
+
+- `delivery_status = picked_up`
+- `orders.status = delivering`
+
+Đây là mốc quan trọng:
+
+- `delivering` nên được hiểu là "đã lấy hàng và đang đi giao", không phải chỉ mới "đã được gán shipper".
+
+### 6.9 Giao xong
+
+Khi shipper giao thành công:
+
+- `orders.status = delivered`
+- `delivery_status = completed`
+
+## 7. Xử lý trường hợp không có shipper
+
+Đây là lý do chính phải đổi flow.
+
+### 7.1 Hệ thống phát hiện sớm
+
+Nếu sau khi xác nhận đơn mà không tìm được shipper:
+
+- `delivery_status` phải vào `searching`
+- Có timeout/retry rõ ràng
+- Cảnh báo admin/staff sớm
+
+Không được đợi tới lúc `ready_for_pickup` mới phát hiện "không có tài xế".
+
+### 7.2 Các hành động nghiệp vụ khi tìm không ra
+
+Có thể áp dụng 1 hoặc nhiều hướng:
+
+- tiếp tục retry tìm shipper trong một cửa sổ thời gian
+- admin/staff gán thủ công shipper
+- thông báo ETA mới cho khách
+- nếu qua ngưỡng cho phép thì hủy đơn theo policy
+
+### 7.3 Mục tiêu vận hành
+
+- Giảm tình trạng món xong nhưng nhặt cho shipper.
+- Đưa cảnh báo lên sớm khi SLA điều phối đang xấu.
+
+## 8. Gán shipper thủ công
+
+Trong flow mới, admin có thể gán shipper thủ công mà không làm sai nghiệp vụ.
+
+Sau khi gán:
+
+- `shipper_id` được set
+- `delivery_status = assigned`
+- `orders.status` vẫn có thể là `confirmed` hoặc `preparing`
+
+Không nên:
+
+- Vừa gán shipper xong đã chuyển `orders.status = delivering`
+
+vì lúc đó shipper có thể chưa đến quán, chưa lấy hàng.
+
+## 9. Rule chuyển trạng thái đề xuất
+
+### 9.1 Order status
+
+| Từ trạng thái | Có thể chuyển sang | Ghi chú |
+|---|---|---|
+| `pending` | `confirmed`, `cancelled` | Đơn mới |
+| `confirmed` | `preparing`, `cancelled` | Đã chấp nhận |
+| `preparing` | `ready_for_pickup`, `cancelled` | Nhà hàng đang làm |
+| `ready_for_pickup` | `delivering`, `cancelled` | `delivering` khi shipper đã lấy hàng |
+| `delivering` | `delivered` | Đang giao |
+| `delivered` | Không chuyển tiếp | Trạng thái cuối |
+| `cancelled` | Không chuyển tiếp | Trạng thái cuối |
+
+### 9.2 Delivery status
+
+| Từ trạng thái | Có thể chuyển sang |
+|---|---|
+| `unassigned` | `searching`, `assigned`, `failed` |
+| `searching` | `assigned`, `failed` |
+| `assigned` | `arriving_pickup`, `waiting_pickup`, `failed` |
+| `arriving_pickup` | `waiting_pickup`, `picked_up`, `failed` |
+| `waiting_pickup` | `picked_up`, `failed` |
+| `picked_up` | `completed` |
+| `completed` | Không chuyển tiếp |
+| `failed` | `searching`, `assigned`, `cancelled` theo policy |
+
+## 10. Dữ liệu cần hiển thị trên admin
+
+### 10.1 Danh sách đơn
+
+- Mã đơn
+- Khách hàng
+- Nhà hàng
+- Tổng tiền
+- `orders.status`
+- `delivery_status`
+- Tên shipper nếu đã có
+- ETA/chuẩn bị nếu có
+- Cảnh báo nếu đang `searching` quá lâu
+
+### 10.2 Chi tiết đơn
+
+- Toàn bộ thông tin đơn
+- Trạng thái nhà hàng
+- Trạng thái điều phối shipper
+- Shipper hiện tại
+- Mốc thời gian:
+  - tạo đơn
+  - xác nhận đơn
+  - bắt đầu tìm shipper
+  - shipper được gán
+  - món sẵn sàng
+  - lấy hàng
+  - giao xong
+
+## 11. Realtime
+
+Admin cần thấy ngay các thay đổi sau:
+
+- Đơn vừa được tạo
+- Đơn được xác nhận
+- Bắt đầu tìm shipper
+- Shipper đã được gán
+- Món đã sẵn sàng
+- Shipper đã lấy hàng
+- Giao xong
+- Hủy đơn
+
+Realtime tối thiểu nên bắm:
+
+- `orders`
+- sau này có thể mở rộng thêm bảng/log delivery nếu được thêm vào DB
+
+## 12. Edge cases
+
+### 12.1 Đã có shipper nhưng nhà hàng làm chậm
+
+Tình huống hợp lệ:
+
+- `orders.status = preparing`
+- `delivery_status = waiting_pickup`
+
+UI không được coi đây là lỗi.
+
+### 12.2 Nhà hàng xong nhưng vẫn chưa có shipper
+
+Tình huống xấu nhưng phải được xử lý:
+
+- `orders.status = ready_for_pickup`
+- `delivery_status = searching` hoặc `failed`
+
+Hệ thống phải cảnh báo rõ.
+
+### 12.3 Đã gán shipper nhưng shipper hủy/bỏ cuốc
+
+Cần support:
+
+- clear `shipper_id` hoặc gán lại shipper
+- đưa `delivery_status` về `searching`
+
+### 12.4 Hủy đơn khi đã có shipper
+
+Cần có policy rõ:
+
+- nếu chưa lấy hàng thì có thể hủy và giải phong shipper
+- nếu đã `picked_up` thì phải có flow exception riêng
+
+## 13. Kết luận nghiệp vụ
+
+Flow nghiệp vụ mới của module order là:
+
+- Tìm shipper sớm, song song với lúc nhà hàng chuẩn bị món.
+- `shipper_id` có thể xuất hiện trước khi đơn `delivering`.
+- `delivering` chỉ bắt đầu sau khi shipper đã lấy hàng.
+- Muốn mô tả nghiệp vụ đúng, phải tách `order status` và `delivery status`.
+
+Tài liệu này là nguồn chuẩn nghiệp vụ cho admin order trong phase tiếp theo.

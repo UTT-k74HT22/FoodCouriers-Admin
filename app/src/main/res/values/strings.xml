@@ -236,4 +236,6 @@
     <string name="order_note_empty">Không có ghi chú</string>
     <string name="order_base_mock_warning">Khung base đang dùng dữ liệu mock, logic realtime sẽ nối sau</string>
     <string name="order_base_mock_updated">Đã cập nhật trạng thái trên base flow mock</string>
+    <string name="order_status_cancelled">Đã hủy đơn hàng thành công</string>
+    <string name="order_status_updated">Cập nhật trạng thái đơn hàng thành công</string>
 </resources>

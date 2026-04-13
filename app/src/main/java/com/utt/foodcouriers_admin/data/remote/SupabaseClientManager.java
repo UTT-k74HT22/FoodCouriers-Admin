@@ -27,12 +27,14 @@ public class SupabaseClientManager {
     public static void updateAllClients(String accessToken, String refreshToken) {
         AuthClient.getInstance().setSession(accessToken, refreshToken);
         RestaurantClient.getInstance().setSession(accessToken, refreshToken);
+        OrderClient.getInstance().setSession(accessToken, refreshToken);
         SupabaseRealtimeClient.getInstance().setAccessToken(accessToken);
     }
 
     public static void clearAllClients() {
         AuthClient.getInstance().clearSession();
         RestaurantClient.getInstance().clearSession();
+        OrderClient.getInstance().clearSession();
         SupabaseRealtimeClient.getInstance().disconnect();
     }
 
