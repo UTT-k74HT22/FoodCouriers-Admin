@@ -63,6 +63,7 @@ public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.S
             return TextUtils.equals(oldItem.getFullName(), newItem.getFullName())
                     && TextUtils.equals(oldItem.getPhone(), newItem.getPhone())
                     && TextUtils.equals(oldItem.getAvatarUrl(), newItem.getAvatarUrl())
+                    && TextUtils.equals(oldItem.getRestaurantName(), newItem.getRestaurantName())
                     && oldItem.isActive() == newItem.isActive();
         }
     };
@@ -71,6 +72,7 @@ public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.S
         private final ImageView ivAvatar;
         private final TextView tvName;
         private final TextView tvPhone;
+        private final TextView tvRestaurantName;
         private final TextView tvOrdersCompleted;
         private final TextView tvStatus;
         private final MaterialSwitch swIsActive;
@@ -82,6 +84,7 @@ public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.S
             ivAvatar = itemView.findViewById(R.id.iv_shipper_avatar);
             tvName = itemView.findViewById(R.id.tv_shipper_name);
             tvPhone = itemView.findViewById(R.id.tv_shipper_phone);
+            tvRestaurantName = itemView.findViewById(R.id.tv_restaurant_name);
             tvOrdersCompleted = itemView.findViewById(R.id.tv_orders_completed);
             tvStatus = itemView.findViewById(R.id.tv_shipper_status);
             swIsActive = itemView.findViewById(R.id.sw_is_active);
@@ -92,6 +95,16 @@ public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.S
         void bind(ShipperProfile shipper) {
             tvName.setText(shipper.getFullName());
             tvPhone.setText(TextUtils.isEmpty(shipper.getPhone()) ? "--" : shipper.getPhone());
+
+            String restaurantName = shipper.getRestaurantName();
+            if (!TextUtils.isEmpty(restaurantName)) {
+                tvRestaurantName.setText(itemView.getContext().getString(R.string.shipper_restaurant, restaurantName));
+                tvRestaurantName.setVisibility(View.VISIBLE);
+            } else {
+                tvRestaurantName.setText(itemView.getContext().getString(R.string.shipper_restaurant_none));
+                tvRestaurantName.setVisibility(View.VISIBLE);
+            }
+
             tvOrdersCompleted.setText(itemView.getContext().getString(R.string.shipper_orders_count, shipper.getTotalDelivered()));
 
             tvStatus.setText(shipper.isActive() ? R.string.shipper_status_available : R.string.shipper_status_unavailable);

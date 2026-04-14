@@ -107,6 +107,8 @@
     <string name="dialog_delete_shipper_message">Shipper %1$s sẽ bị xóa khỏi hệ thống.</string>
     <string name="shipper_saving">Đang lưu…</string>
     <string name="shipper_orders_count">Đơn hoàn thành: %d</string>
+    <string name="shipper_restaurant">Nhà hàng: %s</string>
+    <string name="shipper_restaurant_none">Nhà hàng: Chưa gán</string>
     <string name="shipper_status_available">Sẵn sàng</string>
     <string name="shipper_status_unavailable">Ngừng hoạt động</string>
     <string name="action_choose_image">Chọn ảnh</string>
