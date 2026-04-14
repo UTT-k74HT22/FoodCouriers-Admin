@@ -1,26 +1,41 @@
 package com.utt.foodcouriers_admin.ui.menu;
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.utt.foodcouriers_admin.utils.ToastBanner;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.utt.foodcouriers_admin.R;
+import com.utt.foodcouriers_admin.data.common.BaseResponse;
+import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Category;
 import com.utt.foodcouriers_admin.data.model.MenuItem;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.model.User;
 import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
 import com.utt.foodcouriers_admin.data.repository.MenuRepository;
+import com.utt.foodcouriers_admin.data.repository.StorageRepository;
+import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
+import com.utt.foodcouriers_admin.data.request.MenuUpsertRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +48,18 @@ public class MenuItemFormActivity extends AppCompatActivity {
     private TextInputEditText etName, etDescription, etPrice, etCategory, etRestaurant, etSortOrder;
     private MaterialSwitch swAvailable, swFeatured;
     private MaterialButton btnSave;
+    private MaterialButton btnCancel;
+    private MaterialButton btnChooseImage;
+    private ImageView ivMenuImage;
+    private TextInputEditText etImage;
 
     private MenuRepository menuRepository;
+    private StorageRepository storageRepository;
     private MenuItem currentItem;
     private String preSelectedRestaurantId;
-    
+    private Uri selectedImageUri;
+    private boolean isUploading = false;
+
     private List<Category> categories = new ArrayList<>();
     private List<Restaurant> restaurants = new ArrayList<>();
     private Category selectedCategory;
@@ -51,12 +73,23 @@ public class MenuItemFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_menu_item_form);
 
         menuRepository = MenuRepository.getInstance();
-        
+        storageRepository = StorageRepository.getInstance();
+
         initViews();
         handleIntent();
         loadInitialData();
         setupListeners();
     }
+
+    private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    selectedImageUri = uri;
+                    uploadSelectedImage();
+                }
+            }
+    );
 
     private void initViews() {
         tilName = findViewById(R.id.til_name);
@@ -75,7 +108,11 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
         swAvailable = findViewById(R.id.sw_is_available);
         swFeatured = findViewById(R.id.sw_is_featured);
+        btnCancel = findViewById(R.id.btn_cancel);
         btnSave = findViewById(R.id.btn_save);
+        btnChooseImage = findViewById(R.id.btn_choose_image);
+        ivMenuImage = findViewById(R.id.iv_menu_image);
+        etImage = findViewById(R.id.et_image);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -104,25 +141,42 @@ public class MenuItemFormActivity extends AppCompatActivity {
         etSortOrder.setText(String.valueOf(currentItem.getSortOrder()));
         swAvailable.setChecked(currentItem.isAvailable());
         swFeatured.setChecked(currentItem.isFeatured());
-        
-        // Category and Restaurant will be set after loading lists
+        etImage.setText(currentItem.getImageUrl());
+
+        loadPreviewImage(currentItem.getImageUrl());
+    }
+
+    private void loadPreviewImage(String url) {
+        if (TextUtils.isEmpty(url) && etImage != null) {
+            url = etImage.getText() != null ? etImage.getText().toString().trim() : null;
+        }
+        if (TextUtils.isEmpty(url)) {
+            ivMenuImage.setImageResource(R.drawable.ic_menu_item);
+            return;
+        }
+        Glide.with(this)
+                .load(url)
+                .placeholder(R.drawable.ic_menu_item)
+                .error(R.drawable.ic_menu_item)
+                .centerCrop()
+                .into(ivMenuImage);
     }
 
     private void loadInitialData() {
         // Load Categories
-        menuRepository.getCategories(new BaseSupabaseClient.ApiCallback<Category[]>() {
+        menuRepository.getCategories(new RepositoryCallback<List<Category>>() {
             @Override
-            public void onSuccess(Category[] result) {
+            public void onComplete(BaseResponse<List<Category>> response) {
+                if (!response.isSuccess()) {
+                    Toast.makeText(MenuItemFormActivity.this, "Lỗi tải danh mục: " + response.getMessage(), Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 categories.clear();
+                List<Category> result = response.getData();
                 if (result != null) {
-                    for (Category c : result) categories.add(c);
+                    categories.addAll(result);
                     setupCategoryFilter();
                 }
-            }
-
-            @Override
-            public void onError(String error) {
-                Toast.makeText(MenuItemFormActivity.this, "Lỗi tải danh mục: " + error, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -137,7 +191,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         } else {
@@ -149,7 +203,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String error) {
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi tải nhà hàng: " + error, Toast.LENGTH_SHORT).show();
+                    ToastBanner.showError("Lỗi tải nhà hàng: " + error);
                 }
             });
         }
@@ -186,7 +240,81 @@ public class MenuItemFormActivity extends AppCompatActivity {
     private void setupListeners() {
         etCategory.setOnClickListener(v -> showCategoryPicker());
         etRestaurant.setOnClickListener(v -> showRestaurantPicker());
+        btnCancel.setOnClickListener(v -> finish());
         btnSave.setOnClickListener(v -> saveMenuItem());
+        btnChooseImage.setOnClickListener(v -> openImagePicker());
+        ivMenuImage.setOnClickListener(v -> handleImageClick());
+
+        if (etImage != null) {
+            etImage.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    loadPreviewImage(s != null ? s.toString() : null);
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) { }
+            });
+        }
+    }
+
+    private void openImagePicker() {
+        pickImageLauncher.launch("image/*");
+    }
+
+    private void handleImageClick() {
+        String currentUrl = null;
+        if (currentItem != null) {
+            currentUrl = currentItem.getImageUrl();
+        }
+        if (TextUtils.isEmpty(currentUrl) && etImage != null) {
+            currentUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
+        }
+        if (!TextUtils.isEmpty(currentUrl)) {
+            ImageZoomDialogFragment.newInstance(currentUrl).show(getSupportFragmentManager(), "ImageZoomDialog");
+        }
+    }
+
+    private void uploadSelectedImage() {
+        if (selectedImageUri == null) return;
+
+        isUploading = true;
+        setLoading(true);
+        ToastBanner.showWarning(getString(R.string.toast_uploading));
+
+        storageRepository.uploadImage(this, selectedImageUri, "menu_items", new RepositoryCallback<String>() {
+            @Override
+            public void onComplete(BaseResponse<String> response) {
+                isUploading = false;
+                if (response.isSuccess()) {
+                    String imageUrl = response.getData();
+                    if (currentItem != null) {
+                        currentItem.setImageUrl(imageUrl);
+                    }
+                    if (etImage != null) {
+                        etImage.setText(imageUrl);
+                    }
+                    loadPreviewImage(imageUrl);
+                    ToastBanner.showSuccess(getString(R.string.toast_upload_success));
+                } else {
+                    String errorMsg = response.getMessage();
+                    ToastBanner.showError(getString(R.string.toast_upload_failed, errorMsg));
+                }
+                setLoading(false);
+            }
+        });
+    }
+
+    private void setLoading(boolean loading) {
+        if (btnSave != null) {
+            btnSave.setEnabled(!loading && !isUploading);
+        }
+        if (btnChooseImage != null) {
+            btnChooseImage.setEnabled(!loading && !isUploading);
+        }
     }
 
     private void setupCategoryFilter() {
@@ -232,6 +360,11 @@ public class MenuItemFormActivity extends AppCompatActivity {
     private void saveMenuItem() {
         if (!validateInput()) return;
 
+        if (isUploading) {
+            ToastBanner.showWarning(getString(R.string.toast_uploading));
+            return;
+        }
+
         if (!isEditMode) currentItem = new MenuItem();
         
         currentItem.setName(etName.getText().toString().trim());
@@ -245,33 +378,46 @@ public class MenuItemFormActivity extends AppCompatActivity {
         String sortOrderStr = etSortOrder.getText().toString();
         currentItem.setSortOrder(TextUtils.isEmpty(sortOrderStr) ? 0 : Integer.parseInt(sortOrderStr));
 
+        String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
+        currentItem.setImageUrl(imageUrl);
+
+        MenuUpsertRequest request = new MenuUpsertRequest(
+                currentItem.getRestaurantId(),
+                currentItem.getCategoryId(),
+                currentItem.getName(),
+                currentItem.getDescription(),
+                currentItem.getPrice(),
+                currentItem.getImageUrl(),
+                currentItem.isAvailable(),
+                currentItem.isFeatured(),
+                currentItem.getSortOrder()
+        );
+
         btnSave.setEnabled(false);
         if (isEditMode) {
-            menuRepository.updateMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
+            menuRepository.update(currentItem.getId(), request, new RepositoryCallback<MenuItem>() {
                 @Override
-                public void onSuccess(MenuItem result) {
-                    Toast.makeText(MenuItemFormActivity.this, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-
-                @Override
-                public void onError(String error) {
+                public void onComplete(BaseResponse<MenuItem> response) {
                     btnSave.setEnabled(true);
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + error, Toast.LENGTH_SHORT).show();
+                    if (response.isSuccess()) {
+                        ToastBanner.showSuccess("Cập nhật thành công");
+                        finish();
+                    } else {
+                        ToastBanner.showError("Lỗi: " + response.getMessage());
+                    }
                 }
             });
         } else {
-            menuRepository.createMenuItem(currentItem, new BaseSupabaseClient.ApiCallback<MenuItem>() {
+            menuRepository.create(request, new RepositoryCallback<MenuItem>() {
                 @Override
-                public void onSuccess(MenuItem result) {
-                    Toast.makeText(MenuItemFormActivity.this, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-
-                @Override
-                public void onError(String error) {
+                public void onComplete(BaseResponse<MenuItem> response) {
                     btnSave.setEnabled(true);
-                    Toast.makeText(MenuItemFormActivity.this, "Lỗi: " + error, Toast.LENGTH_SHORT).show();
+                    if (response.isSuccess()) {
+                        ToastBanner.showSuccess("Thêm thành công");
+                        finish();
+                    } else {
+                        ToastBanner.showError("Lỗi: " + response.getMessage());
+                    }
                 }
             });
         }
@@ -305,7 +451,7 @@ public class MenuItemFormActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        getOnBackPressedDispatcher().onBackPressed();
         return true;
     }
 }

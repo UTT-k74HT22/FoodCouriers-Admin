@@ -2,6 +2,8 @@ package com.utt.foodcouriers_admin.data.remote;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 import com.utt.foodcouriers_admin.data.model.User;
 
@@ -9,6 +11,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -415,6 +419,61 @@ public class AuthClient extends BaseSupabaseClient {
                         }
                     } else {
                         postError(callback, parseRestError("Failed to create profile", response.code(), json));
+                    }
+                }
+            }
+        });
+    }
+
+    public void updatePassword(String newPassword, ApiCallback<Void> callback) {
+        if (!SupabaseConfig.isConfigured()) {
+            postError(callback, "Supabase is not configured");
+            return;
+        }
+        if (!isAuthenticated()) {
+            postError(callback, "Not authenticated");
+            return;
+        }
+
+        String trimmedPassword = newPassword != null ? newPassword.trim() : "";
+        if (trimmedPassword.isEmpty()) {
+            postError(callback, "New password is required");
+            return;
+        }
+        if (trimmedPassword.length() < 6) {
+            postError(callback, "New password must be at least 6 characters");
+            return;
+        }
+
+        Log.d(TAG, "updatePassword: current authenticated user");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("password", trimmedPassword);
+
+        Request request = new Request.Builder()
+                .url(SupabaseConfig.AUTH_URL + "/user")
+                .put(RequestBody.create(gson.toJson(body), okhttp3.MediaType.parse(SupabaseConfig.CONTENT_TYPE_JSON)))
+                .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
+                .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
+                .addHeader(SupabaseConfig.HEADER_CONTENT_TYPE, SupabaseConfig.CONTENT_TYPE_JSON)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "updatePassword network failure", e);
+                postError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (ResponseBody responseBody = response.body()) {
+                    String json = responseBody != null ? responseBody.string() : "";
+                    Log.d(TAG, "updatePassword response code=" + response.code() + " body=" + json);
+                    if (response.isSuccessful()) {
+                        postSuccess(callback, null);
+                    } else {
+                        postError(callback, parseRestError("Failed to update password", response.code(), json));
                     }
                 }
             }

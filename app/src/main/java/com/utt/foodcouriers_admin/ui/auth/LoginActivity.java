@@ -7,7 +7,6 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,6 +16,7 @@ import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.User;
 import com.utt.foodcouriers_admin.data.repository.AuthRepository;
 import com.utt.foodcouriers_admin.ui.main.MainActivity;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class LoginActivity extends AppCompatActivity {
@@ -85,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
         );
 
         tvForgotPassword.setOnClickListener(v ->
-                Toast.makeText(this, "Li\u00ean h\u1ec7 qu\u1ea3n tr\u1ecb vi\u00ean \u0111\u1ec3 \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u", Toast.LENGTH_LONG).show()
+                ToastBanner.showError("Liên hệ quản trị viên để đặt lại mật khẩu")
         );
     }
 
@@ -138,11 +138,11 @@ public class LoginActivity extends AppCompatActivity {
 
                 if (!user.isActive()) {
                     authRepository.logout(() -> {});
-                    Toast.makeText(LoginActivity.this, "T\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n \u0111ang b\u1ecb kh\u00f3a.", Toast.LENGTH_LONG).show();
+                    ToastBanner.showError("Tài khoản của bạn đang bị khóa.");
                     return;
                 }
 
-                if (user.isAdmin() || user.isStaff()) {
+                if (user.isAdmin() || user.isStaff() || user.isShipper()) {
                     String accessToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getAccessToken();
                     String refreshToken = com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getRefreshToken();
 
@@ -160,13 +160,13 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
                 authRepository.logout(() -> {});
-                Toast.makeText(LoginActivity.this, "B\u1ea1n kh\u00f4ng c\u00f3 quy\u1ec1n truy c\u1eadp h\u1ec7 th\u1ed1ng qu\u1ea3n tr\u1ecb.", Toast.LENGTH_LONG).show();
+                ToastBanner.showError("Bạn không có quyền truy cập hệ thống quản trị.");
             }
 
             @Override
             public void onError(String error) {
                 showLoading(false);
-                Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
+                ToastBanner.showError(error);
             }
         });
     }

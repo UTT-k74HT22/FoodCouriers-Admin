@@ -84,6 +84,10 @@ public class User {
         return "staff".equalsIgnoreCase(role);
     }
 
+    public boolean isShipper() {
+        return "shipper".equalsIgnoreCase(role);
+    }
+
     public boolean isActive() {
         return Boolean.TRUE.equals(isActive);
     }

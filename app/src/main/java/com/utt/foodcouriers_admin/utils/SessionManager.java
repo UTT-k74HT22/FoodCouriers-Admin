@@ -15,6 +15,9 @@ public class SessionManager {
     private static final String KEY_USER_EMAIL = "user_email";
     private static final String KEY_USER_NAME = "user_name";
     private static final String KEY_USER_ROLE = "user_role";
+    private static final String KEY_USER_PHONE = "user_phone";
+    private static final String KEY_USER_AVATAR = "user_avatar";
+    private static final String KEY_USER_IS_ACTIVE = "user_is_active";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_TOKEN_EXPIRES_AT = "token_expires_at";
     
@@ -47,6 +50,9 @@ public class SessionManager {
                 .putString(KEY_USER_EMAIL, user.getEmail())
                 .putString(KEY_USER_NAME, user.getFullName())
                 .putString(KEY_USER_ROLE, user.getRole())
+                .putString(KEY_USER_PHONE, user.getPhone())
+                .putString(KEY_USER_AVATAR, user.getAvatarUrl())
+                .putBoolean(KEY_USER_IS_ACTIVE, user.isActive())
                 .putBoolean(KEY_IS_LOGGED_IN, true)
                 .putLong(KEY_TOKEN_EXPIRES_AT, expiresAt)
                 .apply();
@@ -58,7 +64,22 @@ public class SessionManager {
                 .putString(KEY_USER_EMAIL, user.getEmail())
                 .putString(KEY_USER_NAME, user.getFullName())
                 .putString(KEY_USER_ROLE, user.getRole())
+                .putString(KEY_USER_PHONE, user.getPhone())
+                .putString(KEY_USER_AVATAR, user.getAvatarUrl())
+                .putBoolean(KEY_USER_IS_ACTIVE, user.isActive())
                 .apply();
+    }
+
+    public void saveUserName(String name) {
+        prefs.edit().putString(KEY_USER_NAME, name).apply();
+    }
+
+    public void saveUserPhone(String phone) {
+        prefs.edit().putString(KEY_USER_PHONE, phone).apply();
+    }
+
+    public void saveUserAvatar(String avatarUrl) {
+        prefs.edit().putString(KEY_USER_AVATAR, avatarUrl).apply();
     }
     
     public boolean isLoggedIn() {
@@ -88,6 +109,18 @@ public class SessionManager {
     public String getUserRole() {
         return prefs.getString(KEY_USER_ROLE, null);
     }
+
+    public String getUserPhone() {
+        return prefs.getString(KEY_USER_PHONE, null);
+    }
+
+    public String getUserAvatar() {
+        return prefs.getString(KEY_USER_AVATAR, null);
+    }
+
+    public boolean getUserIsActive() {
+        return prefs.getBoolean(KEY_USER_IS_ACTIVE, true);
+    }
     
     public boolean isAdmin() {
         return "admin".equalsIgnoreCase(getUserRole());
@@ -114,6 +147,9 @@ public class SessionManager {
         user.setEmail(getUserEmail());
         user.setFullName(getUserName());
         user.setRole(getUserRole());
+        user.setPhone(getUserPhone());
+        user.setAvatarUrl(getUserAvatar());
+        user.setIsActive(getUserIsActive());
         return user;
     }
     
@@ -125,6 +161,9 @@ public class SessionManager {
                 .remove(KEY_USER_EMAIL)
                 .remove(KEY_USER_NAME)
                 .remove(KEY_USER_ROLE)
+                .remove(KEY_USER_PHONE)
+                .remove(KEY_USER_AVATAR)
+                .remove(KEY_USER_IS_ACTIVE)
                 .remove(KEY_TOKEN_EXPIRES_AT)
                 .putBoolean(KEY_IS_LOGGED_IN, false)
                 .apply();

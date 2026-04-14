@@ -9,18 +9,21 @@
     android:padding="@dimen/spacing_lg"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/nav_header_avatar"
         android:layout_width="64dp"
         android:layout_height="64dp"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
         android:src="@drawable/ic_admin_avatar"
-        android:contentDescription="@null" />
+        app:shapeAppearanceOverlay="@style/CircleImage" />
 
     <TextView
         android:id="@+id/nav_header_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/spacing_sm"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
         android:textColor="@color/white"
         android:textStyle="bold" />
 
@@ -28,7 +31,7 @@
         android:id="@+id/nav_header_email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
         android:textColor="@color/white" />
 
 </LinearLayout>

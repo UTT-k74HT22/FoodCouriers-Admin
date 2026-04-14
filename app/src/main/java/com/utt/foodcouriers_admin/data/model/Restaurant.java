@@ -1,9 +1,11 @@
 package com.utt.foodcouriers_admin.data.model;
 
 import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 
 public class Restaurant implements Serializable {
+
     private String id;
     private String name;
     private String description;
@@ -26,6 +28,10 @@ public class Restaurant implements Serializable {
     private int deliveryFee;
     @SerializedName("min_order")
     private int minOrder;
+    @SerializedName("created_at")
+    private String createdAt;
+    @SerializedName("updated_at")
+    private String updatedAt;
 
     public Restaurant() {}
 
@@ -74,5 +80,13 @@ public class Restaurant implements Serializable {
     @Override
     public String toString() {
         return name;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
     }
 }
