@@ -56,9 +56,20 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         orderRepository = OrderRepository.getInstance();
         initViews();
+        setupToolbar();
         setupList();
         loadOrder();
         bindActions();
+    }
+
+    private void setupToolbar() {
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
     private void initViews() {
@@ -134,12 +145,15 @@ public class OrderDetailActivity extends AppCompatActivity {
             if (currentOrder == null || currentOrder.isLocked()) {
                 return;
             }
-            orderRepository.updateStatus(currentOrder.getId(), OrderStatus.CANCELLED, new RepositoryCallback<Order>() {
+            orderRepository.updateStatus(currentOrder.getId(), OrderStatus.CANCELLED, new RepositoryCallback<Void>() {
                 @Override
-                public void onComplete(BaseResponse<Order> response) {
-                    currentOrder = response.getData();
-                    ToastBanner.showWarning(getString(R.string.order_base_mock_warning));
-                    bindOrder();
+                public void onComplete(BaseResponse<Void> response) {
+                    if (response.isSuccess()) {
+                        ToastBanner.showWarning(getString(R.string.order_status_cancelled));
+                        loadOrder();
+                    } else {
+                        ToastBanner.showError(response.getMessage());
+                    }
                 }
             });
         });
@@ -148,12 +162,15 @@ public class OrderDetailActivity extends AppCompatActivity {
             if (currentOrder == null || currentOrder.isLocked()) {
                 return;
             }
-            orderRepository.updateStatus(currentOrder.getId(), currentOrder.getOrderStatus().next(), new RepositoryCallback<Order>() {
+            orderRepository.updateStatus(currentOrder.getId(), currentOrder.getOrderStatus().next(), new RepositoryCallback<Void>() {
                 @Override
-                public void onComplete(BaseResponse<Order> response) {
-                    currentOrder = response.getData();
-                    ToastBanner.showSuccess(getString(R.string.order_base_mock_updated));
-                    bindOrder();
+                public void onComplete(BaseResponse<Void> response) {
+                    if (response.isSuccess()) {
+                        ToastBanner.showSuccess(getString(R.string.order_status_updated));
+                        loadOrder();
+                    } else {
+                        ToastBanner.showError(response.getMessage());
+                    }
                 }
             });
         });
@@ -165,22 +182,30 @@ public class OrderDetailActivity extends AppCompatActivity {
         if (currentOrder == null || currentOrder.isLocked()) {
             return;
         }
-        orderRepository.getAssignableShippers(new RepositoryCallback<List<Shipper>>() {
+        String restaurantId = currentOrder.getRestaurantId();
+        orderRepository.getAssignableShippers(restaurantId, new RepositoryCallback<List<Shipper>>() {
             @Override
             public void onComplete(BaseResponse<List<Shipper>> response) {
                 List<Shipper> shippers = response.isSuccess() && response.getData() != null ? response.getData() : java.util.Collections.emptyList();
+                if (shippers.isEmpty()) {
+                    ToastBanner.showWarning("Không có shipper nào sẵn sàng");
+                    return;
+                }
                 String[] names = new String[shippers.size()];
                 for (int i = 0; i < shippers.size(); i++) {
                     names[i] = shippers.get(i).getFullName() + " - " + shippers.get(i).getPhone();
                 }
                 new MaterialAlertDialogBuilder(OrderDetailActivity.this)
                         .setTitle(R.string.order_assign_shipper)
-                        .setItems(names, (dialog, which) -> orderRepository.assignShipper(currentOrder.getId(), shippers.get(which), new RepositoryCallback<Order>() {
+                        .setItems(names, (dialog, which) -> orderRepository.assignShipper(currentOrder.getId(), shippers.get(which), new RepositoryCallback<Void>() {
                             @Override
-                            public void onComplete(BaseResponse<Order> response) {
-                                currentOrder = response.getData();
-                                ToastBanner.showSuccess(getString(R.string.order_assign_shipper_success));
-                                bindOrder();
+                            public void onComplete(BaseResponse<Void> response) {
+                                if (response.isSuccess()) {
+                                    ToastBanner.showSuccess(getString(R.string.order_assign_shipper_success));
+                                    loadOrder();
+                                } else {
+                                    ToastBanner.showError(response.getMessage());
+                                }
                             }
                         }))
                         .setNegativeButton(R.string.action_cancel, null)

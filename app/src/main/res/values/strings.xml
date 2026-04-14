@@ -107,6 +107,8 @@
     <string name="dialog_delete_shipper_message">Shipper %1$s sẽ bị xóa khỏi hệ thống.</string>
     <string name="shipper_saving">Đang lưu…</string>
     <string name="shipper_orders_count">Đơn hoàn thành: %d</string>
+    <string name="shipper_restaurant">Nhà hàng: %s</string>
+    <string name="shipper_restaurant_none">Nhà hàng: Chưa gán</string>
     <string name="shipper_status_available">Sẵn sàng</string>
     <string name="shipper_status_unavailable">Ngừng hoạt động</string>
     <string name="action_choose_image">Chọn ảnh</string>
@@ -256,4 +258,6 @@
     <string name="order_note_empty">Không có ghi chú</string>
     <string name="order_base_mock_warning">Khung base đang dùng dữ liệu mock, logic realtime sẽ nối sau</string>
     <string name="order_base_mock_updated">Đã cập nhật trạng thái trên base flow mock</string>
+    <string name="order_status_cancelled">Đã hủy đơn hàng thành công</string>
+    <string name="order_status_updated">Cập nhật trạng thái đơn hàng thành công</string>
 </resources>

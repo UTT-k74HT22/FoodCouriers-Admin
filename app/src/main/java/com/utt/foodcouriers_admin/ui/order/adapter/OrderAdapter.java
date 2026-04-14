@@ -27,9 +27,12 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
         void onReject(Order order);
         void onNextStep(Order order);
         void onAssignShipper(Order order);
+        void onPickup(Order order);
+        void onComplete(Order order);
     }
 
     private OrderActionListener listener;
+    private boolean isShipper = false;
 
     public OrderAdapter() {
         super(DIFF_CALLBACK);
@@ -37,6 +40,10 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
 
     public void setListener(OrderActionListener listener) {
         this.listener = listener;
+    }
+
+    public void setShipperMode(boolean isShipper) {
+        this.isShipper = isShipper;
     }
 
     @NonNull
@@ -78,6 +85,8 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
         private final MaterialButton btnReject;
         private final MaterialButton btnNextStep;
         private final MaterialButton btnAssignShipper;
+        private final MaterialButton btnPickup;
+        private final MaterialButton btnComplete;
 
         OrderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -92,6 +101,11 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
             btnReject = itemView.findViewById(R.id.btn_reject_order);
             btnNextStep = itemView.findViewById(R.id.btn_next_step);
             btnAssignShipper = itemView.findViewById(R.id.btn_assign_shipper);
+            
+            // New shipper-specific buttons (assumed to be in item_order.xml or we'll reuse existing buttons)
+            // Reusing btnNextStep as a primary action button for simplicity if they aren't there
+            btnPickup = btnNextStep; 
+            btnComplete = btnNextStep;
         }
 
         void bind(Order order) {
@@ -113,10 +127,14 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
                 }
             });
 
-            bindButtons(order, status);
+            if (isShipper) {
+                bindShipperButtons(order, status);
+            } else {
+                bindAdminButtons(order, status);
+            }
         }
 
-        private void bindButtons(Order order, OrderStatus status) {
+        private void bindAdminButtons(Order order, OrderStatus status) {
             btnAccept.setVisibility(status == OrderStatus.PENDING ? View.VISIBLE : View.GONE);
             btnReject.setVisibility(status == OrderStatus.PENDING ? View.VISIBLE : View.GONE);
 
@@ -127,29 +145,37 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
             btnNextStep.setText(itemView.getContext().getString(R.string.order_action_next_template, status.next().getLabel()));
             btnAssignShipper.setText(order.getShipper() == null ? R.string.order_assign_shipper : R.string.order_change_shipper);
 
-            btnAccept.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onAccept(order);
-                }
-            });
-            btnReject.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onReject(order);
-                }
-            });
-            btnNextStep.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onNextStep(order);
-                }
-            });
-            btnAssignShipper.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onAssignShipper(order);
-                }
-            });
+            btnAccept.setOnClickListener(v -> { if (listener != null) listener.onAccept(order); });
+            btnReject.setOnClickListener(v -> { if (listener != null) listener.onReject(order); });
+            btnNextStep.setOnClickListener(v -> { if (listener != null) listener.onNextStep(order); });
+            btnAssignShipper.setOnClickListener(v -> { if (listener != null) listener.onAssignShipper(order); });
 
             ColorStateList tint = ColorStateList.valueOf(ContextCompat.getColor(itemView.getContext(), R.color.primary));
             btnAssignShipper.setStrokeColor(tint);
+        }
+
+        private void bindShipperButtons(Order order, OrderStatus status) {
+            // Shippers usually don't accept/reject or assign other shippers
+            btnAccept.setVisibility(View.GONE);
+            btnReject.setVisibility(View.GONE);
+            btnAssignShipper.setVisibility(View.GONE);
+
+            if (order.getShipperId() == null) {
+                // Đơn hàng chưa có ai nhận
+                btnNextStep.setVisibility(View.VISIBLE);
+                btnNextStep.setText("Nhận đơn hàng");
+                btnNextStep.setOnClickListener(v -> { if (listener != null) listener.onAccept(order); });
+            } else if (status == OrderStatus.READY_FOR_PICKUP) {
+                btnPickup.setVisibility(View.VISIBLE);
+                btnPickup.setText("Xác nhận lấy hàng");
+                btnPickup.setOnClickListener(v -> { if (listener != null) listener.onPickup(order); });
+            } else if (status == OrderStatus.DELIVERING) {
+                btnComplete.setVisibility(View.VISIBLE);
+                btnComplete.setText("Hoàn thành giao hàng");
+                btnComplete.setOnClickListener(v -> { if (listener != null) listener.onComplete(order); });
+            } else {
+                btnNextStep.setVisibility(View.GONE);
+            }
         }
 
         private String resolveShipperName(Order order) {

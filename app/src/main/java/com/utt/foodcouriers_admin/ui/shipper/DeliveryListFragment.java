@@ -1,5 +1,6 @@
 package com.utt.foodcouriers_admin.ui.shipper;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,7 @@ import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.data.repository.DeliveryRepository;
+import com.utt.foodcouriers_admin.ui.order.OrderDetailActivity;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
@@ -84,9 +86,16 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         loadData();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadData();
+    }
+
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new OrderAdapter();
+        adapter.setShipperMode(true);
         adapter.setListener(this);
         recyclerView.setAdapter(adapter);
     }
@@ -130,7 +139,9 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
 
     @Override
     public void onOpenDetail(Order order) {
-        // Implement if needed
+        Intent intent = new Intent(requireContext(), ShipperOrderDetailActivity.class);
+        intent.putExtra(ShipperOrderDetailActivity.EXTRA_ORDER_ID, order.getId());
+        startActivity(intent);
     }
 
     @Override
@@ -149,12 +160,26 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         if (type == TYPE_AVAILABLE) {
             acceptOrder(order);
         } else if (type == TYPE_ONGOING) {
-            completeDelivery(order);
+            if (order.getOrderStatus() == OrderStatus.READY_FOR_PICKUP || order.getOrderStatus() == OrderStatus.PREPARING) {
+                pickupOrder(order);
+            } else if (order.getOrderStatus() == OrderStatus.DELIVERING) {
+                completeDelivery(order);
+            }
         }
     }
 
     @Override
     public void onAssignShipper(Order order) {
+    }
+
+    @Override
+    public void onPickup(Order order) {
+        pickupOrder(order);
+    }
+
+    @Override
+    public void onComplete(Order order) {
+        completeDelivery(order);
     }
 
     private void acceptOrder(Order order) {
@@ -172,10 +197,25 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         });
     }
 
-    private void completeDelivery(Order order) {
-        repository.updateStatus(order.getId(), OrderStatus.DELIVERED, new RepositoryCallback<Order>() {
+    private void pickupOrder(Order order) {
+        repository.pickupOrder(order.getId(), sessionManager.getUserId(), new RepositoryCallback<Void>() {
             @Override
-            public void onComplete(BaseResponse<Order> response) {
+            public void onComplete(BaseResponse<Void> response) {
+                if (!isAdded()) return;
+                if (response.isSuccess()) {
+                    ToastBanner.showSuccess("Đã lấy hàng thành công!");
+                    loadData();
+                } else {
+                    ToastBanner.showError(response.getMessage());
+                }
+            }
+        });
+    }
+
+    private void completeDelivery(Order order) {
+        repository.completeOrder(order.getId(), sessionManager.getUserId(), new RepositoryCallback<Void>() {
+            @Override
+            public void onComplete(BaseResponse<Void> response) {
                 if (!isAdded()) return;
                 if (response.isSuccess()) {
                     ToastBanner.showSuccess("Đã giao hàng thành công!");
