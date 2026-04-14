@@ -21,9 +21,8 @@
                 android:id="@+id/ivLogo"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:src="@drawable/ic_launcher_foreground"
-                android:background="@drawable/admin_card"
-                android:padding="16dp"
+                android:src="@drawable/fooddelivery_icon"
+                android:scaleType="centerCrop"
                 android:layout_marginTop="40dp"
                 android:contentDescription="Logo" />
 
@@ -41,7 +40,7 @@
                 android:id="@+id/tvSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Admin Portal"
+                android:text="Cổng quản trị"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
@@ -58,7 +57,7 @@
                     android:id="@+id/tvFormTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Create Account"
+                    android:text="Tạo tài khoản"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -67,7 +66,7 @@
                     android:id="@+id/tvFormSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign up to get started"
+                    android:text="Đăng ký để bắt đầu"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:layout_marginTop="4dp" />
@@ -83,7 +82,7 @@
                         android:id="@+id/etName"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:hint="Full Name"
+                        android:hint="Họ và tên"
                         android:inputType="textPersonName"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
@@ -117,7 +116,7 @@
                         android:id="@+id/etPhone"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:hint="Phone Number"
+                        android:hint="Số điện thoại"
                         android:inputType="phone"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
@@ -136,7 +135,7 @@
                         android:id="@+id/etPassword"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:hint="Password"
+                        android:hint="Mật khẩu"
                         android:inputType="textPassword"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
@@ -155,7 +154,7 @@
                         android:id="@+id/etConfirmPassword"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:hint="Confirm Password"
+                        android:hint="Nhập lại mật khẩu"
                         android:inputType="textPassword"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
@@ -166,7 +165,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:background="@drawable/admin_flat_button"
-                    android:text="Create Account"
+                    android:text="Tạo tài khoản"
                     android:textColor="@color/white"
                     android:textSize="14sp"
                     android:textAllCaps="false"
@@ -183,7 +182,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Already have an account?"
+                        android:text="Đã có tài khoản?"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -191,7 +190,7 @@
                         android:id="@+id/tvSwitchToLogin"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=" Sign In"
+                        android:text=" Đăng nhập"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />

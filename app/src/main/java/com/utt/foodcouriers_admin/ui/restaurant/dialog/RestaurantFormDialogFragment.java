@@ -67,8 +67,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
     private TextView btnCancel;
     private ProgressBar progressSave;
     private ImageView ivPreview;
-    private TextView tvPreviewName;
-    private TextView tvPreviewDescription;
     private TextView tvFormTitle;
     private TextView tvFormSubtitle;
     private TextView tvStatusHelper;
@@ -93,19 +91,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
             }
     );
 
-    private final TextWatcher previewWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            updatePreview();
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) { }
-    };
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,20 +113,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         initViews(view);
         bindRestaurant();
         setupListeners();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (etName != null) {
-            etName.removeTextChangedListener(previewWatcher);
-        }
-        if (etDescription != null) {
-            etDescription.removeTextChangedListener(previewWatcher);
-        }
-        if (etImage != null) {
-            etImage.removeTextChangedListener(previewWatcher);
-        }
     }
 
     public void setRestaurantFormListener(RestaurantFormListener listener) {
@@ -183,8 +154,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         btnCancel = view.findViewById(R.id.btn_cancel);
         progressSave = view.findViewById(R.id.progress_save);
         ivPreview = view.findViewById(R.id.iv_form_image);
-        tvPreviewName = view.findViewById(R.id.tv_preview_name);
-        tvPreviewDescription = view.findViewById(R.id.tv_preview_description);
         tvFormTitle = view.findViewById(R.id.tv_form_title);
         tvFormSubtitle = view.findViewById(R.id.tv_form_subtitle);
         tvStatusHelper = view.findViewById(R.id.tv_status_helper);
@@ -267,7 +236,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         updateTimeDisplay();
         tvStatusHelper.setText(switchActive.isChecked() ? R.string.label_active_vi_en : R.string.label_inactive_vi_en);
         tvOpenHelper.setText(switchOpen.isChecked() ? "Mở cửa" : "Đóng cửa");
-        updatePreview();
     }
 
     private void parseTime(String time) {
@@ -310,8 +278,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
 
         ivPreview.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
 
-        etName.addTextChangedListener(previewWatcher);
-        etDescription.addTextChangedListener(previewWatcher);
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -424,13 +390,6 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    private void updatePreview() {
-        String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
-        tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.restaurant_label_name) : name);
-        tvPreviewDescription.setText(TextUtils.isEmpty(description) ? getString(R.string.restaurant_label_description) : description);
     }
 
     private void loadPreviewImage(@Nullable String url) {

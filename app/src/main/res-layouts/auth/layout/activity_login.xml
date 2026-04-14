@@ -22,9 +22,8 @@
                 android:id="@+id/ivLogo"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:src="@drawable/ic_launcher_foreground"
-                android:background="@drawable/admin_card"
-                android:padding="16dp"
+                android:src="@drawable/fooddelivery_icon"
+                android:scaleType="centerCrop"
                 android:layout_marginTop="40dp"
                 android:contentDescription="Logo" />
 
@@ -42,7 +41,7 @@
                 android:id="@+id/tvSubtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Admin Portal"
+                android:text="Cổng quản trị"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp"
                 android:layout_marginTop="4dp" />
@@ -59,7 +58,7 @@
                     android:id="@+id/tvFormTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign In"
+                    android:text="Đăng nhập"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -68,7 +67,7 @@
                     android:id="@+id/tvFormSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign in to continue"
+                    android:text="Đăng nhập để tiếp tục"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:layout_marginTop="4dp" />
@@ -103,7 +102,7 @@
                         android:id="@+id/etPassword"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:hint="Password"
+                        android:hint="Mật khẩu"
                         android:inputType="textPassword"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
@@ -114,7 +113,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:background="@drawable/admin_flat_button"
-                    android:text="Sign In"
+                    android:text="Đăng nhập"
                     android:textColor="@color/white"
                     android:textSize="14sp"
                     android:textAllCaps="false"
@@ -131,7 +130,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Don't have an account?"
+                        android:text="Chưa có tài khoản?"
                         android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
 
@@ -139,7 +138,7 @@
                         android:id="@+id/tvSwitchToRegister"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text=" Sign Up"
+                        android:text=" Đăng ký"
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -151,7 +150,7 @@
                 android:id="@+id/tvForgotPassword"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Forgot Password?"
+                android:text="Quên mật khẩu?"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:layout_marginTop="16dp"

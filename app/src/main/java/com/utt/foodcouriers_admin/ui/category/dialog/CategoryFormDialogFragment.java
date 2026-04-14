@@ -71,8 +71,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
     private CircularProgressIndicator progressSave;
     private ImageView ivPreview;
     private TextView tvStatusHelper;
-    private TextView tvPreviewName;
-    private TextView tvPreviewDescription;
     private TextView tvFormTitle;
     private TextView tvFormSubtitle;
 
@@ -85,19 +83,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
                 }
             }
     );
-
-    private final TextWatcher previewWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            updatePreview();
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) { }
-    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -121,17 +106,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
         initViews(view);
         bindCategory();
         setupListeners();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (etName != null) {
-            etName.removeTextChangedListener(previewWatcher);
-        }
-        if (etDescription != null) {
-            etDescription.removeTextChangedListener(previewWatcher);
-        }
     }
 
     public void setCategoryFormListener(CategoryFormListener listener) {
@@ -169,8 +143,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
         progressSave = view.findViewById(R.id.progress_save);
         ivPreview = view.findViewById(R.id.iv_form_image);
         tvStatusHelper = view.findViewById(R.id.tv_status_helper);
-        tvPreviewName = view.findViewById(R.id.tv_preview_name);
-        tvPreviewDescription = view.findViewById(R.id.tv_preview_description);
         tvFormTitle = view.findViewById(R.id.tv_form_title);
         tvFormSubtitle = view.findViewById(R.id.tv_form_subtitle);
     }
@@ -188,7 +160,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
             loadPreviewImage(category.getImageUrl());
         }
         tvStatusHelper.setText(switchActive.isChecked() ? R.string.label_active_vi_en : R.string.label_inactive_vi_en);
-        updatePreview();
     }
 
     private void setupListeners() {
@@ -197,9 +168,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
         btnChooseImage.setOnClickListener(v -> openImagePicker());
         ivPreview.setOnClickListener(v -> handleImageClick());
 
-        etName.addTextChangedListener(previewWatcher);
-        etDescription.addTextChangedListener(previewWatcher);
-        
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -307,13 +275,6 @@ public class CategoryFormDialogFragment extends DialogFragment {
             tilSortOrder.setError(getString(R.string.error_generic));
             return null;
         }
-    }
-
-    private void updatePreview() {
-        String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : "";
-        tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_name_vi_en) : name);
-        tvPreviewDescription.setText(TextUtils.isEmpty(description) ? "" : description);
     }
 
     private void loadPreviewImage(@Nullable String url) {

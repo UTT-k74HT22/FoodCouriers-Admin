@@ -4,6 +4,7 @@
     tools:showIn="navigation_view">
 
     <group android:checkableBehavior="single">
+        <!-- Admin/Shared items -->
         <item
             android:id="@+id/nav_dashboard"
             android:icon="@drawable/ic_dashboard"
@@ -26,7 +27,7 @@
             android:title="Quản lý món ăn" />
     </group>
 
-    <item android:title="Quản lý khác">
+    <item android:id="@+id/group_management" android:title="Quản lý khác">
         <menu>
             <item
                 android:id="@+id/nav_users"
@@ -43,7 +44,7 @@
         </menu>
     </item>
 
-    <item android:title="Báo cáo &amp; Thông báo">
+    <item android:id="@+id/group_reports" android:title="Báo cáo &amp; Thông báo">
         <menu>
             <item
                 android:id="@+id/nav_reports"
@@ -58,6 +59,11 @@
 
     <item android:title="Tài khoản">
         <menu>
+            <item
+                android:id="@+id/nav_shipper_profile"
+                android:icon="@drawable/ic_admin_avatar"
+                android:title="Hồ sơ của tôi"
+                android:visible="false" />
             <item
                 android:id="@+id/nav_logout"
                 android:icon="@drawable/ic_logout"

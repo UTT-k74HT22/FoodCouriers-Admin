@@ -62,7 +62,7 @@
             android:paddingEnd="@dimen/spacing_sm"
             android:paddingBottom="@dimen/spacing_xs"
             android:textAppearance="@style/AdminTextAppearance.Small"
-            android:textColor="@color/success"
+            android:textColor="@color/white"
             android:textStyle="bold"
             tools:text="#1" />
 

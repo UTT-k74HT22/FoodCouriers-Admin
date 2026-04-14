@@ -13,6 +13,7 @@ public class SupabaseConfig {
     public static final String REST_URL = SUPABASE_URL + "/rest/v1";
     public static final String STORAGE_URL = SUPABASE_URL + "/storage/v1";
     public static final String STORAGE_OBJECT_URL = STORAGE_URL + "/object/public/" + SUPABASE_STORAGE_BUCKET;
+    public static final String REALTIME_VSN = "1.0.0";
 
     public static final String HEADER_AUTH = "apikey";
     public static final String HEADER_AUTHORIZATION = "Authorization";
@@ -42,6 +43,16 @@ public class SupabaseConfig {
 
     public static boolean isAdminApiConfigured() {
         return ADMIN_API_BASE_URL != null && !ADMIN_API_BASE_URL.isBlank();
+    }
+
+    public static String getRealtimeWebsocketUrl() {
+        if (!isConfigured()) {
+            return "";
+        }
+        String websocketBaseUrl = SUPABASE_URL
+                .replaceFirst("^https://", "wss://")
+                .replaceFirst("^http://", "ws://");
+        return websocketBaseUrl + "/realtime/v1/websocket?apikey=" + SUPABASE_ANON_KEY + "&vsn=" + REALTIME_VSN;
     }
 
     public static String debugSummary() {

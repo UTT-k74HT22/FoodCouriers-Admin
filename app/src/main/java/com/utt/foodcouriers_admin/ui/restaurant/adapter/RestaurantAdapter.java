@@ -120,14 +120,14 @@ public class RestaurantAdapter extends ListAdapter<Restaurant, RestaurantAdapter
             if (restaurant.isOpen()) {
                 tvStatus.setText("Mở cửa");
                 tvStatus.setBackgroundResource(R.drawable.admin_badge_success);
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.success));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.white));
             } else {
                 tvStatus.setText("Đóng cửa");
                 tvStatus.setBackgroundResource(R.drawable.admin_badge_pending);
-                tvStatus.setTextColor(itemView.getContext().getColor(R.color.warning));
+                tvStatus.setTextColor(itemView.getContext().getColor(R.color.white));
             }
 
-            swIsActive.setOnCheckedChangeListener(null);
+swIsActive.setOnCheckedChangeListener(null);
             swIsActive.setChecked(restaurant.isActive());
             swIsActive.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (listener != null) {

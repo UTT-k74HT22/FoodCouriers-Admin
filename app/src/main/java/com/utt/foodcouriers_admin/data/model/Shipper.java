@@ -17,6 +17,8 @@ public class Shipper implements Serializable {
     @SerializedName("created_at")
     private String createdAt;
 
+    private User user;
+
     private String fullName;
     private String phone;
     private String email;
@@ -44,16 +46,31 @@ public class Shipper implements Serializable {
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 
-    public String getFullName() { return fullName; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+
+    public String getFullName() { 
+        if (user != null) return user.getFullName();
+        return fullName; 
+    }
     public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getPhone() { return phone; }
+    public String getPhone() { 
+        if (user != null) return user.getPhone();
+        return phone; 
+    }
     public void setPhone(String phone) { this.phone = phone; }
 
-    public String getEmail() { return email; }
+    public String getEmail() { 
+        if (user != null) return user.getEmail();
+        return email; 
+    }
     public void setEmail(String email) { this.email = email; }
 
-    public String getAvatarUrl() { return avatarUrl; }
+    public String getAvatarUrl() { 
+        if (user != null) return user.getAvatarUrl();
+        return avatarUrl; 
+    }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public String getRestaurantName() { return restaurantName; }

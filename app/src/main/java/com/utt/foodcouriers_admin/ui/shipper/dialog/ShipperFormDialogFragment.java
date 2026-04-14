@@ -29,7 +29,7 @@ import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Restaurant;
-import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.model.ShipperProfile;
 import com.utt.foodcouriers_admin.data.repository.StorageRepository;
 import com.utt.foodcouriers_admin.data.request.ShipperUpsertRequest;
 import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
@@ -44,7 +44,7 @@ public class ShipperFormDialogFragment extends DialogFragment {
     private static final String ARG_SHIPPER = "arg_shipper";
     private static final String ARG_RESTAURANTS = "arg_restaurants";
 
-    public static ShipperFormDialogFragment newInstance(@Nullable Shipper shipper, @Nullable List<Restaurant> restaurants) {
+    public static ShipperFormDialogFragment newInstance(@Nullable ShipperProfile shipper, @Nullable List<Restaurant> restaurants) {
         ShipperFormDialogFragment fragment = new ShipperFormDialogFragment();
         Bundle bundle = new Bundle();
         if (shipper != null) {
@@ -57,7 +57,7 @@ public class ShipperFormDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    private Shipper shipper;
+    private ShipperProfile shipper;
     private List<Restaurant> restaurants;
     private ShipperFormListener listener;
     private StorageRepository storageRepository;
@@ -67,11 +67,13 @@ public class ShipperFormDialogFragment extends DialogFragment {
     private TextInputLayout tilName;
     private TextInputLayout tilPhone;
     private TextInputLayout tilEmail;
+    private TextInputLayout tilPassword;
     private TextInputLayout tilImage;
     private TextInputLayout tilRestaurant;
     private TextInputEditText etName;
     private TextInputEditText etPhone;
     private TextInputEditText etEmail;
+    private TextInputEditText etPassword;
     private TextInputEditText etImage;
     private AutoCompleteTextView etRestaurant;
     private MaterialSwitch switchActive;
@@ -81,8 +83,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
     private CircularProgressIndicator progressSave;
     private ImageView ivPreview;
     private TextView tvStatusHelper;
-    private TextView tvPreviewName;
-    private TextView tvPreviewPhone;
     private TextView tvFormTitle;
     private TextView tvFormSubtitle;
 
@@ -98,25 +98,12 @@ public class ShipperFormDialogFragment extends DialogFragment {
             }
     );
 
-    private final TextWatcher previewWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            updatePreview();
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) { }
-    };
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NO_TITLE, com.google.android.material.R.style.ThemeOverlay_Material3_Dialog_Alert);
         if (getArguments() != null) {
-            shipper = (Shipper) getArguments().getSerializable(ARG_SHIPPER);
+            shipper = (ShipperProfile) getArguments().getSerializable(ARG_SHIPPER);
             restaurants = (List<Restaurant>) getArguments().getSerializable(ARG_RESTAURANTS);
         }
         storageRepository = StorageRepository.getInstance();
@@ -135,20 +122,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
         setupRestaurantDropdown();
         bindShipper();
         setupListeners();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (etName != null) {
-            etName.removeTextChangedListener(previewWatcher);
-        }
-        if (etPhone != null) {
-            etPhone.removeTextChangedListener(previewWatcher);
-        }
-        if (etEmail != null) {
-            etEmail.removeTextChangedListener(previewWatcher);
-        }
     }
 
     public void setShipperFormListener(ShipperFormListener listener) {
@@ -175,11 +148,13 @@ public class ShipperFormDialogFragment extends DialogFragment {
         tilName = view.findViewById(R.id.til_name);
         tilPhone = view.findViewById(R.id.til_phone);
         tilEmail = view.findViewById(R.id.til_email);
+        tilPassword = view.findViewById(R.id.til_password);
         tilImage = view.findViewById(R.id.til_image);
         tilRestaurant = view.findViewById(R.id.til_restaurant);
         etName = view.findViewById(R.id.et_name);
         etPhone = view.findViewById(R.id.et_phone);
         etEmail = view.findViewById(R.id.et_email);
+        etPassword = view.findViewById(R.id.et_password);
         etImage = view.findViewById(R.id.et_image);
         etRestaurant = view.findViewById(R.id.et_restaurant);
         switchActive = view.findViewById(R.id.switch_active);
@@ -189,8 +164,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
         progressSave = view.findViewById(R.id.progress_save);
         ivPreview = view.findViewById(R.id.iv_form_avatar);
         tvStatusHelper = view.findViewById(R.id.tv_status_helper);
-        tvPreviewName = view.findViewById(R.id.tv_preview_name);
-        tvPreviewPhone = view.findViewById(R.id.tv_preview_phone);
         tvFormTitle = view.findViewById(R.id.tv_form_title);
         tvFormSubtitle = view.findViewById(R.id.tv_form_subtitle);
     }
@@ -232,7 +205,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
             }
         }
         tvStatusHelper.setText(switchActive.isChecked() ? R.string.label_active_vi_en : R.string.label_inactive_vi_en);
-        updatePreview();
     }
 
     private void setupListeners() {
@@ -241,9 +213,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
         btnChooseImage.setOnClickListener(v -> openImagePicker());
         ivPreview.setOnClickListener(v -> handleImageClick());
 
-        etName.addTextChangedListener(previewWatcher);
-        etPhone.addTextChangedListener(previewWatcher);
-        etEmail.addTextChangedListener(previewWatcher);
         etImage.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
@@ -308,9 +277,20 @@ public class ShipperFormDialogFragment extends DialogFragment {
         String name = etName.getText() != null ? etName.getText().toString().trim() : null;
         String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : null;
         String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : null;
+        String password = etPassword.getText() != null ? etPassword.getText().toString().trim() : null;
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
         String restaurantId = selectedRestaurant != null ? selectedRestaurant.getId() : null;
-        ShipperUpsertRequest request = new ShipperUpsertRequest(null, restaurantId, name, phone, email, imageUrl, switchActive.isChecked());
+        
+        ShipperUpsertRequest request = new ShipperUpsertRequest();
+        request.setUserId(shipper != null ? shipper.getUserId() : null);
+        request.setRestaurantId(restaurantId);
+        request.setFullName(name);
+        request.setPhone(phone);
+        request.setEmail(email);
+        request.setAvatarUrl(imageUrl);
+        request.setIsActive(switchActive.isChecked());
+        request.setPassword(password);
+        
         if (listener != null) {
             listener.onSubmit(shipper != null ? shipper.getId() : null, request, this);
         }
@@ -320,10 +300,20 @@ public class ShipperFormDialogFragment extends DialogFragment {
         boolean isValid = true;
         tilName.setError(null);
         tilPhone.setError(null);
+        tilEmail.setError(null);
+        tilPassword.setError(null);
         tilRestaurant.setError(null);
         String name = etName.getText() != null ? etName.getText().toString().trim() : "";
         if (TextUtils.isEmpty(name)) {
             tilName.setError(getString(R.string.error_field_required));
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(etEmail.getText() != null ? etEmail.getText().toString().trim() : "")) {
+            tilEmail.setError(getString(R.string.error_field_required));
+            isValid = false;
+        }
+        if (shipper == null && TextUtils.isEmpty(etPassword.getText() != null ? etPassword.getText().toString().trim() : "")) {
+            tilPassword.setError(getString(R.string.error_field_required));
             isValid = false;
         }
         if (selectedRestaurant == null) {
@@ -331,13 +321,6 @@ public class ShipperFormDialogFragment extends DialogFragment {
             isValid = false;
         }
         return isValid;
-    }
-
-    private void updatePreview() {
-        String name = etName.getText() != null ? etName.getText().toString().trim() : "";
-        String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : "";
-        tvPreviewName.setText(TextUtils.isEmpty(name) ? getString(R.string.label_shipper_name) : name);
-        tvPreviewPhone.setText(TextUtils.isEmpty(phone) ? getString(R.string.label_phone) : phone);
     }
 
     private void loadPreviewImage(@Nullable String url) {

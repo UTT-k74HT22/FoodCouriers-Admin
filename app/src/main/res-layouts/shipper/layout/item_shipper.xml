@@ -48,6 +48,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginLeft="14dp"
             android:background="@drawable/admin_badge_success"
             android:paddingStart="@dimen/spacing_sm"
             android:paddingTop="@dimen/spacing_xs"
@@ -65,6 +66,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_xs"
+            android:layout_marginLeft="13dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/text_secondary"
@@ -79,13 +81,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/spacing_sm"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             app:layout_constraintEnd_toStartOf="@+id/sw_is_active"
             app:layout_constraintStart_toEndOf="@id/iv_shipper_avatar"
             app:layout_constraintTop_toBottomOf="@id/tv_shipper_phone">
 
             <TextView
-                android:id="@+id/tv_orders_completed"
+                android:id="@+id/tv_restaurant_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/admin_badge_info"
@@ -93,6 +95,25 @@
                 android:paddingTop="@dimen/spacing_xs"
                 android:paddingEnd="@dimen/spacing_sm"
                 android:paddingBottom="@dimen/spacing_xs"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
+                android:drawablePadding="4dp"
+                android:layout_marginLeft="15sp"
+                app:drawableStartCompat="@drawable/ic_restaurant"
+                app:drawableTint="@color/text_secondary"
+                tools:text="Nhà hàng: ABC" />
+
+            <TextView
+                android:id="@+id/tv_orders_completed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:background="@drawable/admin_badge_info"
+                android:paddingStart="@dimen/spacing_sm"
+                android:paddingTop="@dimen/spacing_xs"
+                android:paddingEnd="@dimen/spacing_sm"
+                android:paddingBottom="@dimen/spacing_xs"
+                android:layout_marginLeft="15sp"
                 android:textColor="@color/text_primary"
                 android:textSize="12sp"
                 tools:text="Đơn hoàn thành: 0" />
