@@ -54,8 +54,19 @@ public class ShipperOrderDetailActivity extends AppCompatActivity {
         sessionManager = SessionManager.getInstance(this);
         
         initViews();
+        setupToolbar();
         setupList();
         loadOrder();
+    }
+
+    private void setupToolbar() {
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
     private void initViews() {
@@ -73,8 +84,6 @@ public class ShipperOrderDetailActivity extends AppCompatActivity {
         tvTotal = findViewById(R.id.tv_total);
         btnPickup = findViewById(R.id.btn_pickup);
         btnDelivered = findViewById(R.id.btn_delivered);
-
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
     }
 
     private void setupList() {

@@ -56,9 +56,20 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         orderRepository = OrderRepository.getInstance();
         initViews();
+        setupToolbar();
         setupList();
         loadOrder();
         bindActions();
+    }
+
+    private void setupToolbar() {
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
     private void initViews() {

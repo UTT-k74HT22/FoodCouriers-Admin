@@ -32,7 +32,7 @@ public class OrderRepository {
      */
     public void getOrders(OrderStatus status, String query, String shipperId, RepositoryCallback<List<Order>> callback) {
         // Cấu trúc select để lấy thông tin join
-        String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*)";
+        String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*),items:order_items(*)";
         
         // Tạo filter
         StringBuilder filterBuilder = new StringBuilder();
@@ -67,7 +67,7 @@ public class OrderRepository {
      * Lấy chi tiết một đơn hàng theo ID
      */
     public void getOrderById(String orderId, RepositoryCallback<Order> callback) {
-        String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*)";
+        String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*),items:order_items(*)";
         String filter = "id=eq." + orderId;
 
         orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
