@@ -26,6 +26,8 @@ import androidx.core.content.ContextCompat;
 public class DashboardFragment extends Fragment {
 
     private DashboardViewModel viewModel;
+    private com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardOrderAdapter orderAdapter;
+    private com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardTopItemAdapter topItemAdapter;
     
     // Khai báo các view thống kê
     private View cardOrders, cardRevenue, cardProcessing, cardCompleted;
@@ -48,6 +50,8 @@ public class DashboardFragment extends Fragment {
         
         // 2. Cấu hình ban đầu cho các thẻ (Đặt icon và nhãn)
         setupStatsCards();
+        setupRecentOrders();
+        setupTopItems();
 
         // 3. Khởi tạo ViewModel
         viewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
@@ -57,9 +61,6 @@ public class DashboardFragment extends Fragment {
 
         // 5. Bắt đầu tải dữ liệu từ Supabase
         viewModel.loadDashboardData();
-        
-        setupRecentOrders();
-        setupTopItems();
     }
 
     private void initViews(View view) {
@@ -93,10 +94,24 @@ public class DashboardFragment extends Fragment {
             }
         });
 
+        // Khi có danh sách đơn hàng mới
+        viewModel.getRecentOrders().observe(getViewLifecycleOwner(), orders -> {
+            if (orders != null) {
+                orderAdapter.setOrders(orders);
+            }
+        });
+
+        // Khi có danh sách món ăn bán chạy
+        viewModel.getTopItems().observe(getViewLifecycleOwner(), items -> {
+            if (items != null) {
+                topItemAdapter.setItems(items);
+            }
+        });
+
         // Khi có lỗi xảy ra
         viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
-            if (error != null) {
-                Toast.makeText(getContext(), "Lỗi: " + error, Toast.LENGTH_LONG).show();
+            if (error != null && !error.isEmpty()) {
+                // Toast.makeText(getContext(), "Lỗi: " + error, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -140,11 +155,13 @@ public class DashboardFragment extends Fragment {
 
     private void setupRecentOrders() {
         rvRecentOrders.setLayoutManager(new LinearLayoutManager(getContext()));
-        // TODO: Viết Adapter cho đơn hàng sau
+        orderAdapter = new com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardOrderAdapter();
+        rvRecentOrders.setAdapter(orderAdapter);
     }
 
     private void setupTopItems() {
         rvTopItems.setLayoutManager(new LinearLayoutManager(getContext()));
-        // TODO: Viết Adapter cho top món ăn sau
+        topItemAdapter = new com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardTopItemAdapter();
+        rvTopItems.setAdapter(topItemAdapter);
     }
 }
