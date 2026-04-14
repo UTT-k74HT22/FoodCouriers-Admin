@@ -171,7 +171,8 @@ public class OrderDetailActivity extends AppCompatActivity {
         if (currentOrder == null || currentOrder.isLocked()) {
             return;
         }
-        orderRepository.getAssignableShippers(new RepositoryCallback<List<Shipper>>() {
+        String restaurantId = currentOrder.getRestaurantId();
+        orderRepository.getAssignableShippers(restaurantId, new RepositoryCallback<List<Shipper>>() {
             @Override
             public void onComplete(BaseResponse<List<Shipper>> response) {
                 List<Shipper> shippers = response.isSuccess() && response.getData() != null ? response.getData() : java.util.Collections.emptyList();

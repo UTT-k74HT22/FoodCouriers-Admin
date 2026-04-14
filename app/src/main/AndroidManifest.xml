@@ -38,6 +38,11 @@
             android:label="Chi tiết đơn hàng"
             android:theme="@style/Theme.FoodCouriersAdmin" />
         <activity
+            android:name=".ui.shipper.ShipperOrderDetailActivity"
+            android:exported="false"
+            android:label="Chi tiết đơn giao"
+            android:theme="@style/Theme.FoodCouriersAdmin" />
+        <activity
             android:name=".ui.auth.RegisterActivity"
             android:exported="false" />
 

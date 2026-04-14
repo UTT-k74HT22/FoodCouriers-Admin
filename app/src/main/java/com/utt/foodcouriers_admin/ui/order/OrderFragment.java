@@ -147,8 +147,8 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         if (isShipper) {
             // Shippers only care about specific statuses
             tabLayout.addTab(tabLayout.newTab().setText("Đơn hàng mới").setTag("AVAILABLE"));
-            tabLayout.addTab(tabLayout.newTab().setText("Đang giao").setTag(OrderStatus.DELIVERING));
-            tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành").setTag(OrderStatus.DELIVERED));
+            tabLayout.addTab(tabLayout.newTab().setText("Đang giao").setTag("ACTIVE"));
+            tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành").setTag("HISTORY"));
             isViewingAvailable = true;
         } else {
             for (OrderStatus status : OrderStatus.values()) {
@@ -169,6 +169,12 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
                 } else if ("AVAILABLE".equals(tag)) {
                     isViewingAvailable = true;
                     reloadOrders();
+                } else if ("ACTIVE".equals(tag)) {
+                    String shipperId = sessionManager.getCurrentUser().getId();
+                    viewModel.fetchActiveDeliveries(shipperId);
+                } else if ("HISTORY".equals(tag)) {
+                    String shipperId = sessionManager.getCurrentUser().getId();
+                    viewModel.fetchDeliveryHistory(shipperId);
                 }
             }
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
@@ -238,8 +244,8 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
 
     @Override
     public void onAssignShipper(Order order) {
-        // Mở Dialog chọn Shipper
-        OrderRepository.getInstance().getAssignableShippers(new RepositoryCallback<List<Shipper>>() {
+        String restaurantId = order.getRestaurantId();
+        OrderRepository.getInstance().getAssignableShippers(restaurantId, new RepositoryCallback<List<Shipper>>() {
             @Override
             public void onComplete(BaseResponse<List<Shipper>> response) {
                 if (response.isSuccess() && response.getData() != null) {

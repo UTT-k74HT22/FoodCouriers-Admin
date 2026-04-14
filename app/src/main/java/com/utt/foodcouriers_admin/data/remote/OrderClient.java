@@ -18,6 +18,7 @@ public class OrderClient extends BaseSupabaseClient {
     private static final String RPC_URL = SupabaseConfig.REST_URL + "/rpc/";
     private static final String ORDERS_URL = SupabaseConfig.REST_URL + "/orders";
     private static final String SHIPPERS_URL = SupabaseConfig.REST_URL + "/shippers";
+    private static final String USERS_URL = SupabaseConfig.REST_URL + "/users";
     
     private static OrderClient instance;
 
@@ -96,13 +97,12 @@ public class OrderClient extends BaseSupabaseClient {
     }
 
     /**
-     * Lấy danh sách Shipper có sẵn để gán đơn
+     * Lấy danh sách Shipper có sẵn để gán đơn (lọc theo restaurant)
      */
-    public void getShippers(ApiCallback<List<Shipper>> callback) {
+    public void getShippersByRestaurant(String restaurantId, ApiCallback<List<Shipper>> callback) {
         new Thread(() -> {
             try {
-                // Lấy shipper đang active, available và join thông tin user
-                String url = SHIPPERS_URL + "?select=*,user:users!user_id(*)&is_active=eq.true&is_available=eq.true";
+                String url = SHIPPERS_URL + "?select=*,user:users!user_id(*)&is_active=eq.true&is_available=eq.true&restaurant_id=eq." + restaurantId;
 
                 Request request = new Request.Builder()
                         .url(url)
@@ -118,6 +118,46 @@ public class OrderClient extends BaseSupabaseClient {
                         postSuccess(callback, shippers);
                     } else {
                         postError(callback, parseRestError("Failed to fetch shippers", response.code(), json));
+                    }
+                }
+            } catch (IOException e) {
+                postError(callback, e.getMessage());
+            }
+        }).start();
+    }
+
+    /**
+     * Lấy danh sách Shipper có sẵn để gán đơn (tất cả)
+     */
+    public void getShippers(ApiCallback<List<Shipper>> callback) {
+        getShippersByRestaurant(null, callback);
+    }
+
+    /**
+     * Lấy thông tin user theo filter
+     */
+    public void getUsers(String filterParams, ApiCallback<List<Order.OrderUser>> callback) {
+        new Thread(() -> {
+            try {
+                String url = USERS_URL + "?select=id,full_name,phone,email";
+                if (filterParams != null && !filterParams.isEmpty()) {
+                    url += "&" + filterParams;
+                }
+
+                Request request = new Request.Builder()
+                        .url(url)
+                        .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
+                        .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
+                        .get()
+                        .build();
+
+                try (Response response = client.newCall(request).execute()) {
+                    String json = response.body() != null ? response.body().string() : "[]";
+                    if (response.isSuccessful()) {
+                        List<Order.OrderUser> users = gson.fromJson(json, new TypeToken<List<Order.OrderUser>>() {}.getType());
+                        postSuccess(callback, users);
+                    } else {
+                        postError(callback, parseRestError("Failed to fetch users", response.code(), json));
                     }
                 }
             } catch (IOException e) {

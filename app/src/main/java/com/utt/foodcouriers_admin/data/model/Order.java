@@ -39,8 +39,11 @@ public class Order implements Serializable {
     @SerializedName("cancelled_reason")
     private String cancelledReason;
 
+    @SerializedName("user")
     private OrderUser user;
+    @SerializedName("restaurant")
     private OrderRestaurant restaurant;
+    @SerializedName("shipper")
     private OrderUser shipper;
     @SerializedName("items")
     private List<OrderItem> items = new ArrayList<>();

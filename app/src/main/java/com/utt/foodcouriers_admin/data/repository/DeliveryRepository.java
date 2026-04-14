@@ -27,12 +27,13 @@ public class DeliveryRepository extends BaseSupabaseRepository {
     }
 
     /**
-     * Lấy danh sách đơn hàng đang chờ shipper (Searching hoặc Ready for Pickup)
+     * Lấy danh sách đơn hàng chưa có shipper
+     * Bao gồm: unassigned (chưa gán) và searching (đang tìm tài xế)
      */
     public void getAvailableOrders(RepositoryCallback<List<Order>> callback) {
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name)";
-        // Lọc đơn đang searching hoặc đã ready_for_pickup nhưng chưa có shipper
-        String filter = "delivery_status=eq.searching&shipper_id=is.null";
+        // Lọc đơn chưa có shipper: unassigned hoặc searching
+        String filter = "or(delivery_status.eq.unassigned,delivery_status.eq.searching)&shipper_id=is.null";
         
         orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
@@ -52,8 +53,7 @@ public class DeliveryRepository extends BaseSupabaseRepository {
      */
     public void getActiveDeliveries(String shipperUserId, RepositoryCallback<List<Order>> callback) {
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name)";
-        // Lọc đơn đã gán cho shipper này nhưng chưa hoàn thành
-        String filter = "shipper_id=eq." + shipperUserId + "&delivery_status=in.(assigned,arriving_pickup,waiting_pickup,picked_up)";
+        String filter = "shipper_id=eq." + shipperUserId;
         
         orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
@@ -73,7 +73,7 @@ public class DeliveryRepository extends BaseSupabaseRepository {
      */
     public void getDeliveryHistory(String shipperUserId, RepositoryCallback<List<Order>> callback) {
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name)";
-        String filter = "shipper_id=eq." + shipperUserId + "&delivery_status=eq.completed&order=created_at.desc";
+        String filter = "shipper_id=eq." + shipperUserId + "&status=eq.delivered&order=created_at.desc";
         
         orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
@@ -145,6 +145,51 @@ public class DeliveryRepository extends BaseSupabaseRepository {
             @Override
             public void onError(String error) {
                 postResponse(callback, BaseResponse.error("NETWORK_ERROR", error));
+            }
+        });
+    }
+
+    public void getOrderById(String orderId, RepositoryCallback<Order> callback) {
+        orderClient.getOrders("*,restaurant:restaurants!restaurant_id(id,name)", "id=eq." + orderId, new BaseSupabaseClient.ApiCallback<List<Order>>() {
+            @Override
+            public void onSuccess(List<Order> result) {
+                if (result != null && !result.isEmpty()) {
+                    Order order = result.get(0);
+                    if (order.getUserId() != null) {
+                        fetchUserDetails(order.getUserId(), order, callback);
+                    } else {
+                        postResponse(callback, BaseResponse.success(order));
+                    }
+                } else {
+                    postResponse(callback, BaseResponse.error("NOT_FOUND", "Order not found"));
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                postResponse(callback, BaseResponse.error("FETCH_ERROR", error));
+            }
+        });
+    }
+
+    private void fetchUserDetails(String userId, Order order, RepositoryCallback<Order> callback) {
+        orderClient.getUsers("id=eq." + userId, new BaseSupabaseClient.ApiCallback<List<Order.OrderUser>>() {
+            @Override
+            public void onSuccess(List<Order.OrderUser> users) {
+                android.util.Log.d("DeliveryRepo", "Fetched users count: " + (users != null ? users.size() : 0));
+                if (users != null && !users.isEmpty()) {
+                    order.setUser(users.get(0));
+                    android.util.Log.d("DeliveryRepo", "User set: " + users.get(0).getFullName());
+                } else {
+                    android.util.Log.d("DeliveryRepo", "User not found or empty");
+                }
+                postResponse(callback, BaseResponse.success(order));
+            }
+
+            @Override
+            public void onError(String error) {
+                android.util.Log.e("DeliveryRepo", "Error fetching user: " + error);
+                postResponse(callback, BaseResponse.success(order));
             }
         });
     }

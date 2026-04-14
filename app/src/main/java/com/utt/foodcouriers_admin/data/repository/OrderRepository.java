@@ -127,19 +127,34 @@ public class OrderRepository {
 
     /**
      * Lấy danh sách Shipper có sẵn để gán đơn (Dữ liệu thật từ Supabase)
+     * @param restaurantId - ID nhà hàng để lọc shipper (null = lấy tất cả)
      */
-    public void getAssignableShippers(RepositoryCallback<List<Shipper>> callback) {
-        orderClient.getShippers(new BaseSupabaseClient.ApiCallback<List<Shipper>>() {
-            @Override
-            public void onSuccess(List<Shipper> result) {
-                callback.onComplete(BaseResponse.success(result));
-            }
+    public void getAssignableShippers(String restaurantId, RepositoryCallback<List<Shipper>> callback) {
+        if (restaurantId == null || restaurantId.isEmpty()) {
+            orderClient.getShippers(new BaseSupabaseClient.ApiCallback<List<Shipper>>() {
+                @Override
+                public void onSuccess(List<Shipper> result) {
+                    callback.onComplete(BaseResponse.success(result));
+                }
 
-            @Override
-            public void onError(String error) {
-                callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
-            }
-        });
+                @Override
+                public void onError(String error) {
+                    callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
+                }
+            });
+        } else {
+            orderClient.getShippersByRestaurant(restaurantId, new BaseSupabaseClient.ApiCallback<List<Shipper>>() {
+                @Override
+                public void onSuccess(List<Shipper> result) {
+                    callback.onComplete(BaseResponse.success(result));
+                }
+
+                @Override
+                public void onError(String error) {
+                    callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
+                }
+            });
+        }
     }
 
     /**

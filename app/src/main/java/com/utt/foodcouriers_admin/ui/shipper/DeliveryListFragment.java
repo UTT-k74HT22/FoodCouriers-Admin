@@ -1,5 +1,6 @@
 package com.utt.foodcouriers_admin.ui.shipper;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,7 @@ import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.data.repository.DeliveryRepository;
+import com.utt.foodcouriers_admin.ui.order.OrderDetailActivity;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
@@ -84,6 +86,12 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         loadData();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadData();
+    }
+
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new OrderAdapter();
@@ -131,7 +139,9 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
 
     @Override
     public void onOpenDetail(Order order) {
-        // Implement if needed
+        Intent intent = new Intent(requireContext(), ShipperOrderDetailActivity.class);
+        intent.putExtra(ShipperOrderDetailActivity.EXTRA_ORDER_ID, order.getId());
+        startActivity(intent);
     }
 
     @Override

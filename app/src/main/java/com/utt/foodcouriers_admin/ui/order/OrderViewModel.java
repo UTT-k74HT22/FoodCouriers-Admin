@@ -152,4 +152,38 @@ public class OrderViewModel extends ViewModel {
             }
         });
     }
+
+    /** Lấy danh sách đơn hàng đang giao của shipper */
+    public void fetchActiveDeliveries(String shipperUserId) {
+        _isLoading.setValue(true);
+        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+                .getActiveDeliveries(shipperUserId, new RepositoryCallback<List<Order>>() {
+            @Override
+            public void onComplete(BaseResponse<List<Order>> response) {
+                _isLoading.setValue(false);
+                if (response.isSuccess()) {
+                    _orders.setValue(response.getData());
+                } else {
+                    _errorMessage.setValue(response.getMessage());
+                }
+            }
+        });
+    }
+
+    /** Lấy lịch sử giao hàng của shipper */
+    public void fetchDeliveryHistory(String shipperUserId) {
+        _isLoading.setValue(true);
+        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+                .getDeliveryHistory(shipperUserId, new RepositoryCallback<List<Order>>() {
+            @Override
+            public void onComplete(BaseResponse<List<Order>> response) {
+                _isLoading.setValue(false);
+                if (response.isSuccess()) {
+                    _orders.setValue(response.getData());
+                } else {
+                    _errorMessage.setValue(response.getMessage());
+                }
+            }
+        });
+    }
 }
