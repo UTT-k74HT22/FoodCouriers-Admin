@@ -35,39 +35,49 @@ public class DashboardViewModel extends ViewModel {
     public void loadDashboardData() {
         isLoading.setValue(true);
         
-        // 1. Tự tính toán thống kê từ danh sách đơn hàng thực tế của hôm nay (Không dùng View DB lỗi)
-        repository.getTodayOrders(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
+        // 1. Tự tính toán thống kê từ danh sách đơn hàng thực tế (Bypass View lỗi)
+        repository.getRecentOrdersForStats(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
             @Override
             public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
                 if (response.isSuccess() && response.getData() != null) {
-                    java.util.List<com.utt.foodcouriers_admin.data.model.Order> todayOrders = response.getData();
+                    java.util.List<com.utt.foodcouriers_admin.data.model.Order> recentOrdersList = response.getData();
                     
                     DashboardStats newStats = new DashboardStats();
-                    int total = todayOrders.size();
-                    double revenue = 0;
-                    int pending = 0;
-                    int completed = 0;
-                    int cancelled = 0;
+                    
+                    // Lấy ngày hiện tại (YYYY-MM-DD) theo giờ local của điện thoại
+                    String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
+                    
+                    int todayTotal = 0;
+                    double todayRevenue = 0;
+                    int pendingCount = 0;
+                    int completedCount = 0;
 
-                    for (com.utt.foodcouriers_admin.data.model.Order o : todayOrders) {
+                    for (com.utt.foodcouriers_admin.data.model.Order o : recentOrdersList) {
                         String status = o.getStatus();
-                        if ("delivered".equals(status)) {
-                            completed++;
-                            revenue += o.getTotal();
-                        } else if ("cancelled".equals(status)) {
-                            cancelled++;
-                        } else if ("pending".equals(status) || "confirmed".equals(status) || 
-                                   "preparing".equals(status) || "ready_for_pickup".equals(status) || 
-                                   "delivering".equals(status)) {
-                            pending++;
+                        String orderDate = o.getCreatedAt() != null ? o.getCreatedAt().substring(0, 10) : "";
+
+                        // Đếm số đơn "Đang xử lý" (Không phụ thuộc ngày)
+                        if ("pending".equals(status) || "confirmed".equals(status) || 
+                            "preparing".equals(status) || "ready_for_pickup".equals(status) || 
+                            "delivering".equals(status)) {
+                            pendingCount++;
+                        }
+
+                        // Tính thống kê "Hôm nay" dựa trên ngày tạo của đơn hàng
+                        if (today.equals(orderDate)) {
+                            todayTotal++;
+                            if ("delivered".equals(status)) {
+                                completedCount++;
+                                todayRevenue += o.getTotal();
+                            }
                         }
                     }
 
-                    newStats.setTotalOrders(total);
-                    newStats.setTotalRevenue(revenue);
-                    newStats.setPendingOrders(pending);
-                    newStats.setCompletedOrders(completed);
-                    newStats.setCancelledOrders(cancelled);
+                    // Nếu hôm nay chưa có đơn nào, lấy dữ liệu đơn gần nhất để demo (Hoặc cứ để 0 tùy ý)
+                    newStats.setTotalOrders(todayTotal);
+                    newStats.setTotalRevenue(todayRevenue);
+                    newStats.setPendingOrders(pendingCount);
+                    newStats.setCompletedOrders(completedCount);
                     
                     stats.postValue(newStats);
                 }

@@ -13,11 +13,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.utt.foodcouriers_admin.R;
-import com.utt.foodcouriers_admin.data.model.DailyStat;
+import com.utt.foodcouriers_admin.data.model.Order;
+import com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardTopItemAdapter;
 
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -33,6 +36,9 @@ public class ReportFragment extends Fragment {
     private TextInputEditText etStartDate, etEndDate;
     private MaterialButton btnApply;
     private View cardRevenue, cardTotalOrders, cardSuccessful, cardCancelled;
+    private RecyclerView rvTopRestaurants, rvTopItems;
+    private TopRestaurantAdapter restaurantAdapter;
+    private DashboardTopItemAdapter itemAdapter;
 
     private final Calendar calendarStart = Calendar.getInstance();
     private final Calendar calendarEnd = Calendar.getInstance();
@@ -51,6 +57,7 @@ public class ReportFragment extends Fragment {
         initViews(view);
         setupDatePicker();
         setupStatsCards();
+        setupRecyclerViews();
 
         viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
         observeViewModel();
@@ -71,6 +78,9 @@ public class ReportFragment extends Fragment {
         cardTotalOrders = view.findViewById(R.id.stat_total_orders);
         cardSuccessful = view.findViewById(R.id.stat_successful_orders);
         cardCancelled = view.findViewById(R.id.stat_cancelled_orders);
+        
+        rvTopRestaurants = view.findViewById(R.id.rv_top_restaurants);
+        rvTopItems = view.findViewById(R.id.rv_top_items);
     }
 
     private void setupDatePicker() {
@@ -119,6 +129,16 @@ public class ReportFragment extends Fragment {
         }
     }
 
+    private void setupRecyclerViews() {
+        rvTopRestaurants.setLayoutManager(new LinearLayoutManager(getContext()));
+        restaurantAdapter = new TopRestaurantAdapter();
+        rvTopRestaurants.setAdapter(restaurantAdapter);
+
+        rvTopItems.setLayoutManager(new LinearLayoutManager(getContext()));
+        itemAdapter = new DashboardTopItemAdapter();
+        rvTopItems.setAdapter(itemAdapter);
+    }
+
     private void loadReport() {
         if (etStartDate.getText() != null && etEndDate.getText() != null) {
             viewModel.loadReport(etStartDate.getText().toString(), etEndDate.getText().toString());
@@ -126,9 +146,21 @@ public class ReportFragment extends Fragment {
     }
 
     private void observeViewModel() {
-        viewModel.getReportData().observe(getViewLifecycleOwner(), stats -> {
+        viewModel.getOrders().observe(getViewLifecycleOwner(), orders -> {
+            if (orders != null) {
+                calculateAndDisplaySummary(orders);
+            }
+        });
+
+        viewModel.getTopRestaurants().observe(getViewLifecycleOwner(), stats -> {
             if (stats != null) {
-                calculateAndDisplaySummary(stats);
+                restaurantAdapter.setStats(stats);
+            }
+        });
+
+        viewModel.getTopItems().observe(getViewLifecycleOwner(), items -> {
+            if (items != null) {
+                itemAdapter.setItems(items);
             }
         });
 
@@ -139,21 +171,24 @@ public class ReportFragment extends Fragment {
         });
     }
 
-    private void calculateAndDisplaySummary(List<DailyStat> stats) {
+    private void calculateAndDisplaySummary(List<Order> orders) {
         double totalRevenue = 0;
-        int totalOrders = 0;
+        int totalOrdersCount = orders.size();
         int completedOrders = 0;
         int cancelledOrders = 0;
 
-        for (DailyStat s : stats) {
-            totalRevenue += s.getRevenue();
-            totalOrders += s.getTotalOrders();
-            completedOrders += s.getCompletedOrders();
-            cancelledOrders += s.getCancelledOrders();
+        for (Order o : orders) {
+            String status = o.getStatus();
+            if ("delivered".equals(status)) {
+                completedOrders++;
+                totalRevenue += o.getTotal();
+            } else if ("cancelled".equals(status)) {
+                cancelledOrders++;
+            }
         }
 
         updateStatValue(cardRevenue, formatCurrency(totalRevenue));
-        updateStatValue(cardTotalOrders, String.valueOf(totalOrders));
+        updateStatValue(cardTotalOrders, String.valueOf(totalOrdersCount));
         updateStatValue(cardSuccessful, String.valueOf(completedOrders));
         updateStatValue(cardCancelled, String.valueOf(cancelledOrders));
     }

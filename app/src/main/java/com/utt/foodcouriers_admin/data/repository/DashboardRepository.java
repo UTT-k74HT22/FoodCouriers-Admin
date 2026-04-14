@@ -24,13 +24,11 @@ public class DashboardRepository extends BaseSupabaseRepository {
     }
 
     /**
-     * Lấy tất cả đơn hàng của ngày hôm nay để tự tính toán thống kê (Bypass View lỗi)
+     * Lấy các đơn hàng gần đây để tính toán thống kê (Đảm bảo Dashboard luôn có dữ liệu)
      */
-    public void getTodayOrders(RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
-        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
-        // Lấy tất cả đơn hàng có ngày tạo là hôm nay
-        // Lưu ý: Supabase dùng ISO format, nên ta dùng gte (lớn hơn hoặc bằng) bắt đầu ngày
-        fetchList("orders", "?created_at=gte." + today + "T00:00:00Z&order=created_at.desc", 
+    public void getRecentOrdersForStats(RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
+        // Lấy 100 đơn hàng gần nhất để tính toán các chỉ số
+        fetchList("orders", "?order=created_at.desc&limit=100", 
                 com.utt.foodcouriers_admin.data.model.Order[].class, callback);
     }
 

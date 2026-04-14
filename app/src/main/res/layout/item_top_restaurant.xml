@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/spacing_sm"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="@dimen/radius_lg"
+    app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="@dimen/spacing_md">
+
+        <TextView
+            android:id="@+id/tv_rank"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/admin_badge_success"
+            android:gravity="center"
+            android:textAppearance="@style/AdminTextAppearance.Small"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            tools:text="1" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_restaurant_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/AdminTextAppearance.Body"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold"
+                tools:text="Nhà hàng Phố Biển" />
+
+            <TextView
+                android:id="@+id/tv_order_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:textColor="@color/text_secondary"
+                tools:text="Tổng: 25 đơn hàng" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_total_revenue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/AdminTextAppearance.Body"
+            android:textColor="@color/success"
+            android:textStyle="bold"
+            tools:text="5.200.000đ" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
