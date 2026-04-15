@@ -282,10 +282,19 @@ public class RestaurantFormDialogFragment extends DialogFragment {
             etMinOrder.setText(String.valueOf(restaurant.getMinOrder()));
             
             if (restaurant.getLatitude() != null) {
-                etLatitude.setText(String.valueOf(restaurant.getLatitude()));
+                currentLatitude = restaurant.getLatitude();
+                etLatitude.setText(String.valueOf(currentLatitude));
             }
             if (restaurant.getLongitude() != null) {
-                etLongitude.setText(String.valueOf(restaurant.getLongitude()));
+                currentLongitude = restaurant.getLongitude();
+                etLongitude.setText(String.valueOf(currentLongitude));
+            }
+            
+            if (mapView != null && restaurant.getLatitude() != null && restaurant.getLongitude() != null) {
+                GeoPoint point = new GeoPoint(currentLatitude, currentLongitude);
+                mapView.getController().setCenter(point);
+                addMarker(point);
+                mapView.getController().setZoom(16.0);
             }
             
             loadPreviewImage(restaurant.getImageUrl());
