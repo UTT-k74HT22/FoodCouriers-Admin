@@ -143,7 +143,6 @@ public class ShipperOrderDetailActivity extends AppCompatActivity {
 
     private void updateButtons(OrderStatus status) {
         switch (status) {
-            case ASSIGNED:
             case CONFIRMED:
             case PREPARING:
             case READY_FOR_PICKUP:

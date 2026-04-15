@@ -140,7 +140,7 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
             btnReject.setVisibility(isPending ? View.VISIBLE : View.GONE);
 
             boolean isLocked = status.isLocked();
-            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.ASSIGNED || status == OrderStatus.DELIVERING);
+            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.DELIVERING);
             
             boolean hasShipper = order.getShipper() != null || !TextUtils.isEmpty(order.getShipperId());
             boolean isConfirmStep = status == OrderStatus.CONFIRMED;
