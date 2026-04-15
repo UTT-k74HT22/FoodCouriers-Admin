@@ -135,12 +135,19 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
         }
 
         private void bindAdminButtons(Order order, OrderStatus status) {
-            btnAccept.setVisibility(status == OrderStatus.PENDING ? View.VISIBLE : View.GONE);
-            btnReject.setVisibility(status == OrderStatus.PENDING ? View.VISIBLE : View.GONE);
+            boolean isPending = status == OrderStatus.PENDING;
+            btnAccept.setVisibility(isPending ? View.VISIBLE : View.GONE);
+            btnReject.setVisibility(isPending ? View.VISIBLE : View.GONE);
 
-            boolean showNext = status != OrderStatus.PENDING && !status.isLocked();
+            boolean isLocked = status.isLocked();
+            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.ASSIGNED || status == OrderStatus.DELIVERING);
+            
+            boolean hasShipper = order.getShipper() != null || !TextUtils.isEmpty(order.getShipperId());
+            boolean isConfirmStep = status == OrderStatus.CONFIRMED;
+            boolean showNext = !isLocked && !isPending && status != OrderStatus.DELIVERING && !(isConfirmStep && !hasShipper);
+            
             btnNextStep.setVisibility(showNext ? View.VISIBLE : View.GONE);
-            btnAssignShipper.setVisibility(status == OrderStatus.PREPARING || status == OrderStatus.DELIVERING ? View.VISIBLE : View.GONE);
+            btnAssignShipper.setVisibility(!isLocked && !isPending && !isShipperActionTime ? View.VISIBLE : View.GONE);
 
             btnNextStep.setText(itemView.getContext().getString(R.string.order_action_next_template, status.next().getLabel()));
             btnAssignShipper.setText(order.getShipper() == null ? R.string.order_assign_shipper : R.string.order_change_shipper);
@@ -181,6 +188,9 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
         private String resolveShipperName(Order order) {
             if (order.getShipper() != null && !TextUtils.isEmpty(order.getShipper().getFullName())) {
                 return order.getShipper().getFullName();
+            }
+            if (!TextUtils.isEmpty(order.getShipperId())) {
+                return "Đã gán shipper";
             }
             return itemView.getContext().getString(R.string.order_shipper_unassigned);
         }

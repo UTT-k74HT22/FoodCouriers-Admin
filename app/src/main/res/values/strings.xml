@@ -110,7 +110,9 @@
     <string name="shipper_restaurant">Nhà hàng: %s</string>
     <string name="shipper_restaurant_none">Nhà hàng: Chưa gán</string>
     <string name="shipper_status_available">Sẵn sàng</string>
-    <string name="shipper_status_unavailable">Ngừng hoạt động</string>
+    <string name="shipper_status_busy">Đang giao hàng</string>
+    <string name="shipper_status_offline">Đang tắt app</string>
+    <string name="shipper_status_unavailable">Tài khoản bị khóa</string>
     <string name="action_choose_image">Chọn ảnh</string>
     <string name="label_image_url_or_choose">Ảnh (dán URL hoặc chọn từ thiết bị)</string>
     <string name="label_image_hint_new">Nhấn vào ảnh để xem, nhấn nút bên dưới để chọn ảnh mới</string>
@@ -251,7 +253,7 @@
     <string name="order_empty_message">Không có đơn ở trạng thái %1$s</string>
     <string name="order_unknown_customer">Khách chưa xác định</string>
     <string name="order_unknown_restaurant">Nhà hàng chưa xác định</string>
-    <string name="order_action_next_template">Chuyển sang %1$s</string>
+    <string name="order_action_next_template">%1$s</string>
     <string name="order_assign_shipper_success">Đã cập nhật shipper cho đơn hàng</string>
     <string name="order_locked_message">Đơn hàng đã khóa, không thể thao tác</string>
     <string name="order_not_found">Không tìm thấy đơn hàng</string>

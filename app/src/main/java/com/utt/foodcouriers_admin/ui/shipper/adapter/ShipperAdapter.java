@@ -107,8 +107,20 @@ public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.S
 
             tvOrdersCompleted.setText(itemView.getContext().getString(R.string.shipper_orders_count, shipper.getTotalDelivered()));
 
-            tvStatus.setText(shipper.isActive() ? R.string.shipper_status_available : R.string.shipper_status_unavailable);
-            tvStatus.setBackgroundResource(shipper.isActive() ? R.drawable.admin_badge_success : R.drawable.admin_badge_pending);
+            // Display granular status
+            if (!shipper.isActive()) {
+                tvStatus.setText(R.string.shipper_status_unavailable);
+                tvStatus.setBackgroundResource(R.drawable.admin_badge_danger);
+            } else if (!shipper.isAvailable()) {
+                tvStatus.setText(R.string.shipper_status_offline);
+                tvStatus.setBackgroundResource(R.drawable.admin_badge_pending);
+            } else if ("busy".equals(shipper.getDeliveryStatus())) {
+                tvStatus.setText(R.string.shipper_status_busy);
+                tvStatus.setBackgroundResource(R.drawable.admin_badge_info);
+            } else {
+                tvStatus.setText(R.string.shipper_status_available);
+                tvStatus.setBackgroundResource(R.drawable.admin_badge_success);
+            }
 
             swIsActive.setOnCheckedChangeListener(null);
             swIsActive.setChecked(shipper.isActive());

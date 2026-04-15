@@ -142,18 +142,20 @@
                 android:id="@+id/btn_next_step"
                 style="@style/AdminButton.Outline"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/spacing_xs"
                 android:layout_weight="1"
+                android:minHeight="@dimen/button_height"
                 android:text="@string/order_next_step" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_assign_shipper"
                 style="@style/AdminButton.Outline"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/button_height"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/spacing_xs"
                 android:layout_weight="1"
+                android:minHeight="@dimen/button_height"
                 android:text="@string/order_assign_shipper" />
 
         </LinearLayout>
