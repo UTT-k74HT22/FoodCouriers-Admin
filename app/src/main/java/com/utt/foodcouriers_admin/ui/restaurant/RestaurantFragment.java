@@ -251,7 +251,7 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
             public void onComplete(BaseResponse<Restaurant> response) {
                 dialog.setLoading(false);
                 if (!response.isSuccess()) {
-                    ToastBanner.showError(response.getMessage());
+                    dialog.showError(response.getMessage());
                     return;
                 }
                 dialog.dismissAllowingStateLoss();
@@ -290,7 +290,7 @@ public class RestaurantFragment extends Fragment implements RestaurantAdapter.Re
 
     private void performStatusChange(Restaurant restaurant, boolean isActive) {
         RestaurantUpsertRequest request = new RestaurantUpsertRequest(
-                null, null, null, null, null, isActive, null, null, null, null, null
+                null, null, null, null, null, isActive, null, null, null, null, null, null, null
         );
         restaurantRepository.update(restaurant.getId(), request, new RepositoryCallback<Restaurant>() {
             @Override

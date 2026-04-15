@@ -77,7 +77,7 @@ public class RestaurantRepository extends BaseSupabaseRepository implements Crud
         }
 
         RestaurantUpsertRequest request = new RestaurantUpsertRequest(
-                null, null, null, null, null, null, isOpen, null, null, null, null
+                null, null, null, null, null, null, isOpen, null, null, null, null, null, null
         );
         updateItem(TABLE, eqIdFilter(id.trim()), request, Restaurant[].class, callback);
     }
