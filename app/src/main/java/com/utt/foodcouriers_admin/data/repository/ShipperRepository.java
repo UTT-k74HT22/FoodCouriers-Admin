@@ -166,7 +166,13 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
             }
 
             private void updateShipper() {
-                updateItem(TABLE, eqIdFilter(id.trim()), request, ShipperProfile[].class, callback);
+                ShipperUpsertRequest shipperOnlyRequest = new ShipperUpsertRequest();
+                shipperOnlyRequest.setRestaurantId(request.getRestaurantId());
+                shipperOnlyRequest.setLicensePlate(request.getLicensePlate());
+                shipperOnlyRequest.setVehicleType(request.getVehicleType());
+                shipperOnlyRequest.setIsAvailable(request.getIsAvailable());
+                shipperOnlyRequest.setIsActive(request.getIsActive());
+                updateItem(TABLE, eqIdFilter(id.trim()), shipperOnlyRequest, ShipperProfile[].class, callback);
             }
         });
     }
