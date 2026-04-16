@@ -61,6 +61,21 @@ public class DashboardFragment extends Fragment {
 
         // 5. Bắt đầu tải dữ liệu từ Supabase
         viewModel.loadDashboardData();
+
+        // 6. Thiết lập sự kiện click cho các thẻ
+        setupClickListeners();
+    }
+
+    private void setupClickListeners() {
+        cardOrders.setOnClickListener(v -> navigateToOrders());
+        cardProcessing.setOnClickListener(v -> navigateToOrders());
+        cardCompleted.setOnClickListener(v -> navigateToOrders());
+    }
+
+    private void navigateToOrders() {
+        if (getActivity() instanceof com.utt.foodcouriers_admin.ui.main.MainActivity) {
+            ((com.utt.foodcouriers_admin.ui.main.MainActivity) getActivity()).navigateToOrders();
+        }
     }
 
     private void initViews(View view) {

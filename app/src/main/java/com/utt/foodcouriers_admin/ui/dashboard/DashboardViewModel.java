@@ -70,11 +70,8 @@ public class DashboardViewModel extends ViewModel {
                                 if (todayStr.equals(orderDayStr)) {
                                     String status = o.getStatus();
                                     
-                                    // BỘ LỌC MỚI: Chỉ đếm vào "Tổng đơn hôm nay" nếu đơn chưa kết thúc (không phải delivered hay cancelled)
-                                    // Nếu bạn muốn đếm TẤT CẢ, hãy xóa điều kiện if này.
-                                    if (!"delivered".equals(status) && !"cancelled".equals(status)) {
-                                        total++;
-                                    }
+                                    // Đếm tất cả đơn hàng trong ngày không phân biệt trạng thái
+                                    total++;
 
                                     if ("delivered".equals(status)) {
                                         completed++;
@@ -124,21 +121,22 @@ public class DashboardViewModel extends ViewModel {
                 if (response.isSuccess() && response.getData() != null) {
                     java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> rawItems = response.getData();
                     
-                    // Sử dụng Map để gom nhóm theo tên món ăn và cộng dồn số lượng
+                    // Sử dụng Map để gom nhóm theo Tên món ăn
                     java.util.Map<String, com.utt.foodcouriers_admin.data.model.OrderItem> groupedMap = new java.util.HashMap<>();
                     
                     for (com.utt.foodcouriers_admin.data.model.OrderItem item : rawItems) {
                         String name = item.getMenuItemName();
-                        if (name == null) name = "Món ăn không tên";
-                        
+                        if (name == null || name.isEmpty()) continue;
+
                         if (groupedMap.containsKey(name)) {
                             com.utt.foodcouriers_admin.data.model.OrderItem existing = groupedMap.get(name);
                             existing.setQuantity(existing.getQuantity() + item.getQuantity());
                         } else {
-                            // Tạo bản sao để tránh làm thay đổi dữ liệu gốc nếu cần
+                            // Tạo bản sao để tránh làm thay đổi dữ liệu gốc
                             com.utt.foodcouriers_admin.data.model.OrderItem clone = new com.utt.foodcouriers_admin.data.model.OrderItem();
                             clone.setMenuItemName(name);
                             clone.setQuantity(item.getQuantity());
+                            clone.setMenuItemPrice(item.getMenuItemPrice());
                             groupedMap.put(name, clone);
                         }
                     }
@@ -149,7 +147,7 @@ public class DashboardViewModel extends ViewModel {
                     // Sắp xếp giảm dần theo số lượng (Quantity)
                     java.util.Collections.sort(sortedList, (a, b) -> Integer.compare(b.getQuantity(), a.getQuantity()));
                     
-                    // Lấy Top 5 món đầu tiên
+                    // Lấy Top 5 món bán chạy nhất
                     if (sortedList.size() > 5) {
                         topItems.postValue(sortedList.subList(0, 5));
                     } else {
