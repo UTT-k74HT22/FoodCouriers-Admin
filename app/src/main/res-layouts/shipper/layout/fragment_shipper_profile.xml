@@ -187,7 +187,7 @@
         <LinearLayout
             android:id="@+id/layout_shipper_stats"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="115dp"
             android:layout_marginTop="@dimen/spacing_md"
             android:orientation="horizontal">
 
@@ -195,18 +195,29 @@
                 android:id="@+id/stat_orders"
                 layout="@layout/item_stat_card"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1" />
 
             <Space
-                android:layout_width="@dimen/spacing_sm"
+                android:layout_width="@dimen/spacing_xs"
                 android:layout_height="0dp" />
 
             <include
                 android:id="@+id/stat_revenue"
                 layout="@layout/item_stat_card"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <Space
+                android:layout_width="@dimen/spacing_xs"
+                android:layout_height="0dp" />
+
+            <include
+                android:id="@+id/stat_total_revenue"
+                layout="@layout/item_stat_card"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1" />
         </LinearLayout>
 
