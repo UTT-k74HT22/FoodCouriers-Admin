@@ -140,7 +140,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         btnUpdateStatus.setText(getString(R.string.order_action_next_template, status.next().getLabel()));
 
         boolean isLocked = status.isLocked();
-        boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.ASSIGNED || status == OrderStatus.DELIVERING);
+        boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.DELIVERING);
         
         boolean hasShipper = currentOrder.getShipper() != null || !TextUtils.isEmpty(currentOrder.getShipperId());
         boolean isConfirmStep = status == OrderStatus.CONFIRMED;

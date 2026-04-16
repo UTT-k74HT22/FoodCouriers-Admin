@@ -29,6 +29,7 @@ import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.data.model.Shipper;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
+import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import java.util.List;
@@ -42,17 +43,14 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
 
     private OrderViewModel viewModel;
     private OrderAdapter adapter;
-    private com.utt.foodcouriers_admin.utils.SessionManager sessionManager;
+    private SessionManager sessionManager;
     private boolean isShipper = false;
-
     // Các thành phần UI
     private TextInputEditText etSearch;
     private TabLayout tabLayout;
     private RecyclerView rvOrders;
     private View emptyState, progressBar;
     private TextView tvEmptyTitle, tvEmptyMessage;
-
-    // Trạng thái cục bộ để quản lý việc tìm kiếm và lọc
     private String currentQuery = "";
     private OrderStatus currentStatus = OrderStatus.PENDING;
     private boolean isViewingAvailable = false;
@@ -80,11 +78,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         setupRecycler();
         setupTabs();
         setupSearch();
-        
-        // 2. "Đăng ký" lắng nghe sự thay đổi dữ liệu từ ViewModel
         observeViewModel();
-        
-        // 3. Gọi dữ liệu lần đầu
         reloadOrders();
     }
     // ánh xạ các thành phần UI từ layout
@@ -121,13 +115,10 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         viewModel.isLoading.observe(getViewLifecycleOwner(), isLoading -> {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         });
-
-        // Quan sát thông báo lỗi/thành công
         viewModel.errorMessage.observe(getViewLifecycleOwner(), message -> {
             if (message != null) {
                 ToastBanner.showError(message);
             } else {
-                // message == null là tín hiệu một thao tác update thành công
                 reloadOrders();
             }
         });
@@ -145,7 +136,6 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         tabLayout.removeAllTabs();
         
         if (isShipper) {
-            // Shippers only care about specific statuses
             tabLayout.addTab(tabLayout.newTab().setText("Đơn hàng mới").setTag("AVAILABLE"));
             tabLayout.addTab(tabLayout.newTab().setText("Đang giao").setTag("ACTIVE"));
             tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành").setTag("HISTORY"));

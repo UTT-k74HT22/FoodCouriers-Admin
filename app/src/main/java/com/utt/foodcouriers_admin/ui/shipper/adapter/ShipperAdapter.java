@@ -18,7 +18,7 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.ShipperProfile;
 import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
-
+/** Ánh xạ từ thẻ xml sang java*/
 public class ShipperAdapter extends ListAdapter<ShipperProfile, ShipperAdapter.ShipperViewHolder> {
 
     public interface ShipperActionListener {

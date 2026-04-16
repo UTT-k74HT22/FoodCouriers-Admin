@@ -18,7 +18,7 @@ import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.ui.order.OrderUiFormatter;
-/** Mục đích : Hiển thị danh sách đơn hàng.*/
+/** Mục đích : Hiển thị danh sách đơn hàng. Truyền dự liệu vào các view để hiển thị.*/
 public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolder> {
 
     public interface OrderActionListener {
@@ -139,7 +139,7 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
             btnReject.setVisibility(isPending ? View.VISIBLE : View.GONE);
 
             boolean isLocked = status.isLocked();
-            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.ASSIGNED || status == OrderStatus.DELIVERING);
+            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.DELIVERING);
             
             boolean hasShipper = order.getShipper() != null || !TextUtils.isEmpty(order.getShipperId());
             boolean isConfirmStep = status == OrderStatus.CONFIRMED;

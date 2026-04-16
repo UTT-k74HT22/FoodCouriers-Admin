@@ -34,7 +34,7 @@ import com.utt.foodcouriers_admin.data.repository.StorageRepository;
 import com.utt.foodcouriers_admin.data.request.ShipperUpsertRequest;
 import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 import java.util.List;
-
+/** Dùng để thêm mới shipper hoặc sửa thông tin shipper */
 public class ShipperFormDialogFragment extends DialogFragment {
 
     public interface ShipperFormListener {

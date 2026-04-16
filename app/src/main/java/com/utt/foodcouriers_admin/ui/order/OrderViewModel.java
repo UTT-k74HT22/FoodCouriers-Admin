@@ -9,12 +9,13 @@ import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.repository.DeliveryRepository;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
 
 import java.util.List;
 
 /** 
- * Logic chính của order - MVVM ViewModel
+ * Logic chính của order fragment
  */
 public class OrderViewModel extends ViewModel {
     private final OrderRepository orderRepository;
@@ -75,7 +76,7 @@ public class OrderViewModel extends ViewModel {
     /** Shipper tự nhận đơn hàng */
     public void acceptOrder(String orderId, String shipperUserId) {
         _isLoading.setValue(true);
-        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+        DeliveryRepository.getInstance()
                 .acceptOrder(orderId, shipperUserId, new RepositoryCallback<Void>() {
             @Override
             public void onComplete(BaseResponse<Void> response) {

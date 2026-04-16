@@ -10,7 +10,9 @@ import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
 import com.utt.foodcouriers_admin.data.remote.OrderClient;
 
 import java.util.List;
-
+/** Mục đích là Làm việc logic nghiệp vụ của dự án
+ * Xử lý logic trên app xử lý việc điều hướng
+ */
 public class OrderRepository {
 
     private static OrderRepository instance;
@@ -109,8 +111,7 @@ public class OrderRepository {
     public void updateStatus(String orderId, OrderStatus status, RepositoryCallback<Void> callback) {
         java.util.Map<String, Object> updates = new java.util.HashMap<>();
         updates.put("status", status.getValue());
-        
-        // Nếu chuyển sang confirmed, tự động chuyển delivery_status sang searching theo BA
+
         if (status == OrderStatus.CONFIRMED) {
             updates.put("delivery_status", "searching");
         }
