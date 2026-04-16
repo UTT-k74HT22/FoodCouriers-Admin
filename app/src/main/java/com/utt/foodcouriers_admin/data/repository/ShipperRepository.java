@@ -248,6 +248,15 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
         updateItem(TABLE, eqIdFilter(shipperId), request, ShipperProfile[].class, callback);
     }
 
+    /**
+     * Lấy danh sách đơn hàng của shipper trong ngày hôm nay
+     */
+    public void getTodayOrdersByShipper(String shipperId, RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
+        String filter = "?shipper_id=eq." + shipperId + "&created_at=gte." + today + "T00:00:00Z&order=created_at.desc";
+        fetchList("orders", filter, com.utt.foodcouriers_admin.data.model.Order[].class, callback);
+    }
+
     private BaseResponse<Void> validate(ShipperUpsertRequest request, boolean requireMainFields) {
         if (request == null) {
             return BaseResponse.error("VALIDATION_ERROR", "Shipper payload is required");

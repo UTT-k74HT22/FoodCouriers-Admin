@@ -3,21 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     app:cardBackgroundColor="@color/surface"
     app:cardCornerRadius="@dimen/radius_lg"
     app:cardElevation="@dimen/card_elevation">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="@dimen/spacing_lg">
+        android:gravity="center"
+        android:padding="@dimen/spacing_md">
 
         <ImageView
             android:id="@+id/stat_icon"
-            android:layout_width="@dimen/icon_lg"
-            android:layout_height="@dimen/icon_lg"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:contentDescription="@null"
             android:src="@drawable/ic_orders"
             app:tint="@color/primary" />
@@ -26,21 +27,26 @@
             android:id="@+id/stat_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_sm"
-            android:textAppearance="@style/AdminTextAppearance.Title"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:textAlignment="center"
             android:textColor="@color/primary"
-            android:textSize="24sp"
+            android:textSize="16sp"
             android:textStyle="bold"
-            tools:text="156" />
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="1.500.000đ" />
 
         <TextView
             android:id="@+id/stat_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_xs"
-            android:textAppearance="@style/AdminTextAppearance.Small"
+            android:layout_marginTop="2dp"
+            android:textAlignment="center"
+            android:gravity="center"
             android:textColor="@color/text_secondary"
-            tools:text="Đơn hôm nay" />
+            android:textSize="11sp"
+            android:maxLines="2"
+            tools:text="Doanh thu hôm nay" />
 
     </LinearLayout>
 

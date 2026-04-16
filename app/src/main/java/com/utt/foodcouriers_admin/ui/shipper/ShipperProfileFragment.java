@@ -56,6 +56,7 @@ public class ShipperProfileFragment extends Fragment {
     private View layoutShipperStats;
     private View statOrders;
     private View statRevenue;
+    private View statTotalRevenue;
     private TextView tvVehicleSectionTitle;
     private View cardVehicleInfo;
     private TextInputLayout tilNewPassword;
@@ -129,6 +130,7 @@ public class ShipperProfileFragment extends Fragment {
         layoutShipperStats = view.findViewById(R.id.layout_shipper_stats);
         statOrders = view.findViewById(R.id.stat_orders);
         statRevenue = view.findViewById(R.id.stat_revenue);
+        statTotalRevenue = view.findViewById(R.id.stat_total_revenue);
         tvVehicleSectionTitle = view.findViewById(R.id.tv_vehicle_section_title);
         cardVehicleInfo = view.findViewById(R.id.card_vehicle_info);
         tilNewPassword = view.findViewById(R.id.til_new_password);
@@ -291,8 +293,36 @@ public class ShipperProfileFragment extends Fragment {
         etLicensePlate.setText(currentProfile.getLicensePlate());
 
         updateStatValue(statOrders, String.valueOf(currentProfile.getTotalDelivered()));
+        
         NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        updateStatValue(statRevenue, formatter.format(currentProfile.getTotalRevenue()));
+        setupStatCard(statTotalRevenue, "Tổng doanh thu", formatter.format(currentProfile.getTotalRevenue()), R.drawable.ic_revenue, R.color.success);
+        
+        // Tải doanh thu trong ngày
+        loadDailyRevenue();
+    }
+
+    private void loadDailyRevenue() {
+        if (currentProfile == null) return;
+        
+        shipperRepository.getTodayOrdersByShipper(currentProfile.getId(), new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
+            @Override
+            public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
+                if (!isAdded()) return;
+                
+                long dailyRevenue = 0;
+                if (response.isSuccess() && response.getData() != null) {
+                    for (com.utt.foodcouriers_admin.data.model.Order order : response.getData()) {
+                        if ("delivered".equals(order.getStatus())) {
+                            dailyRevenue += order.getTotal();
+                        }
+                    }
+                }
+                
+                currentProfile.setDailyRevenue(dailyRevenue);
+                NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+                setupStatCard(statRevenue, "Doanh thu hôm nay", formatter.format(dailyRevenue), R.drawable.ic_revenue, R.color.success);
+            }
+        });
     }
 
     private void updateStatValue(View card, String value) {
