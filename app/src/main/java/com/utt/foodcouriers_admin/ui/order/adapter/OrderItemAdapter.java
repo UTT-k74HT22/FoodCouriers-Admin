@@ -14,7 +14,7 @@ import com.utt.foodcouriers_admin.ui.order.OrderUiFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/** Hiển thị danh sách các sản phẩm trong đơn hàng.*/
 public class OrderItemAdapter extends RecyclerView.Adapter<OrderItemAdapter.OrderItemViewHolder> {
 
     private final List<OrderItem> items = new ArrayList<>();

@@ -36,23 +36,23 @@ public class OrderViewModel extends ViewModel {
     }
 
     // Lấy danh sách đơn hàng
-    public void fetchOrders(OrderStatus status, String query) {
-        fetchOrders(status, query, null);
-    }
-
     public void fetchOrders(OrderStatus status, String query, String shipperId) {
         _isLoading.setValue(true);
-        orderRepository.getOrders(status, query, shipperId, new RepositoryCallback<List<Order>>() {
-            @Override
-            public void onComplete(BaseResponse<List<Order>> response) {
-                _isLoading.setValue(false);
-                if (response.isSuccess()) {
-                    _orders.setValue(response.getData());
-                } else {
-                    _errorMessage.setValue(response.getMessage());
-                }
+
+        RepositoryCallback<List<Order>> callback = response -> {
+            _isLoading.setValue(false);
+            if (response.isSuccess()) {
+                _orders.setValue(response.getData());
+            } else {
+                _errorMessage.setValue(response.getMessage());
             }
-        });
+        };
+        if (query != null && !query.trim().isEmpty()) {
+            orderRepository.searchOrders(query.trim(), callback);
+        }
+        else {
+            orderRepository.getOrders(status, "", shipperId, callback);
+        }
     }
 
     /** Lấy danh sách đơn hàng đang chờ Shipper nhận (Dành cho Shipper) */

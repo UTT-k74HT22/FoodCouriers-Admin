@@ -188,11 +188,17 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 currentQuery = s != null ? s.toString().trim() : "";
-                // Cơ chế Debounce: Đợi 300ms sau khi người dùng ngừng gõ mới gọi API
-                searchHandler.removeCallbacksAndMessages(null);
-                searchHandler.postDelayed(() -> reloadOrders(), 300L);
             }
             @Override public void afterTextChanged(Editable s) {}
+        });
+
+        etSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH ||
+                (event != null && event.getKeyCode() == android.view.KeyEvent.KEYCODE_ENTER)) {
+                reloadOrders();
+                return true;
+            }
+            return false;
         });
     }
 
@@ -205,15 +211,12 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         }
     }
 
-    // --- Triển khai các hành động từ giao diện (OrderActionListener) ---
-
     @Override
     public void onOpenDetail(Order order) {
         Intent intent = new Intent(requireContext(), OrderDetailActivity.class);
         intent.putExtra(OrderDetailActivity.EXTRA_ORDER_ID, order.getId());
         startActivity(intent);
     }
-
     @Override
     public void onAccept(Order order) {
         if (isShipper) {
@@ -261,7 +264,6 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         for (int i = 0; i < shippers.size(); i++) {
             names[i] = shippers.get(i).getFullName() + " (" + shippers.get(i).getPhone() + ")";
         }
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.order_assign_shipper)
                 .setItems(names, (dialog, which) -> {

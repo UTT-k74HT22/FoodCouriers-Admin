@@ -24,7 +24,6 @@ import com.utt.foodcouriers_admin.ui.order.adapter.OrderItemAdapter;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import java.util.List;
-
 public class OrderDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_ORDER_ID = "extra_order_id";
