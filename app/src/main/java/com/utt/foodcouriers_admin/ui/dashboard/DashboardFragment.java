@@ -67,14 +67,37 @@ public class DashboardFragment extends Fragment {
     }
 
     private void setupClickListeners() {
-        cardOrders.setOnClickListener(v -> navigateToOrders());
-        cardProcessing.setOnClickListener(v -> navigateToOrders());
-        cardCompleted.setOnClickListener(v -> navigateToOrders());
+        cardOrders.setOnClickListener(v -> navigateToOrders(null));
+        cardProcessing.setOnClickListener(v -> navigateToOrders(null));
+        cardCompleted.setOnClickListener(v -> navigateToOrders(com.utt.foodcouriers_admin.data.model.OrderStatus.DELIVERED));
     }
 
-    private void navigateToOrders() {
+    private void navigateToOrders(com.utt.foodcouriers_admin.data.model.OrderStatus status) {
         if (getActivity() instanceof com.utt.foodcouriers_admin.ui.main.MainActivity) {
-            ((com.utt.foodcouriers_admin.ui.main.MainActivity) getActivity()).navigateToOrders();
+            com.utt.foodcouriers_admin.ui.main.MainActivity main = (com.utt.foodcouriers_admin.ui.main.MainActivity) getActivity();
+            
+            if (status != null) {
+                main.getSupportFragmentManager().registerFragmentLifecycleCallbacks(
+                    new androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks() {
+                        @Override
+                        public void onFragmentViewCreated(@NonNull androidx.fragment.app.FragmentManager fm, @NonNull androidx.fragment.app.Fragment f, @NonNull View v, @Nullable Bundle savedInstanceState) {
+                            if (f instanceof com.utt.foodcouriers_admin.ui.order.OrderFragment) {
+                                com.google.android.material.tabs.TabLayout tabLayout = v.findViewById(R.id.tab_order_status);
+                                if (tabLayout != null) {
+                                    for (int i = 0; i < tabLayout.getTabCount(); i++) {
+                                        com.google.android.material.tabs.TabLayout.Tab tab = tabLayout.getTabAt(i);
+                                        if (tab != null && status.equals(tab.getTag())) {
+                                            tab.select();
+                                            break;
+                                        }
+                                    }
+                                }
+                                fm.unregisterFragmentLifecycleCallbacks(this);
+                            }
+                        }
+                    }, false);
+            }
+            main.navigateToOrders();
         }
     }
 
