@@ -1,21 +1,21 @@
 package com.utt.foodcouriers_admin.data.repository;
 
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
-import com.utt.foodcouriers_admin.data.model.DashboardStats;
+import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.repository.base.BaseSupabaseRepository;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
+
 /**
- * DashboardRepository - "Người phục vụ" đi lấy dữ liệu cho Dashboard.
- * Kế thừa BaseSupabaseRepository để dùng các hàm fetchSingle/fetchList.
+ * DashboardRepository - Cập nhật để lấy dữ liệu biểu đồ 7 ngày.
  */
 public class DashboardRepository extends BaseSupabaseRepository {
     
-    // Tên View (Virtual Table) trong Supabase để tính toán thống kê hàng ngày.
-    private static final String VIEW_STATS = "v_daily_stats";
-    
     private static DashboardRepository instance;
 
-    // Singleton pattern - Chỉ có duy nhất 1 "người phục vụ" này trong toàn app.
     public static synchronized DashboardRepository getInstance() {
         if (instance == null) {
             instance = new DashboardRepository();
@@ -24,32 +24,31 @@ public class DashboardRepository extends BaseSupabaseRepository {
     }
 
     /**
-     * Lấy tất cả đơn hàng của ngày hôm nay để tự tính toán thống kê (Bypass View lỗi)
+     * Lấy đơn hàng trong 7 ngày qua để làm biểu đồ và so sánh
      */
-    public void getTodayOrders(RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
-        // Lấy 100 đơn hàng mới nhất. ViewModel sẽ lo việc lọc đúng ngày hôm nay.
-        // Cách này bypass được hoàn toàn các lỗi lệch múi giờ giữa App và Database.
-        fetchList("orders", "?order=created_at.desc&limit=100",
-                com.utt.foodcouriers_admin.data.model.Order[].class, callback);
+    public void getRecentDaysOrders(RepositoryCallback<List<Order>> callback) {
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        
+        // Lấy ngày của 7 ngày trước
+        cal.add(Calendar.DAY_OF_YEAR, -7);
+        String startDate = sdf.format(cal.getTime());
+        
+        // Query: created_at >= startDate, sắp xếp mới nhất
+        String query = "?created_at=gte." + startDate + "&order=created_at.desc";
+        fetchList("orders", query, Order[].class, callback);
     }
 
-    /**
-     * Lấy danh sách món ăn bán chạy (Top Items)
-     * Chỉ lấy các món hiện đang còn tồn tại trong danh mục món ăn (menu_items)
-     */
-    public void getTopItems(RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>> callback) {
-        // !inner join với bảng menu_items: Chỉ lấy những món vẫn còn tồn tại trong hệ thống
-        // !inner join với bảng orders: Chỉ lấy những món từ đơn hàng đã giao thành công
-        fetchList("order_items", "?select=*,menu_item:menu_items!inner(id,name),order:orders!inner(status)&order.status=eq.delivered&order=created_at.desc&limit=200",
+    public void getTodayOrders(RepositoryCallback<List<Order>> callback) {
+        fetchList("orders", "?order=created_at.desc&limit=200", Order[].class, callback);
+    }
+
+    public void getTopItems(RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.OrderItem>> callback) {
+        fetchList("order_items", "?select=*,menu_item:menu_items!inner(id,name),order:orders!inner(status)&order.status=eq.delivered&limit=200",
                 com.utt.foodcouriers_admin.data.model.OrderItem[].class, callback);
     }
-    /**
-     * Lấy danh sách 10 đơn hàng mới nhất cần xử lý (status='pending')
-     */
-    public void getRecentOrders(RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
-        // Query: status=eq.pending (đang chờ), order by created_at desc (mới nhất lên đầu), limit 10
-        // Cần join thêm thông tin user và restaurant nếu view/table hỗ trợ
-        fetchList("orders", "?status=eq.pending&order=created_at.desc&limit=10", 
-                com.utt.foodcouriers_admin.data.model.Order[].class, callback);
+
+    public void getRecentOrders(RepositoryCallback<List<Order>> callback) {
+        fetchList("orders", "?status=eq.pending&order=created_at.desc&limit=10", Order[].class, callback);
     }
 }

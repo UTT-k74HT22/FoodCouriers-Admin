@@ -1,5 +1,8 @@
 package com.utt.foodcouriers_admin.ui.dashboard;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -7,159 +10,176 @@ import androidx.lifecycle.ViewModel;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.DashboardStats;
+import com.utt.foodcouriers_admin.data.model.Order;
+import com.utt.foodcouriers_admin.data.model.OrderItem;
 import com.utt.foodcouriers_admin.data.repository.DashboardRepository;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
+
 /**
- * DashboardViewModel - Đã sửa lỗi để khớp với RepositoryCallback của dự án.
+ * DashboardViewModel - Cập nhật logic xử lý biểu đồ 7 ngày.
  */
 public class DashboardViewModel extends ViewModel {
 
     private final DashboardRepository repository;
 
     private final MutableLiveData<DashboardStats> stats = new MutableLiveData<>();
-    private final MutableLiveData<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> recentOrders = new MutableLiveData<>();
-    private final MutableLiveData<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>> topItems = new MutableLiveData<>();
+    private final MutableLiveData<List<Order>> recentOrders = new MutableLiveData<>();
+    private final MutableLiveData<List<OrderItem>> topItems = new MutableLiveData<>();
+    private final MutableLiveData<double[]> weeklyRevenue = new MutableLiveData<>(); // Doanh thu 7 ngày
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
+
+    private final Handler refreshHandler = new Handler(Looper.getMainLooper());
+    private static final int REFRESH_INTERVAL = 15000;
+    private boolean isRefreshing = false;
 
     public DashboardViewModel() {
         this.repository = DashboardRepository.getInstance();
     }
 
     public LiveData<DashboardStats> getStats() { return stats; }
-    public LiveData<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> getRecentOrders() { return recentOrders; }
-    public LiveData<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>> getTopItems() { return topItems; }
+    public LiveData<List<Order>> getRecentOrders() { return recentOrders; }
+    public LiveData<List<OrderItem>> getTopItems() { return topItems; }
+    public LiveData<double[]> getWeeklyRevenue() { return weeklyRevenue; }
     public LiveData<Boolean> getIsLoading() { return isLoading; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
 
-    public void loadDashboardData() {
-        isLoading.setValue(true);
+    public void startAutoRefresh() { if (!isRefreshing) { isRefreshing = true; refreshHandler.post(refreshRunnable); } }
+    public void stopAutoRefresh() { isRefreshing = false; refreshHandler.removeCallbacks(refreshRunnable); }
+
+    private final Runnable refreshRunnable = new Runnable() {
+        @Override
+        public void run() { if (isRefreshing) { loadDashboardData(false); refreshHandler.postDelayed(this, REFRESH_INTERVAL); } }
+    };
+
+    public void loadDashboardData() { loadDashboardData(true); }
+
+    public void loadDashboardData(boolean showLoading) {
+        if (showLoading) isLoading.setValue(true);
         
-        // 1. Tự tính toán thống kê từ danh sách đơn hàng thực tế của hôm nay (Không dùng View DB lỗi)
-        repository.getTodayOrders(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
+        // 1. Lấy dữ liệu 7 ngày qua để làm Stats + Biểu đồ
+        repository.getRecentDaysOrders(new RepositoryCallback<List<Order>>() {
             @Override
-            public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
+            public void onComplete(BaseResponse<List<Order>> response) {
                 if (response.isSuccess() && response.getData() != null) {
-                    java.util.List<com.utt.foodcouriers_admin.data.model.Order> allOrders = response.getData();
-
-                    // Lấy ngày hiện tại (Local Time) theo định dạng yyyy-MM-dd
-                    java.text.SimpleDateFormat localFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
-                    String todayStr = localFormat.format(new java.util.Date());
-                    
-                    // Format để parse chuỗi UTC từ Supabase (ISO 8601)
-                    java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US);
-                    parser.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-
-                    int total = 0;
-                    double revenue = 0;
-                    int pending = 0;
-                    int completed = 0;
-                    int cancelled = 0;
-
-                    for (com.utt.foodcouriers_admin.data.model.Order o : allOrders) {
-                        String createdAt = o.getCreatedAt();
-                        if (createdAt != null) {
-                            try {
-                                // 1. Parse chuỗi UTC thành Date object
-                                java.util.Date orderDate = parser.parse(createdAt);
-
-                                // 2. Chuyển sang chuỗi yyyy-MM-dd (theo Local Time của máy)
-                                String orderDayStr = localFormat.format(orderDate);
-
-                                // 3. Chỉ tính nếu đúng là ngày hôm nay
-                                if (todayStr.equals(orderDayStr)) {
-                                    String status = o.getStatus();
-
-                                    // Đếm tất cả đơn hàng trong ngày không phân biệt trạng thái
-                                    total++;
-
-                                    if ("delivered".equals(status)) {
-                                        completed++;
-                                        revenue += o.getTotal();
-                                    } else if ("cancelled".equals(status)) {
-                                        cancelled++;
-                                    } else if ("pending".equals(status) || "confirmed".equals(status) ||
-                                               "preparing".equals(status) || "ready_for_pickup".equals(status) ||
-                                               "delivering".equals(status)) {
-                                        pending++;
-                                    }
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-
-                    DashboardStats newStats = new DashboardStats();
-                    newStats.setTotalOrders(total);
-                    newStats.setTotalRevenue(revenue);
-                    newStats.setPendingOrders(pending);
-                    newStats.setCompletedOrders(completed);
-                    newStats.setCancelledOrders(cancelled);
-                    
-                    stats.postValue(newStats);
+                    processWeeklyStatsAndChart(response.getData());
                 }
                 checkAllLoaded();
             }
         });
 
         // 2. Load Recent Orders
-        repository.getRecentOrders(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
+        repository.getRecentOrders(new RepositoryCallback<List<Order>>() {
             @Override
-            public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
-                if (response.isSuccess()) {
-                    recentOrders.postValue(response.getData());
-                }
+            public void onComplete(BaseResponse<List<Order>> response) {
+                if (response.isSuccess()) { recentOrders.postValue(response.getData()); }
                 checkAllLoaded();
             }
         });
 
-        // 3. Load Top Items và thực hiện gom nhóm, tính toán
-        repository.getTopItems(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>>() {
+        // 3. Load Top Items
+        repository.getTopItems(new RepositoryCallback<List<OrderItem>>() {
             @Override
-            public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>> response) {
-                if (response.isSuccess() && response.getData() != null) {
-                    java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> rawItems = response.getData();
-
-                    // Sử dụng Map để gom nhóm theo Tên món ăn
-                    java.util.Map<String, com.utt.foodcouriers_admin.data.model.OrderItem> groupedMap = new java.util.HashMap<>();
-
-                    for (com.utt.foodcouriers_admin.data.model.OrderItem item : rawItems) {
-                        String name = item.getMenuItemName();
-                        if (name == null || name.isEmpty()) continue;
-
-                        if (groupedMap.containsKey(name)) {
-                            com.utt.foodcouriers_admin.data.model.OrderItem existing = groupedMap.get(name);
-                            existing.setQuantity(existing.getQuantity() + item.getQuantity());
-                        } else {
-                            // Tạo bản sao để tránh làm thay đổi dữ liệu gốc
-                            com.utt.foodcouriers_admin.data.model.OrderItem clone = new com.utt.foodcouriers_admin.data.model.OrderItem();
-                            clone.setMenuItemName(name);
-                            clone.setQuantity(item.getQuantity());
-                            clone.setMenuItemPrice(item.getMenuItemPrice());
-                            groupedMap.put(name, clone);
-                        }
-                    }
-
-                    // Chuyển sang List để sắp xếp
-                    java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> sortedList = new java.util.ArrayList<>(groupedMap.values());
-
-                    // Sắp xếp giảm dần theo số lượng (Quantity)
-                    java.util.Collections.sort(sortedList, (a, b) -> Integer.compare(b.getQuantity(), a.getQuantity()));
-
-                    // Lấy Top 5 món bán chạy nhất
-                    if (sortedList.size() > 5) {
-                        topItems.postValue(sortedList.subList(0, 5));
-                    } else {
-                        topItems.postValue(sortedList);
-                    }
-                }
+            public void onComplete(BaseResponse<List<OrderItem>> response) {
+                if (response.isSuccess() && response.getData() != null) { processTopItems(response.getData()); }
             }
         });
     }
 
-    private void checkAllLoaded() {
-        // Simple logic to stop loading spinner
-        isLoading.postValue(false);
+    private void processWeeklyStatsAndChart(List<Order> allOrders) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+        parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        // Tạo mảng 7 ngày gần nhất (Thứ tự: Hôm kia -> ... -> Hôm qua -> Hôm nay)
+        double[] revenueData = new double[7];
+        String[] dates = new String[7];
+        Calendar cal = Calendar.getInstance();
+        for (int i = 6; i >= 0; i--) {
+            dates[i] = sdf.format(cal.getTime());
+            cal.add(Calendar.DAY_OF_YEAR, -1);
+        }
+
+        int tOrders = 0; double tRevenue = 0; int tPending = 0; int tCompleted = 0;
+        int yOrders = 0; double yRevenue = 0;
+
+        for (Order o : allOrders) {
+            if (o.getCreatedAt() == null) continue;
+            try {
+                Date orderDate = parser.parse(o.getCreatedAt());
+                String dayStr = sdf.format(orderDate);
+
+                // Tính toán cho Stats (Hôm nay & Hôm qua)
+                if (dates[6].equals(dayStr)) {
+                    tOrders++;
+                    if ("delivered".equals(o.getStatus())) { tCompleted++; tRevenue += o.getTotal(); }
+                    else if (!"cancelled".equals(o.getStatus())) { tPending++; }
+                } else if (dates[5].equals(dayStr)) {
+                    yOrders++;
+                    if ("delivered".equals(o.getStatus())) { yRevenue += o.getTotal(); }
+                }
+
+                // Tính toán cho Biểu đồ (7 ngày)
+                if ("delivered".equals(o.getStatus())) {
+                    for (int i = 0; i < 7; i++) {
+                        if (dates[i].equals(dayStr)) {
+                            revenueData[i] += o.getTotal();
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
+        // Đổ dữ liệu vào Stats
+        DashboardStats newStats = new DashboardStats();
+        newStats.setTotalOrders(tOrders); newStats.setTotalRevenue(tRevenue);
+        newStats.setPendingOrders(tPending); newStats.setCompletedOrders(tCompleted);
+        newStats.setOrderTrend(calculateTrend(tOrders, yOrders));
+        newStats.setRevenueTrend(calculateTrend(tRevenue, yRevenue));
+        stats.postValue(newStats);
+
+        // Đổ dữ liệu vào Biểu đồ
+        weeklyRevenue.postValue(revenueData);
     }
+
+    private void processTopItems(List<OrderItem> rawItems) {
+        Map<String, OrderItem> groupedMap = new HashMap<>();
+        for (OrderItem item : rawItems) {
+            String name = item.getMenuItemName();
+            if (name == null) continue;
+            if (groupedMap.containsKey(name)) {
+                OrderItem ex = groupedMap.get(name);
+                ex.setQuantity(ex.getQuantity() + item.getQuantity());
+            } else {
+                OrderItem clone = new OrderItem();
+                clone.setMenuItemName(name);
+                clone.setQuantity(item.getQuantity());
+                clone.setMenuItemPrice(item.getMenuItemPrice());
+                groupedMap.put(name, clone);
+            }
+        }
+        List<OrderItem> sortedList = new ArrayList<>(groupedMap.values());
+        Collections.sort(sortedList, (a, b) -> Integer.compare(b.getQuantity(), a.getQuantity()));
+        topItems.postValue(sortedList.size() > 5 ? sortedList.subList(0, 5) : sortedList);
+    }
+
+    private double calculateTrend(double current, double previous) {
+        if (previous == 0) return current > 0 ? 100.0 : 0.0;
+        return ((current - previous) / previous) * 100.0;
+    }
+
+    private void checkAllLoaded() { isLoading.postValue(false); }
+
+    @Override protected void onCleared() { super.onCleared(); stopAutoRefresh(); }
 }
