@@ -41,7 +41,7 @@ public class DashboardViewModel extends ViewModel {
             public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
                 if (response.isSuccess() && response.getData() != null) {
                     java.util.List<com.utt.foodcouriers_admin.data.model.Order> allOrders = response.getData();
-                    
+
                     // Lấy ngày hiện tại (Local Time) theo định dạng yyyy-MM-dd
                     java.text.SimpleDateFormat localFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
                     String todayStr = localFormat.format(new java.util.Date());
@@ -49,7 +49,7 @@ public class DashboardViewModel extends ViewModel {
                     // Format để parse chuỗi UTC từ Supabase (ISO 8601)
                     java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US);
                     parser.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                    
+
                     int total = 0;
                     double revenue = 0;
                     int pending = 0;
@@ -62,14 +62,14 @@ public class DashboardViewModel extends ViewModel {
                             try {
                                 // 1. Parse chuỗi UTC thành Date object
                                 java.util.Date orderDate = parser.parse(createdAt);
-                                
+
                                 // 2. Chuyển sang chuỗi yyyy-MM-dd (theo Local Time của máy)
                                 String orderDayStr = localFormat.format(orderDate);
-                                
+
                                 // 3. Chỉ tính nếu đúng là ngày hôm nay
                                 if (todayStr.equals(orderDayStr)) {
                                     String status = o.getStatus();
-                                    
+
                                     // Đếm tất cả đơn hàng trong ngày không phân biệt trạng thái
                                     total++;
 
@@ -78,8 +78,8 @@ public class DashboardViewModel extends ViewModel {
                                         revenue += o.getTotal();
                                     } else if ("cancelled".equals(status)) {
                                         cancelled++;
-                                    } else if ("pending".equals(status) || "confirmed".equals(status) || 
-                                               "preparing".equals(status) || "ready_for_pickup".equals(status) || 
+                                    } else if ("pending".equals(status) || "confirmed".equals(status) ||
+                                               "preparing".equals(status) || "ready_for_pickup".equals(status) ||
                                                "delivering".equals(status)) {
                                         pending++;
                                     }
@@ -120,10 +120,10 @@ public class DashboardViewModel extends ViewModel {
             public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>> response) {
                 if (response.isSuccess() && response.getData() != null) {
                     java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> rawItems = response.getData();
-                    
+
                     // Sử dụng Map để gom nhóm theo Tên món ăn
                     java.util.Map<String, com.utt.foodcouriers_admin.data.model.OrderItem> groupedMap = new java.util.HashMap<>();
-                    
+
                     for (com.utt.foodcouriers_admin.data.model.OrderItem item : rawItems) {
                         String name = item.getMenuItemName();
                         if (name == null || name.isEmpty()) continue;
@@ -140,13 +140,13 @@ public class DashboardViewModel extends ViewModel {
                             groupedMap.put(name, clone);
                         }
                     }
-                    
+
                     // Chuyển sang List để sắp xếp
                     java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> sortedList = new java.util.ArrayList<>(groupedMap.values());
-                    
+
                     // Sắp xếp giảm dần theo số lượng (Quantity)
                     java.util.Collections.sort(sortedList, (a, b) -> Integer.compare(b.getQuantity(), a.getQuantity()));
-                    
+
                     // Lấy Top 5 món bán chạy nhất
                     if (sortedList.size() > 5) {
                         topItems.postValue(sortedList.subList(0, 5));
