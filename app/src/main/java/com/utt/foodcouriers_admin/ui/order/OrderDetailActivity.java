@@ -2,6 +2,7 @@ package com.utt.foodcouriers_admin.ui.order;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -138,6 +139,17 @@ public class OrderDetailActivity extends AppCompatActivity {
         btnAssignShipper.setEnabled(!status.isLocked());
         btnUpdateStatus.setEnabled(!status.isLocked());
         btnUpdateStatus.setText(getString(R.string.order_action_next_template, status.next().getLabel()));
+
+        boolean isLocked = status.isLocked();
+        boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.ASSIGNED || status == OrderStatus.DELIVERING);
+        
+        boolean hasShipper = currentOrder.getShipper() != null || !TextUtils.isEmpty(currentOrder.getShipperId());
+        boolean isConfirmStep = status == OrderStatus.CONFIRMED;
+        boolean canProceed = !(isConfirmStep && !hasShipper);
+
+        btnCancelOrder.setVisibility(isLocked ? View.GONE : View.VISIBLE);
+        btnAssignShipper.setVisibility(isLocked || isShipperActionTime ? View.GONE : View.VISIBLE);
+        btnUpdateStatus.setVisibility(isLocked || status == OrderStatus.DELIVERING || !canProceed ? View.GONE : View.VISIBLE);
     }
 
     private void bindActions() {

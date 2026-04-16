@@ -305,6 +305,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void navigateToOrders() {
+        navigationView.setCheckedItem(R.id.nav_orders);
+        loadFragment(new OrderFragment(), "Quản lý đơn hàng");
+    }
+
     private void performLogout() {
         sessionManager.clearSession();
         Intent intent = new Intent(this, LoginActivity.class);

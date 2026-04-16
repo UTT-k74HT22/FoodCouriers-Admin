@@ -35,49 +35,67 @@ public class DashboardViewModel extends ViewModel {
     public void loadDashboardData() {
         isLoading.setValue(true);
         
-        // 1. Tự tính toán thống kê từ danh sách đơn hàng thực tế (Bypass View lỗi)
-        repository.getRecentOrdersForStats(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
+        // 1. Tự tính toán thống kê từ danh sách đơn hàng thực tế của hôm nay (Không dùng View DB lỗi)
+        repository.getTodayOrders(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
             @Override
             public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
                 if (response.isSuccess() && response.getData() != null) {
-                    java.util.List<com.utt.foodcouriers_admin.data.model.Order> recentOrdersList = response.getData();
-                    
-                    DashboardStats newStats = new DashboardStats();
-                    
-                    // Lấy ngày hiện tại (YYYY-MM-DD) theo giờ local của điện thoại
-                    String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
-                    
-                    int todayTotal = 0;
-                    double todayRevenue = 0;
-                    int pendingCount = 0;
-                    int completedCount = 0;
+                    java.util.List<com.utt.foodcouriers_admin.data.model.Order> allOrders = response.getData();
 
-                    for (com.utt.foodcouriers_admin.data.model.Order o : recentOrdersList) {
-                        String status = o.getStatus();
-                        String orderDate = o.getCreatedAt() != null ? o.getCreatedAt().substring(0, 10) : "";
+                    // Lấy ngày hiện tại (Local Time) theo định dạng yyyy-MM-dd
+                    java.text.SimpleDateFormat localFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+                    String todayStr = localFormat.format(new java.util.Date());
+                    
+                    // Format để parse chuỗi UTC từ Supabase (ISO 8601)
+                    java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US);
+                    parser.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 
-                        // Đếm số đơn "Đang xử lý" (Không phụ thuộc ngày)
-                        if ("pending".equals(status) || "confirmed".equals(status) || 
-                            "preparing".equals(status) || "ready_for_pickup".equals(status) || 
-                            "delivering".equals(status)) {
-                            pendingCount++;
-                        }
+                    int total = 0;
+                    double revenue = 0;
+                    int pending = 0;
+                    int completed = 0;
+                    int cancelled = 0;
 
-                        // Tính thống kê "Hôm nay" dựa trên ngày tạo của đơn hàng
-                        if (today.equals(orderDate)) {
-                            todayTotal++;
-                            if ("delivered".equals(status)) {
-                                completedCount++;
-                                todayRevenue += o.getTotal();
+                    for (com.utt.foodcouriers_admin.data.model.Order o : allOrders) {
+                        String createdAt = o.getCreatedAt();
+                        if (createdAt != null) {
+                            try {
+                                // 1. Parse chuỗi UTC thành Date object
+                                java.util.Date orderDate = parser.parse(createdAt);
+
+                                // 2. Chuyển sang chuỗi yyyy-MM-dd (theo Local Time của máy)
+                                String orderDayStr = localFormat.format(orderDate);
+
+                                // 3. Chỉ tính nếu đúng là ngày hôm nay
+                                if (todayStr.equals(orderDayStr)) {
+                                    String status = o.getStatus();
+
+                                    // Đếm tất cả đơn hàng trong ngày không phân biệt trạng thái
+                                    total++;
+
+                                    if ("delivered".equals(status)) {
+                                        completed++;
+                                        revenue += o.getTotal();
+                                    } else if ("cancelled".equals(status)) {
+                                        cancelled++;
+                                    } else if ("pending".equals(status) || "confirmed".equals(status) ||
+                                               "preparing".equals(status) || "ready_for_pickup".equals(status) ||
+                                               "delivering".equals(status)) {
+                                        pending++;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
                         }
                     }
 
-                    // Nếu hôm nay chưa có đơn nào, lấy dữ liệu đơn gần nhất để demo (Hoặc cứ để 0 tùy ý)
-                    newStats.setTotalOrders(todayTotal);
-                    newStats.setTotalRevenue(todayRevenue);
-                    newStats.setPendingOrders(pendingCount);
-                    newStats.setCompletedOrders(completedCount);
+                    DashboardStats newStats = new DashboardStats();
+                    newStats.setTotalOrders(total);
+                    newStats.setTotalRevenue(revenue);
+                    newStats.setPendingOrders(pending);
+                    newStats.setCompletedOrders(completed);
+                    newStats.setCancelledOrders(cancelled);
                     
                     stats.postValue(newStats);
                 }
@@ -96,12 +114,45 @@ public class DashboardViewModel extends ViewModel {
             }
         });
 
-        // 3. Load Top Items (Tạm thời lấy dữ liệu đơn giản)
+        // 3. Load Top Items và thực hiện gom nhóm, tính toán
         repository.getTopItems(new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>>() {
             @Override
             public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem>> response) {
-                if (response.isSuccess()) {
-                    topItems.postValue(response.getData());
+                if (response.isSuccess() && response.getData() != null) {
+                    java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> rawItems = response.getData();
+
+                    // Sử dụng Map để gom nhóm theo Tên món ăn
+                    java.util.Map<String, com.utt.foodcouriers_admin.data.model.OrderItem> groupedMap = new java.util.HashMap<>();
+
+                    for (com.utt.foodcouriers_admin.data.model.OrderItem item : rawItems) {
+                        String name = item.getMenuItemName();
+                        if (name == null || name.isEmpty()) continue;
+
+                        if (groupedMap.containsKey(name)) {
+                            com.utt.foodcouriers_admin.data.model.OrderItem existing = groupedMap.get(name);
+                            existing.setQuantity(existing.getQuantity() + item.getQuantity());
+                        } else {
+                            // Tạo bản sao để tránh làm thay đổi dữ liệu gốc
+                            com.utt.foodcouriers_admin.data.model.OrderItem clone = new com.utt.foodcouriers_admin.data.model.OrderItem();
+                            clone.setMenuItemName(name);
+                            clone.setQuantity(item.getQuantity());
+                            clone.setMenuItemPrice(item.getMenuItemPrice());
+                            groupedMap.put(name, clone);
+                        }
+                    }
+
+                    // Chuyển sang List để sắp xếp
+                    java.util.List<com.utt.foodcouriers_admin.data.model.OrderItem> sortedList = new java.util.ArrayList<>(groupedMap.values());
+
+                    // Sắp xếp giảm dần theo số lượng (Quantity)
+                    java.util.Collections.sort(sortedList, (a, b) -> Integer.compare(b.getQuantity(), a.getQuantity()));
+
+                    // Lấy Top 5 món bán chạy nhất
+                    if (sortedList.size() > 5) {
+                        topItems.postValue(sortedList.subList(0, 5));
+                    } else {
+                        topItems.postValue(sortedList);
+                    }
                 }
             }
         });

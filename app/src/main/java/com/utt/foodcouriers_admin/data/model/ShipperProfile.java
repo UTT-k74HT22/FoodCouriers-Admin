@@ -22,6 +22,7 @@ public class ShipperProfile implements Serializable {
     private int totalDelivered;
     @SerializedName("total_revenue")
     private long totalRevenue;
+    private long dailyRevenue;
     private Double rating;
     @SerializedName("joined_at")
     private String joinedAt;
@@ -66,6 +67,9 @@ public class ShipperProfile implements Serializable {
 
     public long getTotalRevenue() { return totalRevenue; }
     public void setTotalRevenue(long totalRevenue) { this.totalRevenue = totalRevenue; }
+
+    public long getDailyRevenue() { return dailyRevenue; }
+    public void setDailyRevenue(long dailyRevenue) { this.dailyRevenue = dailyRevenue; }
 
     public Double getRating() { return rating; }
     public void setRating(Double rating) { this.rating = rating; }

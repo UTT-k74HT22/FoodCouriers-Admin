@@ -102,10 +102,16 @@ public class OrderClient extends BaseSupabaseClient {
     public void getShippersByRestaurant(String restaurantId, ApiCallback<List<Shipper>> callback) {
         new Thread(() -> {
             try {
-                String url = SHIPPERS_URL + "?select=*,user:users!user_id(*)&is_active=eq.true&is_available=eq.true&restaurant_id=eq." + restaurantId;
+                // Filter: Active, Available (manually toggled) AND Delivery Status must be 'available' (not busy)
+                StringBuilder urlBuilder = new StringBuilder(SHIPPERS_URL)
+                        .append("?select=*,user:users!user_id(*)&is_active=eq.true&is_available=eq.true&delivery_status=eq.available");
+
+                if (restaurantId != null && !restaurantId.isEmpty()) {
+                    urlBuilder.append("&restaurant_id=eq.").append(restaurantId);
+                }
 
                 Request request = new Request.Builder()
-                        .url(url)
+                        .url(urlBuilder.toString())
                         .addHeader(SupabaseConfig.HEADER_AUTH, SupabaseConfig.SUPABASE_ANON_KEY)
                         .addHeader(SupabaseConfig.HEADER_AUTHORIZATION, "Bearer " + accessToken)
                         .get()

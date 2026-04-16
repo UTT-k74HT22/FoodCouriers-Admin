@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.supabase.kt)
     implementation(libs.glide)
     implementation(libs.swiperefreshlayout)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

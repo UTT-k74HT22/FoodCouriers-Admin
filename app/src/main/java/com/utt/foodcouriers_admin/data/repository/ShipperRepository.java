@@ -166,7 +166,13 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
             }
 
             private void updateShipper() {
-                updateItem(TABLE, eqIdFilter(id.trim()), request, ShipperProfile[].class, callback);
+                ShipperUpsertRequest shipperOnlyRequest = new ShipperUpsertRequest();
+                shipperOnlyRequest.setRestaurantId(request.getRestaurantId());
+                shipperOnlyRequest.setLicensePlate(request.getLicensePlate());
+                shipperOnlyRequest.setVehicleType(request.getVehicleType());
+                shipperOnlyRequest.setIsAvailable(request.getIsAvailable());
+                shipperOnlyRequest.setIsActive(request.getIsActive());
+                updateItem(TABLE, eqIdFilter(id.trim()), shipperOnlyRequest, ShipperProfile[].class, callback);
             }
         });
     }
@@ -240,6 +246,15 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
         ShipperUpsertRequest request = new ShipperUpsertRequest();
         request.setIsAvailable(isAvailable);
         updateItem(TABLE, eqIdFilter(shipperId), request, ShipperProfile[].class, callback);
+    }
+
+    /**
+     * Lấy danh sách đơn hàng của shipper trong ngày hôm nay
+     */
+    public void getTodayOrdersByShipper(String shipperId, RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
+        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
+        String filter = "?shipper_id=eq." + shipperId + "&created_at=gte." + today + "T00:00:00Z&order=created_at.desc";
+        fetchList("orders", filter, com.utt.foodcouriers_admin.data.model.Order[].class, callback);
     }
 
     private BaseResponse<Void> validate(ShipperUpsertRequest request, boolean requireMainFields) {

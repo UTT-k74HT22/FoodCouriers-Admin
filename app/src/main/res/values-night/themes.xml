@@ -31,4 +31,11 @@
         <item name="dividerColor">@color/border</item>
         <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
     </style>
+
+    <style name="Theme.FoodCouriersAdmin.Dialog" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="colorSurface">#1E1E1E</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#B0B0B0</item>
+    </style>
 </resources>

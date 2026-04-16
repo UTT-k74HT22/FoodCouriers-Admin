@@ -34,6 +34,13 @@
         <item name="textInputStyle">@style/Widget.Material3.TextInputLayout.OutlinedBox</item>
     </style>
 
+    <style name="Theme.FoodCouriersAdmin.Dialog" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+
             <style name="AdminChip.Filter" parent="Widget.Material3.Chip.Filter">
                 <item name="android:textAppearance">@style/AdminTextAppearance.Small</item>
                 <item name="chipStrokeWidth">1dp</item>

@@ -1,6 +1,9 @@
 package com.utt.foodcouriers_admin.ui.restaurant.dialog;
 
 import android.app.TimePickerDialog;
+import android.content.Context;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
@@ -9,15 +12,21 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+
 import com.bumptech.glide.Glide;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.utt.foodcouriers_admin.R;
@@ -27,6 +36,18 @@ import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.repository.StorageRepository;
 import com.utt.foodcouriers_admin.data.request.RestaurantUpsertRequest;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
+
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.overlay.Marker;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RestaurantFormDialogFragment extends DialogFragment {
 
@@ -51,16 +72,28 @@ public class RestaurantFormDialogFragment extends DialogFragment {
     private StorageRepository storageRepository;
     private Uri selectedImageUri;
     private boolean isUploading = false;
+    private double currentLatitude = 21.0285;
+    private double currentLongitude = 105.8542;
+    private Marker currentMarker;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private AutoCompleteTextView etAddressAutocomplete;
+    private org.osmdroid.views.MapView mapView;
+    private TextView tvCoordinates;
+    private ProgressBar progressLocation;
+    private AddressSuggestionAdapter suggestionAdapter;
+    private final android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable searchRunnable;
 
     private EditText etName;
     private EditText etDescription;
     private EditText etImage;
-    private EditText etAddress;
     private EditText etPhone;
     private TextView tvOpenTime;
     private TextView tvCloseTime;
     private EditText etDeliveryFee;
     private EditText etMinOrder;
+    private EditText etLatitude;
+    private EditText etLongitude;
     private MaterialSwitch switchActive;
     private MaterialSwitch switchOpen;
     private TextView btnSave;
@@ -94,7 +127,7 @@ public class RestaurantFormDialogFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setStyle(DialogFragment.STYLE_NO_TITLE, com.google.android.material.R.style.ThemeOverlay_Material3_Dialog_Alert);
+        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.Theme_FoodCouriersAdmin_Dialog);
         if (getArguments() != null) {
             restaurant = (Restaurant) getArguments().getSerializable(ARG_RESTAURANT);
         }
@@ -109,8 +142,12 @@ public class RestaurantFormDialogFragment extends DialogFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        
+        Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+        
         storageRepository = StorageRepository.getInstance();
         initViews(view);
+        setupMap(view);
         bindRestaurant();
         setupListeners();
     }
@@ -132,21 +169,29 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         }
     }
 
+    public void showError(String message) {
+        if (etAddressAutocomplete != null) {
+            etAddressAutocomplete.setError(message);
+        }
+    }
+
     private void initViews(View view) {
         inputName = view.findViewById(R.id.input_name);
-        inputAddress = view.findViewById(R.id.input_address);
+        inputAddress = null;
         inputOpenTime = view.findViewById(R.id.input_open_time);
         inputCloseTime = view.findViewById(R.id.input_close_time);
         
         etName = inputName.findViewById(R.id.et_input);
         etDescription = view.findViewById(R.id.input_description).findViewById(R.id.et_input);
         etImage = view.findViewById(R.id.input_image).findViewById(R.id.et_input);
-        etAddress = inputAddress.findViewById(R.id.et_input);
+        etAddressAutocomplete = view.findViewById(R.id.et_address_autocomplete);
         etPhone = view.findViewById(R.id.input_phone).findViewById(R.id.et_input);
         tvOpenTime = inputOpenTime.findViewById(R.id.tv_hint);
         tvCloseTime = inputCloseTime.findViewById(R.id.tv_hint);
         etDeliveryFee = view.findViewById(R.id.input_delivery_fee).findViewById(R.id.et_input);
         etMinOrder = view.findViewById(R.id.input_min_order).findViewById(R.id.et_input);
+        etLatitude = view.findViewById(R.id.input_latitude).findViewById(R.id.et_input);
+        etLongitude = view.findViewById(R.id.input_longitude).findViewById(R.id.et_input);
         
         switchActive = view.findViewById(R.id.switch_active);
         switchOpen = view.findViewById(R.id.switch_open);
@@ -162,26 +207,29 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         View inputNameRoot = view.findViewById(R.id.input_name);
         View inputDescRoot = view.findViewById(R.id.input_description);
         View inputImageRoot = view.findViewById(R.id.input_image);
-        View inputAddressRoot = view.findViewById(R.id.input_address);
         View inputPhoneRoot = view.findViewById(R.id.input_phone);
         View inputDeliveryFeeRoot = view.findViewById(R.id.input_delivery_fee);
         View inputMinOrderRoot = view.findViewById(R.id.input_min_order);
+        View inputLatitudeRoot = view.findViewById(R.id.input_latitude);
+        View inputLongitudeRoot = view.findViewById(R.id.input_longitude);
         
         ImageView ivNameIcon = inputNameRoot.findViewById(R.id.iv_icon);
         ImageView ivDescIcon = inputDescRoot.findViewById(R.id.iv_icon);
         ImageView ivImageIcon = inputImageRoot.findViewById(R.id.iv_icon);
-        ImageView ivAddressIcon = inputAddressRoot.findViewById(R.id.iv_icon);
         ImageView ivPhoneIcon = inputPhoneRoot.findViewById(R.id.iv_icon);
         ImageView ivDeliveryFeeIcon = inputDeliveryFeeRoot.findViewById(R.id.iv_icon);
         ImageView ivMinOrderIcon = inputMinOrderRoot.findViewById(R.id.iv_icon);
+        ImageView ivLatitudeIcon = inputLatitudeRoot.findViewById(R.id.iv_icon);
+        ImageView ivLongitudeIcon = inputLongitudeRoot.findViewById(R.id.iv_icon);
         
         ivNameIcon.setImageResource(R.drawable.ic_restaurant);
         ivDescIcon.setImageResource(R.drawable.ic_menu);
         ivImageIcon.setImageResource(R.drawable.ic_menu_item);
-        ivAddressIcon.setImageResource(R.drawable.ic_orders);
         ivPhoneIcon.setImageResource(R.drawable.ic_orders);
         ivDeliveryFeeIcon.setImageResource(R.drawable.ic_orders);
         ivMinOrderIcon.setImageResource(R.drawable.ic_orders);
+        ivLatitudeIcon.setImageResource(R.drawable.ic_orders);
+        ivLongitudeIcon.setImageResource(R.drawable.ic_orders);
         
         ImageView ivOpenTimeIcon = inputOpenTime.findViewById(R.id.iv_icon);
         ImageView ivCloseTimeIcon = inputCloseTime.findViewById(R.id.iv_icon);
@@ -197,12 +245,14 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         etDescription.setHint(R.string.label_description_vi_en);
         etImage.setHint(R.string.label_image_url);
         etImage.setEnabled(false);
-        etAddress.setHint(R.string.label_address_vi_en);
+        etAddressAutocomplete.setHint(R.string.label_address_vi_en);
         etPhone.setHint(R.string.label_phone_vi_en);
         tvOpenTime.setHint(R.string.label_open_time);
         tvCloseTime.setHint(R.string.label_close_time);
         etDeliveryFee.setHint(R.string.label_delivery_fee);
         etMinOrder.setHint(R.string.label_min_order);
+        etLatitude.setHint("Vĩ độ (Latitude)");
+        etLongitude.setHint("Kinh độ (Longitude)");
         
         etDescription.setMinLines(2);
     }
@@ -218,7 +268,7 @@ public class RestaurantFormDialogFragment extends DialogFragment {
             etName.setText(restaurant.getName());
             etDescription.setText(restaurant.getDescription());
             etImage.setText(restaurant.getImageUrl());
-            etAddress.setText(restaurant.getAddress());
+            etAddressAutocomplete.setText(restaurant.getAddress());
             etPhone.setText(restaurant.getPhone());
             
             if (!TextUtils.isEmpty(restaurant.getOpenTime())) {
@@ -230,6 +280,23 @@ public class RestaurantFormDialogFragment extends DialogFragment {
             
             etDeliveryFee.setText(String.valueOf(restaurant.getDeliveryFee()));
             etMinOrder.setText(String.valueOf(restaurant.getMinOrder()));
+            
+            if (restaurant.getLatitude() != null) {
+                currentLatitude = restaurant.getLatitude();
+                etLatitude.setText(String.valueOf(currentLatitude));
+            }
+            if (restaurant.getLongitude() != null) {
+                currentLongitude = restaurant.getLongitude();
+                etLongitude.setText(String.valueOf(currentLongitude));
+            }
+            
+            if (mapView != null && restaurant.getLatitude() != null && restaurant.getLongitude() != null) {
+                GeoPoint point = new GeoPoint(currentLatitude, currentLongitude);
+                mapView.getController().setCenter(point);
+                addMarker(point);
+                mapView.getController().setZoom(16.0);
+            }
+            
             loadPreviewImage(restaurant.getImageUrl());
         }
         
@@ -328,17 +395,22 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         String name = etName.getText() != null ? etName.getText().toString().trim() : null;
         String description = etDescription.getText() != null ? etDescription.getText().toString().trim() : null;
         String imageUrl = etImage.getText() != null ? etImage.getText().toString().trim() : null;
-        String address = etAddress.getText() != null ? etAddress.getText().toString().trim() : null;
+        String address = etAddressAutocomplete.getText() != null ? etAddressAutocomplete.getText().toString().trim() : null;
         String phone = etPhone.getText() != null ? etPhone.getText().toString().trim() : null;
         String openTime = formatTime(openHour, openMinute);
         String closeTime = formatTime(closeHour, closeMinute);
         Integer deliveryFee = parseInteger(etDeliveryFee);
         Integer minOrder = parseInteger(etMinOrder);
+        Double latitude = parseDouble(etLatitude);
+        Double longitude = parseDouble(etLongitude);
+        
+        android.util.Log.d("DEBUG_SUBMIT", "name=" + name + ", address=" + address + ", lat=" + latitude + ", lon=" + longitude);
 
         RestaurantUpsertRequest request = new RestaurantUpsertRequest(
                 name, description, address, phone, imageUrl,
                 switchActive.isChecked(), switchOpen.isChecked(),
-                openTime, closeTime, deliveryFee, minOrder
+                openTime, closeTime, deliveryFee, minOrder,
+                latitude, longitude
         );
         if (listener != null) {
             listener.onSubmit(restaurant != null ? restaurant.getId() : null, request, this);
@@ -354,12 +426,12 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         } else {
             inputName.setBackgroundResource(R.drawable.admin_input);
         }
-        String address = etAddress.getText() != null ? etAddress.getText().toString().trim() : "";
+        String address = etAddressAutocomplete.getText() != null ? etAddressAutocomplete.getText().toString().trim() : "";
         if (TextUtils.isEmpty(address)) {
-            inputAddress.setBackgroundResource(R.drawable.admin_input_error);
+            etAddressAutocomplete.setBackgroundResource(R.drawable.admin_input_error);
             isValid = false;
         } else {
-            inputAddress.setBackgroundResource(R.drawable.admin_input);
+            etAddressAutocomplete.setBackgroundResource(R.drawable.admin_input);
         }
         
         int openTimeMinutes = openHour * 60 + openMinute;
@@ -387,6 +459,21 @@ public class RestaurantFormDialogFragment extends DialogFragment {
         }
         try {
             return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Double parseDouble(EditText editText) {
+        if (editText == null || editText.getText() == null) {
+            return null;
+        }
+        String value = editText.getText().toString().trim();
+        if (TextUtils.isEmpty(value)) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value);
         } catch (NumberFormatException e) {
             return null;
         }
@@ -432,5 +519,309 @@ public class RestaurantFormDialogFragment extends DialogFragment {
                 setLoading(false);
             }
         });
+    }
+
+    private void setupMap(View view) {
+        mapView = view.findViewById(R.id.map_view);
+        tvCoordinates = view.findViewById(R.id.tv_coordinates);
+        progressLocation = view.findViewById(R.id.progress_location);
+        
+        if (mapView != null) {
+            mapView.setTileSource(TileSourceFactory.MAPNIK);
+            mapView.setMultiTouchControls(true);
+            mapView.getController().setZoom(15.0);
+            
+            GeoPoint startPoint = new GeoPoint(currentLatitude, currentLongitude);
+            mapView.getController().setCenter(startPoint);
+            addMarker(startPoint);
+        }
+        
+        etAddressAutocomplete = view.findViewById(R.id.et_address_autocomplete);
+        etAddressAutocomplete.setThreshold(2);
+        
+        suggestionAdapter = new AddressSuggestionAdapter(requireContext(), new ArrayList<>());
+        etAddressAutocomplete.setAdapter(suggestionAdapter);
+        
+        etAddressAutocomplete.setOnItemClickListener((parent, view1, position, id) -> {
+            AddressSuggestionAdapter.SuggestionItem item = suggestionAdapter.getItem(position);
+            if (item != null) {
+                currentLatitude = item.lat;
+                currentLongitude = item.lon;
+                GeoPoint point = new GeoPoint(item.lat, item.lon);
+                addMarker(point);
+                if (mapView != null) {
+                    mapView.getController().animateTo(point);
+                    mapView.getController().setZoom(16.0);
+                }
+                updateCoordinatesText();
+                if (etAddressAutocomplete != null) {
+                    etAddressAutocomplete.setText(item.displayName);
+                }
+            }
+        });
+        
+        etAddressAutocomplete.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (suggestionAdapter == null) return;
+                String text = s.toString().trim();
+                if (text.length() >= 3) {
+                    if (searchRunnable != null) {
+                        searchHandler.removeCallbacks(searchRunnable);
+                    }
+                    searchRunnable = () -> searchSuggestions(text);
+                    searchHandler.postDelayed(searchRunnable, 500);
+                } else {
+                    suggestionAdapter.clearItems();
+                }
+            }
+        });
+        
+        view.findViewById(R.id.btn_search_address).setOnClickListener(v -> searchAddress());
+    }
+    
+    private void searchSuggestions(String query) {
+        executor.execute(() -> {
+            Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+            try {
+                @SuppressWarnings("deprecation")
+                List<Address> addresses = geocoder.getFromLocationName(query + ", Việt Nam", 5);
+                
+                List<AddressSuggestionAdapter.SuggestionItem> items = new ArrayList<>();
+                
+                if (addresses != null && !addresses.isEmpty()) {
+                    for (Address addr : addresses) {
+                        String fullAddress = addr.getAddressLine(0);
+                        if (fullAddress != null && !fullAddress.isEmpty()) {
+                            items.add(new AddressSuggestionAdapter.SuggestionItem(
+                                fullAddress, addr.getLatitude(), addr.getLongitude()
+                            ));
+                        }
+                    }
+                }
+                
+                final List<AddressSuggestionAdapter.SuggestionItem> finalItems = items;
+                requireActivity().runOnUiThread(() -> suggestionAdapter.updateItems(finalItems));
+                
+            } catch (IOException e) {
+                // Ignore
+            }
+        });
+    }
+
+    private void addMarker(GeoPoint point) {
+        if (mapView == null || point == null) return;
+        
+        if (currentMarker != null) {
+            mapView.getOverlays().remove(currentMarker);
+        }
+        
+        currentMarker = new Marker(mapView);
+        currentMarker.setPosition(point);
+        currentMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+        currentMarker.setDraggable(true);
+        
+        currentMarker.setOnMarkerDragListener(new Marker.OnMarkerDragListener() {
+            @Override
+            public void onMarkerDrag(Marker marker) {}
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                currentLatitude = marker.getPosition().getLatitude();
+                currentLongitude = marker.getPosition().getLongitude();
+                updateCoordinatesText();
+            }
+
+            @Override
+            public void onMarkerDragStart(Marker marker) {}
+        });
+        
+        mapView.getOverlays().add(currentMarker);
+        mapView.invalidate();
+    }
+
+    private void updateCoordinatesText() {
+        if (tvCoordinates != null) {
+            tvCoordinates.setText(String.format(Locale.getDefault(), 
+                "Vĩ độ: %.6f, Kinh độ: %.6f", currentLatitude, currentLongitude));
+        }
+        if (etLatitude != null) {
+            etLatitude.setText(String.valueOf(currentLatitude));
+        }
+        if (etLongitude != null) {
+            etLongitude.setText(String.valueOf(currentLongitude));
+        }
+    }
+
+    private void searchAddress() {
+        if (etAddressAutocomplete == null || etAddressAutocomplete == null) return;
+        
+        String address = etAddressAutocomplete.getText().toString().trim();
+        if (TextUtils.isEmpty(address)) {
+            etAddressAutocomplete.setHint(R.string.error_field_required);
+            return;
+        }
+        
+        if (progressLocation != null) {
+            progressLocation.setVisibility(View.VISIBLE);
+        }
+        
+        final String searchQuery = address + ", Hà Nội, Việt Nam";
+        
+        executor.execute(() -> {
+            Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+            try {
+                @SuppressWarnings("deprecation")
+                List<Address> addresses = geocoder.getFromLocationName(searchQuery, 5);
+                
+                if (addresses != null && !addresses.isEmpty()) {
+                    Address addr = addresses.get(0);
+                    currentLatitude = addr.getLatitude();
+                    currentLongitude = addr.getLongitude();
+                    
+                    requireActivity().runOnUiThread(() -> {
+                        if (progressLocation != null) {
+                            progressLocation.setVisibility(View.GONE);
+                        }
+                        
+                        GeoPoint point = new GeoPoint(currentLatitude, currentLongitude);
+                        addMarker(point);
+                        if (mapView != null) {
+                            mapView.getController().animateTo(point);
+                            mapView.getController().setZoom(16.0);
+                        }
+                        updateCoordinatesText();
+                        
+                        if (etAddressAutocomplete != null && addr.getAddressLine(0) != null) {
+                            etAddressAutocomplete.setText(addr.getAddressLine(0));
+                        }
+                        
+                        ToastBanner.showSuccess("Đã tìm thấy địa chỉ");
+                    });
+                } else {
+                    final String searchQuery2 = address + ", Việt Nam";
+                    @SuppressWarnings("deprecation")
+                    List<Address> addresses2 = geocoder.getFromLocationName(searchQuery2, 3);
+                    
+                    if (addresses2 != null && !addresses2.isEmpty()) {
+                        Address addr = addresses2.get(0);
+                        currentLatitude = addr.getLatitude();
+                        currentLongitude = addr.getLongitude();
+                        
+                        requireActivity().runOnUiThread(() -> {
+                            if (progressLocation != null) {
+                                progressLocation.setVisibility(View.GONE);
+                            }
+                            
+                            GeoPoint point = new GeoPoint(currentLatitude, currentLongitude);
+                            addMarker(point);
+                            if (mapView != null) {
+                                mapView.getController().animateTo(point);
+                                mapView.getController().setZoom(16.0);
+                            }
+                            updateCoordinatesText();
+                            
+                            if (etAddressAutocomplete != null && addr.getAddressLine(0) != null) {
+                                etAddressAutocomplete.setText(addr.getAddressLine(0));
+                            }
+                            
+                            ToastBanner.showSuccess("Đã tìm thấy địa chỉ");
+                        });
+                    } else {
+                        requireActivity().runOnUiThread(() -> {
+                            if (progressLocation != null) {
+                                progressLocation.setVisibility(View.GONE);
+                            }
+                            ToastBanner.showError("Không tìm thấy. Thử nhập: số nhà + đường + quận (VD: 123 Đường Láng, Đống Đa, Hà Nội)");
+                        });
+                    }
+                }
+            } catch (IOException e) {
+                requireActivity().runOnUiThread(() -> {
+                    if (progressLocation != null) {
+                        progressLocation.setVisibility(View.GONE);
+                    }
+                    ToastBanner.showError("Lỗi: " + e.getMessage());
+                });
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mapView != null) {
+            mapView.onResume();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mapView != null) {
+            mapView.onPause();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        executor.shutdown();
+        if (searchHandler != null) {
+            searchHandler.removeCallbacksAndMessages(null);
+        }
+    }
+
+    private static class AddressSuggestionAdapter extends android.widget.ArrayAdapter<AddressSuggestionAdapter.SuggestionItem> implements android.widget.Filterable {
+        
+        static class SuggestionItem {
+            String displayName;
+            double lat;
+            double lon;
+            
+            SuggestionItem(String displayName, double lat, double lon) {
+                this.displayName = displayName;
+                this.lat = lat;
+                this.lon = lon;
+            }
+            
+            @NonNull
+            @Override
+            public String toString() {
+                return displayName;
+            }
+        }
+        
+        private List<SuggestionItem> items = new ArrayList<>();
+        
+        AddressSuggestionAdapter(@NonNull Context context, List<SuggestionItem> items) {
+            super(context, android.R.layout.simple_dropdown_item_1line, (List<SuggestionItem>) items);
+            this.items = new ArrayList<>(items);
+        }
+        
+        void updateItems(List<SuggestionItem> newItems) {
+            this.items = new ArrayList<>(newItems);
+            clear();
+            addAll(newItems);
+            notifyDataSetChanged();
+        }
+        
+        void clearItems() {
+            items.clear();
+            clear();
+            notifyDataSetChanged();
+        }
+        
+        @NonNull
+        @Override
+        public Filter getFilter() {
+            return null;
+        }
     }
 }

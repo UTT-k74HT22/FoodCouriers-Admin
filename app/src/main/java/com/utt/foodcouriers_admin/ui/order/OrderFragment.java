@@ -152,6 +152,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             isViewingAvailable = true;
         } else {
             for (OrderStatus status : OrderStatus.values()) {
+                if (status == OrderStatus.ASSIGNED) continue;
                 tabLayout.addTab(tabLayout.newTab().setText(status.getLabel()).setTag(status));
             }
             currentStatus = OrderStatus.PENDING;

@@ -84,7 +84,7 @@ public class EditUserDialogFragment extends DialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setStyle(DialogFragment.STYLE_NO_TITLE, com.google.android.material.R.style.ThemeOverlay_Material3_Dialog_Alert);
+        setStyle(DialogFragment.STYLE_NO_TITLE, R.style.Theme_FoodCouriersAdmin_Dialog);
         storageRepository = StorageRepository.getInstance();
         userRepository = UserRepository.getInstance();
 
