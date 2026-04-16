@@ -302,20 +302,21 @@ public class ShipperProfileFragment extends Fragment {
     }
 
     private void loadDailyRevenue() {
-        if (currentProfile == null) return;
+        if (currentProfile == null || getContext() == null) return;
         
-        shipperRepository.getTodayOrdersByShipper(currentProfile.getId(), new RepositoryCallback<java.util.List<com.utt.foodcouriers_admin.data.model.Order>>() {
+        String userId = currentProfile.getUserId();
+        if (userId == null || userId.isEmpty()) {
+            userId = currentProfile.getId();
+        }
+        
+        shipperRepository.getTodayRevenue(userId, new RepositoryCallback<Long>() {
             @Override
-            public void onComplete(BaseResponse<java.util.List<com.utt.foodcouriers_admin.data.model.Order>> response) {
-                if (!isAdded()) return;
+            public void onComplete(BaseResponse<Long> response) {
+                if (!isAdded() || getContext() == null) return;
                 
                 long dailyRevenue = 0;
                 if (response.isSuccess() && response.getData() != null) {
-                    for (com.utt.foodcouriers_admin.data.model.Order order : response.getData()) {
-                        if ("delivered".equals(order.getStatus())) {
-                            dailyRevenue += order.getTotal();
-                        }
-                    }
+                    dailyRevenue = response.getData();
                 }
                 
                 currentProfile.setDailyRevenue(dailyRevenue);
