@@ -7,23 +7,46 @@
     android:layout_marginBottom="@dimen/spacing_sm"
     app:cardBackgroundColor="@color/surface"
     app:cardCornerRadius="@dimen/radius_lg"
-    app:cardElevation="@dimen/card_elevation">
+    app:cardElevation="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="@dimen/spacing_md">
 
-        <ImageView
-            android:id="@+id/item_image"
+        <!-- Rank Badge -->
+        <FrameLayout
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/admin_badge_info"
+            android:backgroundTint="#F3F4F6">
+
+            <TextView
+                android:id="@+id/tv_rank"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="1" />
+        </FrameLayout>
+
+        <!-- Product Image Placeholder -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/img_product"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:background="@drawable/admin_card"
-            android:contentDescription="@null"
+            android:layout_marginStart="@dimen/spacing_md"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_menu_item" />
+            android:src="@drawable/fooddelivery_icon"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.SmallComponent"
+            app:strokeColor="@color/border"
+            app:strokeWidth="1dp" />
 
+        <!-- Info Section -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -32,39 +55,62 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/item_name"
+                android:id="@+id/tv_product_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/AdminTextAppearance.Body"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textColor="@color/text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold"
-                tools:text="Cơm tấm sườn bì chả" />
+                tools:text="Pizza Hải Sản Phô Mai" />
 
             <TextView
-                android:id="@+id/item_sold_count"
+                android:id="@+id/tv_sales_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xs"
-                android:textAppearance="@style/AdminTextAppearance.Small"
+                android:layout_marginTop="2dp"
                 android:textColor="@color/text_secondary"
-                tools:text="Đã bán: 342" />
+                android:textSize="12sp"
+                tools:text="Đã bán: 125 suất" />
 
+            <!-- Mini Progress Bar to show popularity -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progress_popularity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                app:indicatorColor="@color/primary"
+                app:trackColor="#F3F4F6"
+                app:trackCornerRadius="4dp"
+                app:trackThickness="4dp"
+                tools:progress="75" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/item_rank"
+        <!-- Revenue Section -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@drawable/admin_badge_success"
-            android:paddingStart="@dimen/spacing_sm"
-            android:paddingTop="@dimen/spacing_xs"
-            android:paddingEnd="@dimen/spacing_sm"
-            android:paddingBottom="@dimen/spacing_xs"
-            android:textAppearance="@style/AdminTextAppearance.Small"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            tools:text="#1" />
+            android:layout_marginStart="@dimen/spacing_md"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_product_revenue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="2.450k" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Doanh thu"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
 
     </LinearLayout>
 

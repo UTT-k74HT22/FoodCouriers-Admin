@@ -67,7 +67,7 @@ public class DashboardOrderAdapter extends RecyclerView.Adapter<DashboardOrderAd
         }
 
         void bind(Order order, OnOrderClickListener listener) {
-            tvOrderCode.setText(order.getOrderCode() != null ? order.getOrderCode() : "#" + order.getId().substring(0, 8));
+            tvOrderCode.setText(order.getOrderCode() != null ? order.getOrderCode() : "#" + (order.getId() != null ? order.getId().substring(0, 8) : "N/A"));
             
             if (order.getUser() != null) {
                 tvCustomerName.setText(order.getUser().getFullName());
@@ -84,11 +84,9 @@ public class DashboardOrderAdapter extends RecyclerView.Adapter<DashboardOrderAd
             NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
             tvTotal.setText(formatter.format(order.getTotal()));
             
-            // Set status text and background based on status
             String statusStr = order.getStatus();
             tvStatus.setText(getStatusText(statusStr));
             
-            // Format time (assuming createdAt is in ISO format)
             if (order.getCreatedAt() != null && order.getCreatedAt().length() >= 16) {
                 String timePart = order.getCreatedAt().substring(11, 16);
                 tvTime.setText(timePart);
@@ -104,9 +102,7 @@ public class DashboardOrderAdapter extends RecyclerView.Adapter<DashboardOrderAd
             switch (status) {
                 case "pending": return "Đang chờ";
                 case "confirmed": return "Đã xác nhận";
-                case "preparing": return "Đang chuẩn bị";
-                case "ready_for_pickup": return "Chờ shipper";
-                case "delivering": return "Đang giao";
+                case "preparing": return "Chuẩn bị";
                 case "delivered": return "Hoàn thành";
                 case "cancelled": return "Đã hủy";
                 default: return status;
