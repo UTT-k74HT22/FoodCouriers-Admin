@@ -30,8 +30,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import androidx.core.content.ContextCompat;
-
 import com.google.gson.JsonObject;
 
 /**
@@ -40,8 +38,6 @@ import com.google.gson.JsonObject;
 public class DashboardFragment extends Fragment {
 
     private DashboardViewModel viewModel;
-    private com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardOrderAdapter orderAdapter;
-    private com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardTopItemAdapter topItemAdapter;
     private OrderRealtimeManager realtimeManager;
     private OrderRealtimeManager.OrderRealtimeCallback realtimeCallback;
     private DashboardOrderAdapter orderAdapter;
