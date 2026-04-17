@@ -10,7 +10,9 @@ import com.utt.foodcouriers_admin.data.remote.BaseSupabaseClient;
 import com.utt.foodcouriers_admin.data.remote.OrderClient;
 
 import java.util.List;
-
+/** Mục đích là Làm việc logic nghiệp vụ của dự án
+ * Xử lý logic trên app xử lý việc điều hướng
+ */
 public class OrderRepository {
 
     private static OrderRepository instance;
@@ -30,7 +32,7 @@ public class OrderRepository {
     /**
      * Lấy danh sách đơn hàng thực tế từ Supabase
      */
-    public void getOrders(OrderStatus status, String query, String shipperId, RepositoryCallback<List<Order>> callback) {
+    public void getOrders(OrderStatus status, String query, String shipperId, String restaurantId, RepositoryCallback<List<Order>> callback) {
         // Cấu trúc select để lấy thông tin join
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*),items:order_items(*)";
         
@@ -45,6 +47,11 @@ public class OrderRepository {
             filterBuilder.append("shipper_id=eq.").append(shipperId);
         }
 
+        if (restaurantId != null && !restaurantId.isEmpty()) {
+            if (filterBuilder.length() > 0) filterBuilder.append("&");
+            filterBuilder.append("restaurant_id=eq.").append(restaurantId);
+        }
+
         // Sắp xếp đơn mới nhất lên đầu
         if (filterBuilder.length() > 0) filterBuilder.append("&");
         filterBuilder.append("order=created_at.desc");
@@ -52,13 +59,30 @@ public class OrderRepository {
         orderClient.getOrders(selectClause, filterBuilder.toString(), new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
             public void onSuccess(List<Order> result) {
-                // Bạn có thể lọc thêm theo query ở đây nếu Supabase filter phức tạp
                 callback.onComplete(BaseResponse.success(result));
             }
 
             @Override
             public void onError(String error) {
                 callback.onComplete(BaseResponse.error("FETCH_ERROR", error));
+            }
+        });
+    }
+
+    public void searchOrders(String orderCode, RepositoryCallback<List<Order>> callback) {
+        String selectClause ="*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name)";
+
+        String filter = "order_code=eq." + orderCode + "&order=created_at.desc";
+
+        orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
+            @Override
+            public void onSuccess(List<Order> result) {
+                callback.onComplete(BaseResponse.success(result));
+            }
+
+            @Override
+            public void onError(String error) {
+                callback.onComplete(BaseResponse.error("SEARCH_ERROR", error));
             }
         });
     }
@@ -93,8 +117,7 @@ public class OrderRepository {
     public void updateStatus(String orderId, OrderStatus status, RepositoryCallback<Void> callback) {
         java.util.Map<String, Object> updates = new java.util.HashMap<>();
         updates.put("status", status.getValue());
-        
-        // Nếu chuyển sang confirmed, tự động chuyển delivery_status sang searching theo BA
+
         if (status == OrderStatus.CONFIRMED) {
             updates.put("delivery_status", "searching");
         }

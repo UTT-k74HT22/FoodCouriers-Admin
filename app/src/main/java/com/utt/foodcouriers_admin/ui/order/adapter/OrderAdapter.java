@@ -18,7 +18,7 @@ import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.ui.order.OrderUiFormatter;
-
+/** Mục đích : Hiển thị danh sách đơn hàng. Truyền dự liệu vào các view để hiển thị.*/
 public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolder> {
 
     public interface OrderActionListener {
@@ -72,7 +72,8 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
                     && oldItem.getTotal() == newItem.getTotal();
         }
     };
-
+    /** ViewHolder để hiển thị đơn hàng trong danh sách.
+     * Mục đích : Hiển thị thông tin đơn hàng trong danh sách.*/
     class OrderViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvOrderCode;
         private final TextView tvCustomerName;
@@ -101,13 +102,11 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
             btnReject = itemView.findViewById(R.id.btn_reject_order);
             btnNextStep = itemView.findViewById(R.id.btn_next_step);
             btnAssignShipper = itemView.findViewById(R.id.btn_assign_shipper);
-            
-            // New shipper-specific buttons (assumed to be in item_order.xml or we'll reuse existing buttons)
-            // Reusing btnNextStep as a primary action button for simplicity if they aren't there
             btnPickup = btnNextStep; 
             btnComplete = btnNextStep;
         }
 
+        /** Gắn dữ liệu đơn hàng vào ViewHolder.*/
         void bind(Order order) {
             OrderStatus status = order.getOrderStatus();
             tvOrderCode.setText(order.getOrderCode());
@@ -133,14 +132,14 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
                 bindAdminButtons(order, status);
             }
         }
-
+        /** Gắn các nút bấm trạng thái cho admin .*/
         private void bindAdminButtons(Order order, OrderStatus status) {
             boolean isPending = status == OrderStatus.PENDING;
             btnAccept.setVisibility(isPending ? View.VISIBLE : View.GONE);
             btnReject.setVisibility(isPending ? View.VISIBLE : View.GONE);
 
             boolean isLocked = status.isLocked();
-            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.ASSIGNED || status == OrderStatus.DELIVERING);
+            boolean isShipperActionTime = (status == OrderStatus.READY_FOR_PICKUP || status == OrderStatus.DELIVERING);
             
             boolean hasShipper = order.getShipper() != null || !TextUtils.isEmpty(order.getShipperId());
             boolean isConfirmStep = status == OrderStatus.CONFIRMED;
@@ -160,15 +159,14 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
             ColorStateList tint = ColorStateList.valueOf(ContextCompat.getColor(itemView.getContext(), R.color.primary));
             btnAssignShipper.setStrokeColor(tint);
         }
-
+        /**
+         * Gắn các nút bấm của đơn hàng do cho shipper  .*/
         private void bindShipperButtons(Order order, OrderStatus status) {
-            // Shippers usually don't accept/reject or assign other shippers
             btnAccept.setVisibility(View.GONE);
             btnReject.setVisibility(View.GONE);
             btnAssignShipper.setVisibility(View.GONE);
 
             if (order.getShipperId() == null) {
-                // Đơn hàng chưa có ai nhận
                 btnNextStep.setVisibility(View.VISIBLE);
                 btnNextStep.setText("Nhận đơn hàng");
                 btnNextStep.setOnClickListener(v -> { if (listener != null) listener.onAccept(order); });
@@ -184,7 +182,7 @@ public class OrderAdapter extends ListAdapter<Order, OrderAdapter.OrderViewHolde
                 btnNextStep.setVisibility(View.GONE);
             }
         }
-
+        /** Hàm này được sử dụng để xác định tên của shipper.*/
         private String resolveShipperName(Order order) {
             if (order.getShipper() != null && !TextUtils.isEmpty(order.getShipper().getFullName())) {
                 return order.getShipper().getFullName();

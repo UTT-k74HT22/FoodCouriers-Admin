@@ -8,20 +8,28 @@ import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.repository.DeliveryRepository;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
+import com.utt.foodcouriers_admin.data.repository.RestaurantRepository;
 
 import java.util.List;
 
 /** 
- * Logic chính của order - MVVM ViewModel
+ * Logic chính của order fragment
  */
 public class OrderViewModel extends ViewModel {
     private final OrderRepository orderRepository;
+    private final RestaurantRepository restaurantRepository;
     
     // Danh sách đơn hàng
     private final MutableLiveData<List<Order>> _orders = new MutableLiveData<>();
     public final LiveData<List<Order>> orders = _orders;
+
+    // Danh sách nhà hàng cho bộ lọc
+    private final MutableLiveData<List<Restaurant>> _restaurants = new MutableLiveData<>();
+    public final LiveData<List<Restaurant>> restaurants = _restaurants;
     
     // Trạng thái tải dữ liệu
     private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
@@ -33,23 +41,36 @@ public class OrderViewModel extends ViewModel {
 
     public OrderViewModel() {
         orderRepository = OrderRepository.getInstance();
+        restaurantRepository = RestaurantRepository.getInstance();
     }
 
     // Lấy danh sách đơn hàng
-    public void fetchOrders(OrderStatus status, String query) {
-        fetchOrders(status, query, null);
+    public void fetchOrders(OrderStatus status, String query, String shipperId, String restaurantId) {
+        _isLoading.setValue(true);
+
+        RepositoryCallback<List<Order>> callback = response -> {
+            _isLoading.setValue(false);
+            if (response.isSuccess()) {
+                _orders.setValue(response.getData());
+            } else {
+                _errorMessage.setValue(response.getMessage());
+            }
+        };
+        if (query != null && !query.trim().isEmpty()) {
+            orderRepository.searchOrders(query.trim(), callback);
+        }
+        else {
+            orderRepository.getOrders(status, "", shipperId, restaurantId, callback);
+        }
     }
 
-    public void fetchOrders(OrderStatus status, String query, String shipperId) {
-        _isLoading.setValue(true);
-        orderRepository.getOrders(status, query, shipperId, new RepositoryCallback<List<Order>>() {
+    /** Lấy danh sách nhà hàng để lọc */
+    public void fetchRestaurants() {
+        restaurantRepository.getAll(new RepositoryCallback<List<Restaurant>>() {
             @Override
-            public void onComplete(BaseResponse<List<Order>> response) {
-                _isLoading.setValue(false);
+            public void onComplete(BaseResponse<List<Restaurant>> response) {
                 if (response.isSuccess()) {
-                    _orders.setValue(response.getData());
-                } else {
-                    _errorMessage.setValue(response.getMessage());
+                    _restaurants.setValue(response.getData());
                 }
             }
         });
@@ -75,7 +96,7 @@ public class OrderViewModel extends ViewModel {
     /** Shipper tự nhận đơn hàng */
     public void acceptOrder(String orderId, String shipperUserId) {
         _isLoading.setValue(true);
-        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+        DeliveryRepository.getInstance()
                 .acceptOrder(orderId, shipperUserId, new RepositoryCallback<Void>() {
             @Override
             public void onComplete(BaseResponse<Void> response) {

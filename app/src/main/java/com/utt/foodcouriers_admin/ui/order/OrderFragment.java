@@ -9,6 +9,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,16 +23,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.model.Shipper;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
+import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,18 +48,18 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
 
     private OrderViewModel viewModel;
     private OrderAdapter adapter;
-    private com.utt.foodcouriers_admin.utils.SessionManager sessionManager;
+    private SessionManager sessionManager;
     private boolean isShipper = false;
-
     // Các thành phần UI
     private TextInputEditText etSearch;
+    private TextInputLayout tilRestaurantFilter;
+    private AutoCompleteTextView acRestaurantFilter;
     private TabLayout tabLayout;
     private RecyclerView rvOrders;
     private View emptyState, progressBar;
     private TextView tvEmptyTitle, tvEmptyMessage;
-
-    // Trạng thái cục bộ để quản lý việc tìm kiếm và lọc
     private String currentQuery = "";
+    private String currentRestaurantId = "";
     private OrderStatus currentStatus = OrderStatus.PENDING;
     private boolean isViewingAvailable = false;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
@@ -80,22 +86,29 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         setupRecycler();
         setupTabs();
         setupSearch();
-        
-        // 2. "Đăng ký" lắng nghe sự thay đổi dữ liệu từ ViewModel
+        setupRestaurantFilter();
         observeViewModel();
         
-        // 3. Gọi dữ liệu lần đầu
+        if (!isShipper) {
+            viewModel.fetchRestaurants();
+        }
         reloadOrders();
     }
     // ánh xạ các thành phần UI từ layout
     private void initViews(View view) {
         etSearch = view.findViewById(R.id.et_search);
+        tilRestaurantFilter = view.findViewById(R.id.til_restaurant_filter);
+        acRestaurantFilter = view.findViewById(R.id.ac_restaurant_filter);
         tabLayout = view.findViewById(R.id.tab_order_status);
         rvOrders = view.findViewById(R.id.rv_orders);
         emptyState = view.findViewById(R.id.empty_state);
         progressBar = view.findViewById(R.id.progress_bar);
         tvEmptyTitle = emptyState.findViewById(R.id.tvEmptyTitle);
         tvEmptyMessage = emptyState.findViewById(R.id.tvEmptyMessage);
+
+        if (!isShipper) {
+            tilRestaurantFilter.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
@@ -117,19 +130,45 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             }
         });
 
+        // Quan sát danh sách nhà hàng
+        viewModel.restaurants.observe(getViewLifecycleOwner(), restaurants -> {
+            if (restaurants != null) {
+                List<String> restaurantNames = new ArrayList<>();
+                restaurantNames.add("Tất cả nhà hàng");
+                for (Restaurant r : restaurants) {
+                    restaurantNames.add(r.getName());
+                }
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                        android.R.layout.simple_dropdown_item_1line, restaurantNames);
+                acRestaurantFilter.setAdapter(adapter);
+                acRestaurantFilter.setText(restaurantNames.get(0), false);
+            }
+        });
+
         // Quan sát trạng thái đang tải (Loading)
         viewModel.isLoading.observe(getViewLifecycleOwner(), isLoading -> {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         });
-
-        // Quan sát thông báo lỗi/thành công
         viewModel.errorMessage.observe(getViewLifecycleOwner(), message -> {
             if (message != null) {
                 ToastBanner.showError(message);
             } else {
-                // message == null là tín hiệu một thao tác update thành công
                 reloadOrders();
             }
+        });
+    }
+
+    private void setupRestaurantFilter() {
+        acRestaurantFilter.setOnItemClickListener((parent, view, position, id) -> {
+            if (position == 0) {
+                currentRestaurantId = "";
+            } else {
+                List<Restaurant> restaurants = viewModel.restaurants.getValue();
+                if (restaurants != null && position <= restaurants.size()) {
+                    currentRestaurantId = restaurants.get(position - 1).getId();
+                }
+            }
+            reloadOrders();
         });
     }
 
@@ -145,7 +184,6 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         tabLayout.removeAllTabs();
         
         if (isShipper) {
-            // Shippers only care about specific statuses
             tabLayout.addTab(tabLayout.newTab().setText("Đơn hàng mới").setTag("AVAILABLE"));
             tabLayout.addTab(tabLayout.newTab().setText("Đang giao").setTag("ACTIVE"));
             tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành").setTag("HISTORY"));
@@ -188,11 +226,17 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                 currentQuery = s != null ? s.toString().trim() : "";
-                // Cơ chế Debounce: Đợi 300ms sau khi người dùng ngừng gõ mới gọi API
-                searchHandler.removeCallbacksAndMessages(null);
-                searchHandler.postDelayed(() -> reloadOrders(), 300L);
             }
             @Override public void afterTextChanged(Editable s) {}
+        });
+
+        etSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH ||
+                (event != null && event.getKeyCode() == android.view.KeyEvent.KEYCODE_ENTER)) {
+                reloadOrders();
+                return true;
+            }
+            return false;
         });
     }
 
@@ -201,11 +245,9 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             viewModel.fetchAvailableOrders();
         } else {
             String shipperId = isShipper ? sessionManager.getCurrentUser().getId() : null;
-            viewModel.fetchOrders(currentStatus, currentQuery, shipperId);
+            viewModel.fetchOrders(currentStatus, currentQuery, shipperId, currentRestaurantId);
         }
     }
-
-    // --- Triển khai các hành động từ giao diện (OrderActionListener) ---
 
     @Override
     public void onOpenDetail(Order order) {
@@ -213,7 +255,6 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         intent.putExtra(OrderDetailActivity.EXTRA_ORDER_ID, order.getId());
         startActivity(intent);
     }
-
     @Override
     public void onAccept(Order order) {
         if (isShipper) {
@@ -261,7 +302,6 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         for (int i = 0; i < shippers.size(); i++) {
             names[i] = shippers.get(i).getFullName() + " (" + shippers.get(i).getPhone() + ")";
         }
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.order_assign_shipper)
                 .setItems(names, (dialog, which) -> {

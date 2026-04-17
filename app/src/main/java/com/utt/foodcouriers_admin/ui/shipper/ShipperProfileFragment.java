@@ -39,7 +39,7 @@ import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import java.text.NumberFormat;
 import java.util.Locale;
-
+/** Bên Shipper Profile*/
 public class ShipperProfileFragment extends Fragment {
 
     private ImageView ivAvatar;

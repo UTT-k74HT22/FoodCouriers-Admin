@@ -31,7 +31,7 @@ import com.utt.foodcouriers_admin.ui.shipper.adapter.ShipperAdapter;
 import com.utt.foodcouriers_admin.ui.shipper.dialog.ShipperFormDialogFragment;
 import java.util.ArrayList;
 import java.util.List;
-
+/** Trang quản lý shipper của admin */
 public class ShipperFragment extends Fragment implements ShipperAdapter.ShipperActionListener {
 
     private RecyclerView rvShippers;

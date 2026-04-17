@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
+/** Cấu trúc dữ liệu của bảng order */
 public class Order implements Serializable {
 
     private String id;
