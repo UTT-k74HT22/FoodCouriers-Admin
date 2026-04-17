@@ -175,8 +175,11 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         if (order == null) return false;
 
         String deliveryStatus = getString(order, "delivery_status");
+        String status = getString(order, "status");
         String shipperId = getString(order, "shipper_id");
         return shipperId == null
+                && !"cancelled".equalsIgnoreCase(status)
+                && !"delivered".equalsIgnoreCase(status)
                 && ("unassigned".equalsIgnoreCase(deliveryStatus)
                 || "searching".equalsIgnoreCase(deliveryStatus));
     }

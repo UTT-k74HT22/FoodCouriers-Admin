@@ -98,6 +98,9 @@ public class OrderRepository {
         if (status == OrderStatus.CONFIRMED) {
             updates.put("delivery_status", "searching");
         }
+        if (status == OrderStatus.CANCELLED) {
+            updates.put("delivery_status", "cancelled");
+        }
 
         orderClient.updateOrder(orderId, updates, new BaseSupabaseClient.ApiCallback<Void>() {
             @Override
