@@ -246,7 +246,7 @@ public class OrderViewModel extends ViewModel {
             if (isShipperMode) {
                 fetchAvailableOrders();
             } else if (currentStatus != null) {
-                fetchOrders(currentStatus, currentQuery, currentShipperId);
+                fetchOrders(currentStatus, currentQuery, currentShipperId, currentRestaurantId);
             }
         }
     }
@@ -254,6 +254,7 @@ public class OrderViewModel extends ViewModel {
     private OrderStatus currentStatus;
     private String currentQuery;
     private String currentShipperId;
+    private String currentRestaurantId;
     private boolean isShipperMode = false;
 
     public void setShipperMode(boolean isShipper) {
@@ -261,8 +262,13 @@ public class OrderViewModel extends ViewModel {
     }
 
     public void setCurrentFilter(OrderStatus status, String query, String shipperId) {
+        setCurrentFilter(status, query, shipperId, null);
+    }
+
+    public void setCurrentFilter(OrderStatus status, String query, String shipperId, String restaurantId) {
         this.currentStatus = status;
         this.currentQuery = query;
         this.currentShipperId = shipperId;
+        this.currentRestaurantId = restaurantId;
     }
 }

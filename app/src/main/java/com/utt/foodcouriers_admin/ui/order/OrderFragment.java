@@ -260,7 +260,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     }
 
     private void reloadOrders() {
-        viewModel.setCurrentFilter(currentStatus, currentQuery, isShipper ? sessionManager.getCurrentUser().getId() : null);
+        viewModel.setCurrentFilter(currentStatus, currentQuery, isShipper ? sessionManager.getCurrentUser().getId() : null, currentRestaurantId);
         if (isViewingAvailable) {
             viewModel.fetchAvailableOrders();
         } else {
@@ -338,7 +338,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
 
         // Lưu current filter vào ViewModel
         viewModel.setShipperMode(isShipper);
-        viewModel.setCurrentFilter(currentStatus, currentQuery, isShipper ? sessionManager.getCurrentUser().getId() : null);
+        viewModel.setCurrentFilter(currentStatus, currentQuery, isShipper ? sessionManager.getCurrentUser().getId() : null, currentRestaurantId);
 
         // Subscribe
         realtimeCallback = new OrderRealtimeManager.OrderRealtimeCallback() {
