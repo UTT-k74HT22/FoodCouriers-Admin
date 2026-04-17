@@ -20,6 +20,40 @@
         app:tabTextAppearance="@style/AdminTextAppearance.Small"
         app:tabTextColor="@color/text_secondary" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/spacing_md"
+        android:paddingTop="@dimen/spacing_sm"
+        android:paddingEnd="@dimen/spacing_md"
+        android:paddingBottom="@dimen/spacing_sm">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_mark_all_read"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đã đọc tất cả "
+            android:textAllCaps="false"
+            app:cornerRadius="@dimen/radius_sm" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_delete_all"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:text="Xóa tất cả"
+            android:textAllCaps="false"
+            android:textColor="@color/error"
+            app:cornerRadius="@dimen/radius_sm"
+            app:strokeColor="@color/error" />
+
+    </LinearLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -39,6 +73,13 @@
             layout="@layout/admin_empty_state"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:visibility="gone" />
 
     </FrameLayout>

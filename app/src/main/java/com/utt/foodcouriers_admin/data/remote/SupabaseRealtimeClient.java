@@ -14,7 +14,9 @@ import com.utt.foodcouriers_admin.utils.websocket.MainThreadDispatcher;
 import com.utt.foodcouriers_admin.utils.websocket.RealtimeChannel;
 import com.utt.foodcouriers_admin.utils.websocket.RealtimeListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -120,8 +122,9 @@ public class SupabaseRealtimeClient {
      * @param accessToken JWT token từ Supabase Auth
      */
     public void initialize(String accessToken) {
-        this.accessToken = accessToken;
+        setAccessToken(accessToken);
         this.apikey = SupabaseConfig.SUPABASE_ANON_KEY;
+        this.shouldReconnect = true;
     }
 
     /**
@@ -151,6 +154,12 @@ public class SupabaseRealtimeClient {
      */
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+        if (apikey == null || apikey.isEmpty()) {
+            apikey = SupabaseConfig.SUPABASE_ANON_KEY;
+        }
+        if (isConnected) {
+            sendAccessToken();
+        }
     }
 
     /**
@@ -158,6 +167,7 @@ public class SupabaseRealtimeClient {
      * Nếu đã connected, không làm gì.
      */
     public void connect() {
+        shouldReconnect = true;
         if (isConnected) {
             Log.d(TAG, "Already connected");
             return;
@@ -257,6 +267,8 @@ public class SupabaseRealtimeClient {
                 String topic = "realtime:" + schema + ":" + table;
                 channelTopics.put(channelId, topic);
                 sendJoin(topic, schema, table, filter);
+            } else {
+                connect();
             }
         }
         
@@ -423,6 +435,52 @@ public class SupabaseRealtimeClient {
         }
     }
 
+    public void unsubscribe(RealtimeChannel channel, RealtimeListener listener) {
+        if (channel == null || listener == null) return;
+
+        String channelId = channel.getId();
+        RealtimeChannel existingChannel = channels.get(channelId);
+
+        if (existingChannel != null) {
+            existingChannel.removeListener(listener);
+
+            if (existingChannel.getListenerCount() == 0) {
+                channels.remove(channelId);
+
+                String topic = channelTopics.remove(channelId);
+                if (topic != null && isConnected) {
+                    sendLeave(topic);
+                }
+            }
+        }
+    }
+
+    private void sendAccessToken() {
+        if (accessToken == null || accessToken.isEmpty() || webSocket == null) {
+            return;
+        }
+
+        if (channelTopics.isEmpty()) {
+            return;
+        }
+
+        for (String topic : channelTopics.values()) {
+            int ref = refCounter.incrementAndGet();
+
+            JsonObject payload = new JsonObject();
+            payload.addProperty("access_token", accessToken);
+
+            JsonObject msg = new JsonObject();
+            msg.addProperty("topic", topic);
+            msg.addProperty("event", "access_token");
+            msg.add("payload", payload);
+            msg.addProperty("join_ref", String.valueOf(ref));
+            msg.addProperty("ref", String.valueOf(ref));
+
+            webSocket.send(msg.toString());
+        }
+    }
+
     private void resubscribeAllChannels() {
         for (Map.Entry<String, RealtimeChannel> entry : channels.entrySet()) {
             String channelId = entry.getKey();
@@ -483,18 +541,21 @@ public class SupabaseRealtimeClient {
     private void handlePostgresChanges(JsonObject payload, String topic) {
         JsonObject data = payload.has("data") ? payload.getAsJsonObject("data") : null;
         if (data == null) return;
-        
+
+        if (data.has("type") && data.has("record")) {
+            handleCurrentPostgresChange(data, topic);
+            return;
+        }
+
         String commitType = data.has("commit_type") ? data.get("commit_type").getAsString() : "";
         JsonArray changes = data.has("changes") ? data.getAsJsonArray("changes") : null;
-        
+
         if (changes == null || changes.size() == 0) return;
         
         String schema = extractSchemaFromTopic(topic);
         String table = extractTableFromTopic(topic);
-        String channelId = schema + ":" + table;
-        
-        RealtimeChannel channel = channels.get(channelId);
-        if (channel == null) return;
+        List<RealtimeChannel> matchedChannels = findChannels(schema, table);
+        if (matchedChannels.isEmpty()) return;
         
         for (JsonElement changeElem : changes) {
             JsonObject change = changeElem.getAsJsonObject();
@@ -504,25 +565,60 @@ public class SupabaseRealtimeClient {
             switch (commitType) {
                 case "insert":
                     if (newRecord != null) {
-                        notifyChannel(channel, c -> c.notifyInsert(newRecord));
+                        notifyChannels(matchedChannels, c -> c.notifyInsert(newRecord));
                     }
                     break;
                     
                 case "update":
                     if (newRecord != null) {
-                        notifyChannel(channel, c -> c.notifyUpdate(newRecord, oldRecord));
+                        notifyChannels(matchedChannels, c -> c.notifyUpdate(newRecord, oldRecord));
                     }
                     break;
                     
                 case "delete":
                     if (oldRecord != null) {
-                        notifyChannel(channel, c -> c.notifyDelete(oldRecord));
+                        notifyChannels(matchedChannels, c -> c.notifyDelete(oldRecord));
                     }
                     break;
                     
                 default:
                     break;
             }
+        }
+    }
+
+    private void handleCurrentPostgresChange(JsonObject data, String topic) {
+        String eventType = data.has("type") ? data.get("type").getAsString() : "";
+        String schema = data.has("schema") ? data.get("schema").getAsString() : extractSchemaFromTopic(topic);
+        String table = data.has("table") ? data.get("table").getAsString() : extractTableFromTopic(topic);
+        JsonObject newRecord = data.has("record") && data.get("record").isJsonObject()
+                ? data.getAsJsonObject("record")
+                : null;
+        JsonObject oldRecord = data.has("old_record") && data.get("old_record").isJsonObject()
+                ? data.getAsJsonObject("old_record")
+                : null;
+
+        List<RealtimeChannel> matchedChannels = findChannels(schema, table);
+        if (matchedChannels.isEmpty()) return;
+
+        switch (eventType) {
+            case "INSERT":
+                if (newRecord != null) {
+                    notifyChannels(matchedChannels, c -> c.notifyInsert(newRecord));
+                }
+                break;
+            case "UPDATE":
+                if (newRecord != null) {
+                    notifyChannels(matchedChannels, c -> c.notifyUpdate(newRecord, oldRecord));
+                }
+                break;
+            case "DELETE":
+                if (oldRecord != null) {
+                    notifyChannels(matchedChannels, c -> c.notifyDelete(oldRecord));
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -542,6 +638,24 @@ public class SupabaseRealtimeClient {
         } else {
             action.accept(channel);
         }
+    }
+
+    private void notifyChannels(List<RealtimeChannel> matchedChannels, java.util.function.Consumer<RealtimeChannel> action) {
+        for (RealtimeChannel channel : matchedChannels) {
+            notifyChannel(channel, action);
+        }
+    }
+
+    private List<RealtimeChannel> findChannels(String schema, String table) {
+        String prefix = schema + ":" + table;
+        List<RealtimeChannel> matched = new ArrayList<>();
+        for (Map.Entry<String, RealtimeChannel> entry : channels.entrySet()) {
+            String channelId = entry.getKey();
+            if (channelId.equals(prefix) || channelId.startsWith(prefix + ":")) {
+                matched.add(entry.getValue());
+            }
+        }
+        return matched;
     }
 
     private void notifyChannelsConnected() {

@@ -19,6 +19,7 @@ public class DeliveryManagementFragment extends Fragment {
 
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
+    private final DeliveryListFragment[] pages = new DeliveryListFragment[3];
 
     @Nullable
     @Override
@@ -41,11 +42,20 @@ public class DeliveryManagementFragment extends Fragment {
             @NonNull
             @Override
             public Fragment createFragment(int position) {
-                switch (position) {
-                    case 0: return DeliveryListFragment.newInstance(DeliveryListFragment.TYPE_AVAILABLE);
-                    case 1: return DeliveryListFragment.newInstance(DeliveryListFragment.TYPE_ONGOING);
-                    default: return DeliveryListFragment.newInstance(DeliveryListFragment.TYPE_HISTORY);
+                if (pages[position] == null) {
+                    switch (position) {
+                        case 0:
+                            pages[position] = DeliveryListFragment.newInstance(DeliveryListFragment.TYPE_AVAILABLE);
+                            break;
+                        case 1:
+                            pages[position] = DeliveryListFragment.newInstance(DeliveryListFragment.TYPE_ONGOING);
+                            break;
+                        default:
+                            pages[position] = DeliveryListFragment.newInstance(DeliveryListFragment.TYPE_HISTORY);
+                            break;
+                    }
                 }
+                return pages[position];
             }
 
             @Override
@@ -61,5 +71,26 @@ public class DeliveryManagementFragment extends Fragment {
                 case 2: tab.setText("Lịch sử"); break;
             }
         }).attach();
+
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                refreshPage(position);
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewPager != null) {
+            refreshPage(viewPager.getCurrentItem());
+        }
+    }
+
+    private void refreshPage(int position) {
+        if (position >= 0 && position < pages.length && pages[position] != null) {
+            pages[position].refreshData();
+        }
     }
 }

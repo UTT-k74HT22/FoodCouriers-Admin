@@ -31,6 +31,7 @@ import com.utt.foodcouriers_admin.ui.shipper.ShipperProfileFragment;
 import com.utt.foodcouriers_admin.ui.promotion.PromotionFragment;
 import com.utt.foodcouriers_admin.ui.restaurant.RestaurantFragment;
 import com.utt.foodcouriers_admin.ui.user.UserFragment;
+import com.utt.foodcouriers_admin.data.remote.SupabaseRealtimeClient;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Supabase clients with the saved session token
         com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.initializeClients(this);
+        
+        // Connect to realtime
+        SupabaseRealtimeClient.getInstance().connect();
 
         setContentView(R.layout.activity_main_with_drawer);
 
@@ -195,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new com.utt.foodcouriers_admin.ui.report.ReportFragment();
                     title = "Báo cáo";
                 } else if (id == R.id.nav_notifications) {
+                    fragment = new com.utt.foodcouriers_admin.ui.notification.NotificationFragment();
                     title = "Thông báo";
                 } else if (id == R.id.nav_logout) {
                     performLogout();

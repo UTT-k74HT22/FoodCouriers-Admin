@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.gson.JsonObject;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
@@ -15,6 +16,8 @@ import com.utt.foodcouriers_admin.data.repository.OrderRepository;
 import com.utt.foodcouriers_admin.data.repository.RestaurantRepository;
 
 import java.util.List;
+
+import com.utt.foodcouriers_admin.data.realtime.OrderRealtimeManager;
 
 /** 
  * Logic chính của order fragment
@@ -38,6 +41,16 @@ public class OrderViewModel extends ViewModel {
     // Thông báo lỗi
     private final MutableLiveData<String> _errorMessage = new MutableLiveData<>();
     public final LiveData<String> errorMessage = _errorMessage;
+
+    // Realtime events
+    private final MutableLiveData<JsonObject> _newOrderEvent = new MutableLiveData<>();
+    public final LiveData<JsonObject> newOrderEvent = _newOrderEvent;
+
+    private final MutableLiveData<JsonObject> _orderUpdatedEvent = new MutableLiveData<>();
+    public final LiveData<JsonObject> orderUpdatedEvent = _orderUpdatedEvent;
+
+    private final MutableLiveData<JsonObject> _orderDeletedEvent = new MutableLiveData<>();
+    public final LiveData<JsonObject> orderDeletedEvent = _orderDeletedEvent;
 
     public OrderViewModel() {
         orderRepository = OrderRepository.getInstance();
@@ -118,7 +131,7 @@ public class OrderViewModel extends ViewModel {
             public void onComplete(BaseResponse<Void> response) {
                 _isLoading.setValue(false);
                 if (response.isSuccess()) {
-                    _errorMessage.setValue(null); 
+                    reloadOrders();
                 } else {
                     _errorMessage.setValue(response.getMessage());
                 }
@@ -206,5 +219,50 @@ public class OrderViewModel extends ViewModel {
                 }
             }
         });
+    }
+
+    // ========== Realtime Event Handlers ==========
+
+    /** Gọi khi có đơn hàng mới */
+    public void onNewOrder(JsonObject order) {
+        _newOrderEvent.postValue(order);
+        reloadOrders();
+    }
+
+    /** Gọi khi đơn hàng được cập nhật */
+    public void onOrderUpdated(JsonObject newOrder, JsonObject oldOrder) {
+        _orderUpdatedEvent.postValue(newOrder);
+        reloadOrders();
+    }
+
+    /** Gọi khi đơn hàng bị xóa */
+    public void onOrderDeleted(JsonObject oldOrder) {
+        _orderDeletedEvent.postValue(oldOrder);
+        reloadOrders();
+    }
+
+    private void reloadOrders() {
+        if (_orders.getValue() != null) {
+            if (isShipperMode) {
+                fetchAvailableOrders();
+            } else if (currentStatus != null) {
+                fetchOrders(currentStatus, currentQuery, currentShipperId);
+            }
+        }
+    }
+
+    private OrderStatus currentStatus;
+    private String currentQuery;
+    private String currentShipperId;
+    private boolean isShipperMode = false;
+
+    public void setShipperMode(boolean isShipper) {
+        this.isShipperMode = isShipper;
+    }
+
+    public void setCurrentFilter(OrderStatus status, String query, String shipperId) {
+        this.currentStatus = status;
+        this.currentQuery = query;
+        this.currentShipperId = shipperId;
     }
 }

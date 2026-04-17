@@ -152,11 +152,12 @@ public class RegisterActivity extends AppCompatActivity {
                 sessionManager.saveSession(
                         accessToken,
                         refreshToken,
-                        user
+                        user,
+                        com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getCurrentExpiresInMillis()
                 );
                 
                 // Sync session to all clients
-                com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.updateAllClients(accessToken, refreshToken);
+                com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.initializeClients(RegisterActivity.this);
                 
                 ToastBanner.showSuccess("Tài khoản đã được tạo thành công!");
                 

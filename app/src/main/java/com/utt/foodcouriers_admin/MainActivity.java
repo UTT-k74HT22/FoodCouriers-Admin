@@ -20,6 +20,7 @@ import com.utt.foodcouriers_admin.ui.menu.MenuItemFragment;
 import com.utt.foodcouriers_admin.ui.order.OrderFragment;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.data.model.User;
+import com.utt.foodcouriers_admin.data.remote.SupabaseRealtimeClient;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -230,6 +231,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
+        // Disconnect realtime first
+        SupabaseRealtimeClient.getInstance().disconnect();
+        
         sessionManager.clearSession();
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

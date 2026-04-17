@@ -14,6 +14,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.User;
+import com.utt.foodcouriers_admin.data.remote.SupabaseRealtimeClient;
 import com.utt.foodcouriers_admin.data.repository.AuthRepository;
 import com.utt.foodcouriers_admin.ui.main.MainActivity;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
@@ -149,11 +150,16 @@ public class LoginActivity extends AppCompatActivity {
                     sessionManager.saveSession(
                             accessToken,
                             refreshToken,
-                            user
+                            user,
+                            com.utt.foodcouriers_admin.data.remote.AuthClient.getInstance().getCurrentExpiresInMillis()
                     );
 
                     // Sync session to all clients
-                    com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.updateAllClients(accessToken, refreshToken);
+                    com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.initializeClients(LoginActivity.this);
+
+                    // Initialize Supabase Realtime Client
+                    SupabaseRealtimeClient.getInstance().initialize(accessToken);
+                    SupabaseRealtimeClient.getInstance().connect();
 
                     navigateToMain("Chào mừng bạn quay lại hệ thống.");
                     return;

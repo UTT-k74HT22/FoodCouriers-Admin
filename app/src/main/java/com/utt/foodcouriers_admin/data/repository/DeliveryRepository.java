@@ -33,7 +33,10 @@ public class DeliveryRepository extends BaseSupabaseRepository {
     public void getAvailableOrders(RepositoryCallback<List<Order>> callback) {
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),items:order_items(*)";
         // Lọc đơn chưa có shipper: unassigned hoặc searching
-        String filter = "or(delivery_status.eq.unassigned,delivery_status.eq.searching)&shipper_id=is.null";
+        String filter = "or(delivery_status.eq.unassigned,delivery_status.eq.searching)"
+                + "&shipper_id=is.null"
+                + "&status=not.in.(cancelled,delivered)"
+                + "&order=created_at.desc";
         
         orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
@@ -53,7 +56,9 @@ public class DeliveryRepository extends BaseSupabaseRepository {
      */
     public void getActiveDeliveries(String shipperUserId, RepositoryCallback<List<Order>> callback) {
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),items:order_items(*)";
-        String filter = "shipper_id=eq." + shipperUserId;
+        String filter = "shipper_id=eq." + shipperUserId
+                + "&status=not.in.(cancelled,delivered)"
+                + "&order=created_at.desc";
         
         orderClient.getOrders(selectClause, filter, new BaseSupabaseClient.ApiCallback<List<Order>>() {
             @Override
