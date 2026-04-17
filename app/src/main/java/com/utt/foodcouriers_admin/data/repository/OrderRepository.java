@@ -68,7 +68,7 @@ public class OrderRepository {
             }
         });
     }
-
+    //ilike.*
     public void searchOrders(String orderCode, RepositoryCallback<List<Order>> callback) {
         String selectClause ="*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name)";
 
