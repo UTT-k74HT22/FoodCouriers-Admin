@@ -34,8 +34,11 @@ import com.utt.foodcouriers_admin.data.repository.UserRepository;
 import com.utt.foodcouriers_admin.data.request.UserUpdateRequest;
 import com.utt.foodcouriers_admin.ui.common.dialog.ImageZoomDialogFragment;
 import com.utt.foodcouriers_admin.ui.main.MainActivity;
+import com.utt.foodcouriers_admin.data.realtime.OrderRealtimeManager;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
+
+import com.google.gson.JsonObject;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -81,6 +84,8 @@ public class ShipperProfileFragment extends Fragment {
     private User currentUser;
     private boolean isShipper;
     private boolean isEditMode;
+    private OrderRealtimeManager realtimeManager;
+    private OrderRealtimeManager.OrderRealtimeCallback realtimeCallback;
 
     private final ActivityResultLauncher<String> pickImageLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -626,5 +631,71 @@ public class ShipperProfileFragment extends Fragment {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).refreshNavigationHeader();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        subscribeRealtime();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (realtimeManager != null && realtimeCallback != null) {
+            realtimeManager.unsubscribe(realtimeCallback);
+            realtimeCallback = null;
+        }
+    }
+
+    private void subscribeRealtime() {
+        if (realtimeManager == null) {
+            realtimeManager = OrderRealtimeManager.getInstance();
+        }
+
+        realtimeCallback = new OrderRealtimeManager.OrderRealtimeCallback() {
+            @Override
+            public void onNewOrder(JsonObject order) {
+                if (isAdded() && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        String orderCode = order.has("order_code") ? order.get("order_code").getAsString() : "mới";
+                        ToastBanner.showInfo("Đơn hàng mới: " + orderCode);
+                        loadProfile();
+                    });
+                }
+            }
+
+            @Override
+            public void onOrderUpdated(JsonObject newOrder, JsonObject oldOrder) {
+                if (isAdded() && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        loadProfile();
+                    });
+                }
+            }
+
+            @Override
+            public void onOrderDeleted(JsonObject oldOrder) {
+                if (isAdded() && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        loadProfile();
+                    });
+                }
+            }
+
+            @Override
+            public void onRealtimeConnected() {
+            }
+
+            @Override
+            public void onRealtimeDisconnected() {
+            }
+
+            @Override
+            public void onRealtimeError(String error) {
+            }
+        };
+
+        realtimeManager.subscribe(realtimeCallback);
     }
 }

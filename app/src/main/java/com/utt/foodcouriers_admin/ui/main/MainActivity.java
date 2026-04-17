@@ -31,6 +31,7 @@ import com.utt.foodcouriers_admin.ui.shipper.ShipperProfileFragment;
 import com.utt.foodcouriers_admin.ui.promotion.PromotionFragment;
 import com.utt.foodcouriers_admin.ui.restaurant.RestaurantFragment;
 import com.utt.foodcouriers_admin.ui.user.UserFragment;
+import com.utt.foodcouriers_admin.data.remote.SupabaseRealtimeClient;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,6 +57,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Supabase clients with the saved session token
         com.utt.foodcouriers_admin.data.remote.SupabaseClientManager.initializeClients(this);
+        
+        // Connect to realtime
+        SupabaseRealtimeClient.getInstance().connect();
 
         setContentView(R.layout.activity_main_with_drawer);
 

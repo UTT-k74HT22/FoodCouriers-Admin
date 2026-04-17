@@ -13,10 +13,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.utt.foodcouriers_admin.R;
+import com.google.gson.JsonObject;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
+import com.utt.foodcouriers_admin.data.realtime.OrderRealtimeManager;
 import com.utt.foodcouriers_admin.data.repository.DeliveryRepository;
 import com.utt.foodcouriers_admin.ui.order.OrderDetailActivity;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
@@ -40,6 +42,8 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
     private OrderAdapter adapter;
     private DeliveryRepository repository;
     private SessionManager sessionManager;
+    private OrderRealtimeManager realtimeManager;
+    private OrderRealtimeManager.OrderRealtimeCallback realtimeCallback;
 
     public static DeliveryListFragment newInstance(int type) {
         DeliveryListFragment fragment = new DeliveryListFragment();
@@ -84,6 +88,7 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
 
         setupRecyclerView();
         loadData();
+        initRealtime();
     }
 
     @Override
@@ -135,6 +140,57 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
             emptyState.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void initRealtime() {
+        realtimeManager = OrderRealtimeManager.getInstance();
+        realtimeCallback = new OrderRealtimeManager.OrderRealtimeCallback() {
+            @Override
+            public void onNewOrder(JsonObject order) {
+                if (!isAdded()) return;
+
+                if (type == TYPE_AVAILABLE && isAvailableOrder(order)) {
+                    String orderCode = getOrderCode(order);
+                    ToastBanner.showInfo("Đơn hàng mới: " + orderCode);
+                }
+                loadData();
+            }
+
+            @Override
+            public void onOrderUpdated(JsonObject newOrder, JsonObject oldOrder) {
+                if (!isAdded()) return;
+                loadData();
+            }
+
+            @Override
+            public void onOrderDeleted(JsonObject oldOrder) {
+                if (!isAdded()) return;
+                loadData();
+            }
+        };
+        realtimeManager.subscribe(realtimeCallback);
+    }
+
+    private boolean isAvailableOrder(JsonObject order) {
+        if (order == null) return false;
+
+        String deliveryStatus = getString(order, "delivery_status");
+        String shipperId = getString(order, "shipper_id");
+        return shipperId == null
+                && ("unassigned".equalsIgnoreCase(deliveryStatus)
+                || "searching".equalsIgnoreCase(deliveryStatus));
+    }
+
+    private String getOrderCode(JsonObject order) {
+        String orderCode = getString(order, "order_code");
+        return orderCode != null ? orderCode : "mới";
+    }
+
+    private String getString(JsonObject object, String key) {
+        if (object == null || !object.has(key) || object.get(key).isJsonNull()) {
+            return null;
+        }
+        return object.get(key).getAsString();
     }
 
     @Override
@@ -225,5 +281,14 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
                 }
             }
         });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (realtimeManager != null && realtimeCallback != null) {
+            realtimeManager.unsubscribe(realtimeCallback);
+            realtimeCallback = null;
+        }
     }
 }

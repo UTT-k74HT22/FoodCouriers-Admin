@@ -110,7 +110,7 @@ public class OrderViewModel extends ViewModel {
             public void onComplete(BaseResponse<Void> response) {
                 _isLoading.setValue(false);
                 if (response.isSuccess()) {
-                    _errorMessage.setValue(null); 
+                    reloadOrders();
                 } else {
                     _errorMessage.setValue(response.getMessage());
                 }

@@ -98,6 +98,14 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         reloadOrders();
     }
     // ánh xạ các thành phần UI từ layout
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            reloadOrders();
+        }
+    }
+
     private void initViews(View view) {
         etSearch = view.findViewById(R.id.et_search);
         tabLayout = view.findViewById(R.id.tab_order_status);
