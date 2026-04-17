@@ -9,6 +9,7 @@ import com.utt.foodcouriers_admin.data.repository.base.CrudRepository;
 import com.utt.foodcouriers_admin.data.request.ShipperUpsertRequest;
 import com.utt.foodcouriers_admin.data.request.AdminCreateUserAccountRequest;
 import java.util.List;
+import java.util.Map;
 
 public class ShipperRepository extends BaseSupabaseRepository implements CrudRepository<ShipperProfile, ShipperUpsertRequest> {
 
@@ -287,6 +288,42 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
                     }
                 }
                 postResponse(callback, BaseResponse.success(total, "Success"));
+            }
+        });
+    }
+
+    /**
+     * Lấy doanh thu 7 ngày gần nhất của shipper (đơn đã giao)
+     */
+    public void getWeeklyRevenue(String userId, RepositoryCallback<Map<String, Long>> callback) {
+        java.util.TimeZone tz = java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        java.util.Calendar cal = java.util.Calendar.getInstance(tz);
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -7);
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+        sdf.setTimeZone(tz);
+        String startDate = sdf.format(cal.getTime());
+        
+        String filter = "?shipper_id=eq." + userId + "&status=eq.delivered&created_at=gte." + startDate + "T00:00:00%2B07:00&select=created_at,total";
+        
+        fetchList("orders", filter, com.utt.foodcouriers_admin.data.model.Order[].class, new RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.Order>>() {
+            @Override
+            public void onComplete(BaseResponse<List<com.utt.foodcouriers_admin.data.model.Order>> response) {
+                if (!response.isSuccess()) {
+                    postResponse(callback, BaseResponse.error(response.getError() != null ? response.getError().getCode() : "ERROR", response.getMessage()));
+                    return;
+                }
+                
+                Map<String, Long> dailyRevenue = new java.util.HashMap<>();
+                if (response.getData() != null) {
+                    for (com.utt.foodcouriers_admin.data.model.Order order : response.getData()) {
+                        String dateKey = order.getCreatedAt();
+                        if (dateKey != null && dateKey.length() >= 10) {
+                            dateKey = dateKey.substring(0, 10);
+                            dailyRevenue.put(dateKey, dailyRevenue.getOrDefault(dateKey, 0L) + order.getTotal());
+                        }
+                    }
+                }
+                postResponse(callback, BaseResponse.success(dailyRevenue, "Success"));
             }
         });
     }

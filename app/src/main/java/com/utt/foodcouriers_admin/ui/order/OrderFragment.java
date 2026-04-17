@@ -275,6 +275,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         intent.putExtra(OrderDetailActivity.EXTRA_ORDER_ID, order.getId());
         startActivity(intent);
     }
+
     @Override
     public void onAccept(Order order) {
         if (isShipper) {
@@ -283,7 +284,6 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             viewModel.updateStatus(order.getId(), OrderStatus.CONFIRMED);
         }
     }
-
     @Override
     public void onReject(Order order) {
         viewModel.updateStatus(order.getId(), OrderStatus.CANCELLED);

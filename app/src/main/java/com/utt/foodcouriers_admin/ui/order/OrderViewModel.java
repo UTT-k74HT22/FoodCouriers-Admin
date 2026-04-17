@@ -92,7 +92,7 @@ public class OrderViewModel extends ViewModel {
     /** Lấy danh sách đơn hàng đang chờ Shipper nhận (Dành cho Shipper) */
     public void fetchAvailableOrders() {
         _isLoading.setValue(true);
-        com.utt.foodcouriers_admin.data.repository.DeliveryRepository.getInstance()
+        DeliveryRepository.getInstance()
                 .getAvailableOrders(new RepositoryCallback<List<Order>>() {
             @Override
             public void onComplete(BaseResponse<List<Order>> response) {
