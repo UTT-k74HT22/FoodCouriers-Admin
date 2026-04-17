@@ -25,6 +25,7 @@ import okhttp3.ResponseBody;
 public class AuthClient extends BaseSupabaseClient {
     
     private static AuthClient instance;
+    private long currentExpiresInMillis = 3600000L;
     
     // Private constructor to enforce Singleton pattern
     private AuthClient() {
@@ -95,6 +96,7 @@ public class AuthClient extends BaseSupabaseClient {
                                 && authResponse.getAccessToken() != null
                                 && authResponse.getUser() != null
                                 && authResponse.getUser().getId() != null) {
+                            updateCurrentExpiresIn(authResponse);
                             setSession(authResponse.getAccessToken(), authResponse.getRefreshToken());
                             Log.d(TAG, "signIn success: authUserId=" + authResponse.getUser().getId());
                             fetchUserProfile(authResponse.getUser().getId(), callback);
@@ -163,6 +165,7 @@ public class AuthClient extends BaseSupabaseClient {
                                 && authResponse.getAccessToken() != null
                                 && authResponse.getUser() != null
                                 && authResponse.getUser().getId() != null) {
+                            updateCurrentExpiresIn(authResponse);
                             setSession(authResponse.getAccessToken(), authResponse.getRefreshToken());
                             // Create user profile after successful auth signup
                             createUserProfile(authResponse.getUser().getId(), name, phone, email, callback);
@@ -255,6 +258,7 @@ public class AuthClient extends BaseSupabaseClient {
                     if (response.isSuccessful()) {
                         AuthResponse authResponse = gson.fromJson(json, AuthResponse.class);
                         if (authResponse != null && authResponse.getAccessToken() != null) {
+                            updateCurrentExpiresIn(authResponse);
                             setSession(authResponse.getAccessToken(), authResponse.getRefreshToken());
                             Log.d(TAG, "refreshToken success");
                             postSuccess(callback, authResponse);
@@ -270,6 +274,15 @@ public class AuthClient extends BaseSupabaseClient {
                 }
             }
         });
+    }
+
+    public long getCurrentExpiresInMillis() {
+        return currentExpiresInMillis;
+    }
+
+    private void updateCurrentExpiresIn(AuthResponse authResponse) {
+        Long expiresIn = authResponse != null ? authResponse.getExpiresIn() : null;
+        currentExpiresInMillis = (expiresIn != null ? expiresIn : 3600L) * 1000L;
     }
 
     /**

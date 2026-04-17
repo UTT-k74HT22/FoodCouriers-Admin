@@ -1,6 +1,7 @@
 package com.utt.foodcouriers_admin.ui.dashboard;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,17 +18,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.model.DashboardStats;
+import com.utt.foodcouriers_admin.data.realtime.OrderRealtimeManager;
+import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import java.text.NumberFormat;
 import java.util.Locale;
 
 import androidx.core.content.ContextCompat;
 
+import com.google.gson.JsonObject;
+
 public class DashboardFragment extends Fragment {
 
     private DashboardViewModel viewModel;
     private com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardOrderAdapter orderAdapter;
     private com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardTopItemAdapter topItemAdapter;
+    private OrderRealtimeManager realtimeManager;
+    private OrderRealtimeManager.OrderRealtimeCallback realtimeCallback;
     
     // Khai báo các view thống kê
     private View cardOrders, cardRevenue, cardProcessing, cardCompleted;
@@ -61,6 +68,9 @@ public class DashboardFragment extends Fragment {
 
         // 5. Bắt đầu tải dữ liệu từ Supabase
         viewModel.loadDashboardData();
+        
+        // 6. Khởi tạo realtime để auto refresh dashboard khi có đơn mới
+        initRealtime();
     }
 
     private void initViews(View view) {
@@ -163,5 +173,46 @@ public class DashboardFragment extends Fragment {
         rvTopItems.setLayoutManager(new LinearLayoutManager(getContext()));
         topItemAdapter = new com.utt.foodcouriers_admin.ui.dashboard.adapter.DashboardTopItemAdapter();
         rvTopItems.setAdapter(topItemAdapter);
+    }
+
+    private void initRealtime() {
+        realtimeManager = OrderRealtimeManager.getInstance();
+        
+        realtimeCallback = new OrderRealtimeManager.OrderRealtimeCallback() {
+            @Override
+            public void onNewOrder(JsonObject order) {
+                if (getActivity() == null) return;
+                Log.d("DashboardFragment", "New order received via realtime");
+                String orderCode = order.has("order_code") ? order.get("order_code").getAsString() : "mới";
+                ToastBanner.showInfo("Đơn hàng mới: " + orderCode);
+                // Auto refresh dashboard
+                viewModel.loadDashboardData();
+            }
+
+            @Override
+            public void onOrderUpdated(JsonObject newOrder, JsonObject oldOrder) {
+                if (getActivity() == null) return;
+                Log.d("DashboardFragment", "Order updated via realtime");
+                // Auto refresh dashboard
+                viewModel.loadDashboardData();
+            }
+
+            @Override
+            public void onOrderDeleted(JsonObject oldOrder) {
+                if (getActivity() == null) return;
+                Log.d("DashboardFragment", "Order deleted via realtime");
+                viewModel.loadDashboardData();
+            }
+        };
+        realtimeManager.subscribe(realtimeCallback);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (realtimeManager != null && realtimeCallback != null) {
+            realtimeManager.unsubscribe(realtimeCallback);
+            realtimeCallback = null;
+        }
     }
 }

@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,11 +28,15 @@ import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
 import com.utt.foodcouriers_admin.data.model.Shipper;
+import com.utt.foodcouriers_admin.data.model.User;
+import com.utt.foodcouriers_admin.data.realtime.OrderRealtimeManager;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import java.util.List;
+
+import com.google.gson.JsonObject;
 
 /**
  * OrderFragment: Màn hình danh sách đơn hàng.
@@ -57,6 +62,8 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     private OrderStatus currentStatus = OrderStatus.PENDING;
     private boolean isViewingAvailable = false;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    private OrderRealtimeManager realtimeManager;
+    private OrderRealtimeManager.OrderRealtimeCallback realtimeCallback;
 
     @Nullable
     @Override
@@ -84,7 +91,10 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         // 2. "Đăng ký" lắng nghe sự thay đổi dữ liệu từ ViewModel
         observeViewModel();
         
-        // 3. Gọi dữ liệu lần đầu
+        // 3. Khởi tạo realtime subscription
+        initRealtime();
+        
+        // 4. Gọi dữ liệu lần đầu
         reloadOrders();
     }
     // ánh xạ các thành phần UI từ layout
@@ -197,6 +207,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     }
 
     private void reloadOrders() {
+        viewModel.setCurrentFilter(currentStatus, currentQuery, isShipper ? sessionManager.getCurrentUser().getId() : null);
         if (isViewingAvailable) {
             viewModel.fetchAvailableOrders();
         } else {
@@ -271,10 +282,67 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
                 .show();
     }
 
+    // ========== Realtime Integration ==========
+
+    private void initRealtime() {
+        realtimeManager = OrderRealtimeManager.getInstance();
+        
+        // Lưu current filter vào ViewModel
+        viewModel.setShipperMode(isShipper);
+        viewModel.setCurrentFilter(currentStatus, currentQuery, isShipper ? sessionManager.getCurrentUser().getId() : null);
+
+        // Subscribe
+        realtimeCallback = new OrderRealtimeManager.OrderRealtimeCallback() {
+            @Override
+            public void onNewOrder(JsonObject order) {
+                if (getActivity() == null) return;
+                String orderCode = order.has("order_code") ? order.get("order_code").getAsString() : "mới";
+                ToastBanner.showInfo("Đơn hàng mới: " + orderCode);
+                viewModel.onNewOrder(order);
+            }
+
+            @Override
+            public void onOrderUpdated(JsonObject newOrder, JsonObject oldOrder) {
+                if (getActivity() == null) return;
+                viewModel.onOrderUpdated(newOrder, oldOrder);
+            }
+
+            @Override
+            public void onOrderDeleted(JsonObject oldOrder) {
+                if (getActivity() == null) return;
+                String orderCode = oldOrder.has("order_code") ? oldOrder.get("order_code").getAsString() : "";
+                ToastBanner.showInfo("Đơn hàng đã bị xóa: " + orderCode);
+                viewModel.onOrderDeleted(oldOrder);
+            }
+
+            @Override
+            public void onRealtimeConnected() {
+                Log.d("OrderFragment", "Realtime connected");
+            }
+
+            @Override
+            public void onRealtimeDisconnected() {
+                Log.w("OrderFragment", "Realtime disconnected");
+            }
+
+            @Override
+            public void onRealtimeError(String error) {
+                Log.e("OrderFragment", "Realtime error: " + error);
+            }
+        };
+        realtimeManager.subscribe(realtimeCallback);
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         // Hủy các callback của Handler để tránh rò rỉ bộ nhớ
         searchHandler.removeCallbacksAndMessages(null);
+        
+        // Unsubscribe realtime
+        if (realtimeManager != null && realtimeCallback != null) {
+            realtimeManager.unsubscribe(realtimeCallback);
+            realtimeCallback = null;
+        }
     }
 }

@@ -20,6 +20,7 @@ public class SessionManager {
     private static final String KEY_USER_IS_ACTIVE = "user_is_active";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_TOKEN_EXPIRES_AT = "token_expires_at";
+    private static final long TOKEN_REFRESH_SKEW_MILLIS = 5 * 60 * 1000L;
     
     private static SessionManager instance;
     private final SharedPreferences prefs;
@@ -136,7 +137,7 @@ public class SessionManager {
 
     public boolean isTokenExpired() {
         long expiresAt = getTokenExpiresAt();
-        return expiresAt == 0 || System.currentTimeMillis() >= expiresAt;
+        return expiresAt == 0 || System.currentTimeMillis() >= expiresAt - TOKEN_REFRESH_SKEW_MILLIS;
     }
 
     public User getCurrentUser() {

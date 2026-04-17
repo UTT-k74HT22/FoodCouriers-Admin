@@ -30,7 +30,8 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
     public enum ToastBannerType {
         SUCCESS,
         ERROR,
-        WARNING
+        WARNING,
+        INFO
     }
 
     private ToastBanner() {
@@ -55,6 +56,10 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
         show(message, ToastBannerType.WARNING);
     }
 
+    public static void showInfo(String message) {
+        show(message, ToastBannerType.INFO);
+    }
+
     private static void show(String message, ToastBannerType type) {
         if (currentActivity == null) {
             return;
@@ -73,6 +78,9 @@ public class ToastBanner implements Application.ActivityLifecycleCallbacks {
                     break;
                 case WARNING:
                     backgroundColor = currentActivity.getColor(R.color.warning);
+                    break;
+                case INFO:
+                    backgroundColor = currentActivity.getColor(R.color.info);
                     break;
                 default:
                     backgroundColor = currentActivity.getColor(R.color.primary);

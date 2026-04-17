@@ -1,6 +1,8 @@
 package com.utt.foodcouriers_admin.data.remote;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.utt.foodcouriers_admin.utils.SessionManager;
@@ -11,8 +13,11 @@ import com.utt.foodcouriers_admin.utils.SessionManager;
 public class SupabaseClientManager {
 
     private static final String TAG = "SupabaseClientManager";
+    private static final long TOKEN_REFRESH_SKEW_MILLIS = 5 * 60 * 1000L;
     private static SessionManager sessionManager;
     private static boolean isRefreshing = false;
+    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static Runnable scheduledRefresh;
 
     public static void initializeClients(Context context) {
         sessionManager = SessionManager.getInstance(context);
@@ -21,6 +26,7 @@ public class SupabaseClientManager {
             String refreshToken = sessionManager.getRefreshToken();
             
             updateAllClients(accessToken, refreshToken);
+            scheduleTokenRefresh();
         }
     }
 
@@ -36,6 +42,7 @@ public class SupabaseClientManager {
         RestaurantClient.getInstance().clearSession();
         OrderClient.getInstance().clearSession();
         SupabaseRealtimeClient.getInstance().disconnect();
+        cancelScheduledRefresh();
     }
 
     public static void refreshTokenIfNeeded(BaseSupabaseClient.ApiCallback<Boolean> callback) {
@@ -59,6 +66,20 @@ public class SupabaseClientManager {
             return;
         }
 
+        refreshTokenNow(callback);
+    }
+
+    public static void refreshTokenNow(BaseSupabaseClient.ApiCallback<Boolean> callback) {
+        if (sessionManager == null || !sessionManager.isLoggedIn()) {
+            postSuccess(callback, false);
+            return;
+        }
+
+        if (isRefreshing) {
+            postSuccess(callback, false);
+            return;
+        }
+
         isRefreshing = true;
         Log.d(TAG, "Token expired, refreshing...");
 
@@ -73,6 +94,7 @@ public class SupabaseClientManager {
 
                     updateAllClients(newAccessToken, newRefreshToken);
                     sessionManager.updateSession(newAccessToken, newRefreshToken, expiresIn);
+                    scheduleTokenRefresh();
                     Log.d(TAG, "Token refreshed successfully");
                     postSuccess(callback, true);
                 } else {
@@ -93,6 +115,43 @@ public class SupabaseClientManager {
     private static <T> void postSuccess(BaseSupabaseClient.ApiCallback<T> callback, T result) {
         if (callback != null) {
             callback.onSuccess(result);
+        }
+    }
+
+    private static void scheduleTokenRefresh() {
+        if (sessionManager == null || !sessionManager.isLoggedIn()) {
+            cancelScheduledRefresh();
+            return;
+        }
+
+        cancelScheduledRefresh();
+
+        long expiresAt = sessionManager.getTokenExpiresAt();
+        if (expiresAt <= 0) {
+            return;
+        }
+
+        long delayMillis = Math.max(0L, expiresAt - System.currentTimeMillis() - TOKEN_REFRESH_SKEW_MILLIS);
+        scheduledRefresh = () -> refreshTokenIfNeeded(new BaseSupabaseClient.ApiCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                if (Boolean.FALSE.equals(result)) {
+                    Log.w(TAG, "Scheduled token refresh did not refresh the session");
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Scheduled token refresh failed: " + error);
+            }
+        });
+        mainHandler.postDelayed(scheduledRefresh, delayMillis);
+    }
+
+    private static void cancelScheduledRefresh() {
+        if (scheduledRefresh != null) {
+            mainHandler.removeCallbacks(scheduledRefresh);
+            scheduledRefresh = null;
         }
     }
 }
