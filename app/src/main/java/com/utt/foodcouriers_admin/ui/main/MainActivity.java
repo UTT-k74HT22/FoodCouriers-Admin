@@ -196,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
                     fragment = new PromotionFragment();
                     title = "Khuyến mãi";
                 } else if (id == R.id.nav_reports) {
+                    fragment = new com.utt.foodcouriers_admin.ui.report.ReportFragment();
                     title = "Báo cáo";
                 } else if (id == R.id.nav_notifications) {
                     fragment = new com.utt.foodcouriers_admin.ui.notification.NotificationFragment();
@@ -307,6 +308,11 @@ public class MainActivity extends AppCompatActivity {
         if (drawerLayout != null) {
             drawerLayout.closeDrawer(GravityCompat.START);
         }
+    }
+
+    public void navigateToOrders() {
+        navigationView.setCheckedItem(R.id.nav_orders);
+        loadFragment(new OrderFragment(), "Quản lý đơn hàng");
     }
 
     private void performLogout() {

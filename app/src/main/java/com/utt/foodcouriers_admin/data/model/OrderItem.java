@@ -3,7 +3,7 @@ package com.utt.foodcouriers_admin.data.model;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-
+/** Mục đích : Chứa thông tin đơn hàng.*/
 public class OrderItem implements Serializable {
 
     private String id;

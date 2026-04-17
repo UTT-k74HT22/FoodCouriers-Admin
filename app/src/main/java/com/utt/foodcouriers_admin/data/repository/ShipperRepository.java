@@ -249,12 +249,46 @@ public class ShipperRepository extends BaseSupabaseRepository implements CrudRep
     }
 
     /**
-     * Lấy danh sách đơn hàng của shipper trong ngày hôm nay
+     * Lấy danh sách đơn hàng của shipper trong ngày hôm nay (theo user_id)
      */
-    public void getTodayOrdersByShipper(String shipperId, RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
-        String today = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(new java.util.Date());
-        String filter = "?shipper_id=eq." + shipperId + "&created_at=gte." + today + "T00:00:00Z&order=created_at.desc";
+    public void getTodayOrdersByShipper(String userId, RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.Order>> callback) {
+        java.util.TimeZone tz = java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        java.util.Calendar cal = java.util.Calendar.getInstance(tz);
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+        sdf.setTimeZone(tz);
+        String today = sdf.format(cal.getTime());
+        String filter = "?shipper_id=eq." + userId + "&select=*,restaurant:restaurants(name),user:users!orders_user_id_fkey(full_name,phone)&created_at=gte." + today + "T00:00:00%2B07:00&order=created_at.desc";
         fetchList("orders", filter, com.utt.foodcouriers_admin.data.model.Order[].class, callback);
+    }
+
+    /**
+     * Lấy tổng doanh thu trong ngày của shipper (đơn đã giao) - theo user_id
+     */
+    public void getTodayRevenue(String userId, RepositoryCallback<Long> callback) {
+        java.util.TimeZone tz = java.util.TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        java.util.Calendar cal = java.util.Calendar.getInstance(tz);
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US);
+        sdf.setTimeZone(tz);
+        String today = sdf.format(cal.getTime());
+        String filter = "?shipper_id=eq." + userId + "&status=eq.delivered&created_at=gte." + today + "T00:00:00%2B07:00&select=total";
+        
+        fetchList("orders", filter, com.utt.foodcouriers_admin.data.model.Order[].class, new RepositoryCallback<List<com.utt.foodcouriers_admin.data.model.Order>>() {
+            @Override
+            public void onComplete(BaseResponse<List<com.utt.foodcouriers_admin.data.model.Order>> response) {
+                if (!response.isSuccess()) {
+                    postResponse(callback, BaseResponse.error(response.getError() != null ? response.getError().getCode() : "ERROR", response.getMessage()));
+                    return;
+                }
+                
+                long total = 0;
+                if (response.getData() != null) {
+                    for (com.utt.foodcouriers_admin.data.model.Order order : response.getData()) {
+                        total += order.getTotal();
+                    }
+                }
+                postResponse(callback, BaseResponse.success(total, "Success"));
+            }
+        });
     }
 
     private BaseResponse<Void> validate(ShipperUpsertRequest request, boolean requireMainFields) {

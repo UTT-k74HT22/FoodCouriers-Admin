@@ -12,7 +12,9 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
+/** chú thích : eq trong query đồng nghĩa với =
+ * Xử lý logic trên sever của supbase
+ * */
 public class OrderClient extends BaseSupabaseClient {
 
     private static final String RPC_URL = SupabaseConfig.REST_URL + "/rpc/";
@@ -34,7 +36,7 @@ public class OrderClient extends BaseSupabaseClient {
     }
 
     /**
-     * Lấy danh sách đơn hàng với filter và join thông tin user, restaurant, shipper
+     * Lấy danh sách đơn hàng từ bảng order
      */
     public void getOrders(String selectClause, String filterParams, ApiCallback<List<Order>> callback) {
         new Thread(() -> {
@@ -67,7 +69,7 @@ public class OrderClient extends BaseSupabaseClient {
     }
 
     /**
-     * Cập nhật thông tin đơn hàng (PATCH)
+     * Cập nhật thông tin trạng thái đơn hàng
      */
     public void updateOrder(String orderId, Map<String, Object> updates, ApiCallback<Void> callback) {
         new Thread(() -> {
@@ -97,12 +99,12 @@ public class OrderClient extends BaseSupabaseClient {
     }
 
     /**
-     * Lấy danh sách Shipper có sẵn để gán đơn (lọc theo restaurant)
+     * Lấy danh sách Shipper có sẵn để gán đơn
      */
     public void getShippersByRestaurant(String restaurantId, ApiCallback<List<Shipper>> callback) {
         new Thread(() -> {
             try {
-                // Filter: Active, Available (manually toggled) AND Delivery Status must be 'available' (not busy)
+                // Lọc theo trạng thái và nhà hàng
                 StringBuilder urlBuilder = new StringBuilder(SHIPPERS_URL)
                         .append("?select=*,user:users!user_id(*)&is_active=eq.true&is_available=eq.true&delivery_status=eq.available");
 
@@ -192,7 +194,7 @@ public class OrderClient extends BaseSupabaseClient {
     public void completeOrder(String orderId, String shipperUserId, ApiCallback<RpcResponse> callback) {
         callRpc("complete_order", Map.of("p_order_id", orderId, "p_shipper_user_id", shipperUserId), callback);
     }
-
+    /** Sử dụng query để gọi RPC*/
     private void callRpc(String functionName, Map<String, Object> params, ApiCallback<RpcResponse> callback) {
         new Thread(() -> {
             try {

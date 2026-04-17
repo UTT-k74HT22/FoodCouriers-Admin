@@ -27,7 +27,7 @@ import com.utt.foodcouriers_admin.utils.ToastBanner;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/** Trang admin quản lý đơn hàng của shipper */
 public class DeliveryListFragment extends Fragment implements OrderAdapter.OrderActionListener {
 
     private static final String ARG_TYPE = "type";

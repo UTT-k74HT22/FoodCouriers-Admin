@@ -143,7 +143,6 @@ public class ShipperOrderDetailActivity extends AppCompatActivity {
 
     private void updateButtons(OrderStatus status) {
         switch (status) {
-            case ASSIGNED:
             case CONFIRMED:
             case PREPARING:
             case READY_FOR_PICKUP:
@@ -151,18 +150,17 @@ public class ShipperOrderDetailActivity extends AppCompatActivity {
                 btnDelivered.setVisibility(android.view.View.GONE);
                 btnPickup.setOnClickListener(v -> pickupOrder());
                 break;
-                
+
             case DELIVERING:
                 btnPickup.setVisibility(android.view.View.GONE);
                 btnDelivered.setVisibility(android.view.View.VISIBLE);
                 btnDelivered.setOnClickListener(v -> completeOrder());
                 break;
-                
+
             case DELIVERED:
                 btnPickup.setVisibility(android.view.View.GONE);
                 btnDelivered.setVisibility(android.view.View.GONE);
                 break;
-                
             default:
                 btnPickup.setVisibility(android.view.View.GONE);
                 btnDelivered.setVisibility(android.view.View.GONE);
