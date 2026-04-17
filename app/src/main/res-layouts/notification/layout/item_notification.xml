@@ -59,6 +59,17 @@
                 android:textColor="@color/text_hint"
                 tools:text="5 phút trước" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_mark_read"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text=" Đánh dấu đã đọc  "
+                android:textAllCaps="false"
+                app:cornerRadius="@dimen/radius_sm"
+                tools:visibility="visible" />
+
         </LinearLayout>
 
         <View

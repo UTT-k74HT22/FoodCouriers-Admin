@@ -198,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_reports) {
                     title = "Báo cáo";
                 } else if (id == R.id.nav_notifications) {
+                    fragment = new com.utt.foodcouriers_admin.ui.notification.NotificationFragment();
                     title = "Thông báo";
                 } else if (id == R.id.nav_logout) {
                     performLogout();

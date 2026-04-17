@@ -97,6 +97,12 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
         loadData();
     }
 
+    public void refreshData() {
+        if (isAdded()) {
+            loadData();
+        }
+    }
+
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new OrderAdapter();
@@ -159,6 +165,11 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
             @Override
             public void onOrderUpdated(JsonObject newOrder, JsonObject oldOrder) {
                 if (!isAdded()) return;
+                if (isCancelledOrder(newOrder)) {
+                    ToastBanner.showWarning("Đơn hàng đã bị hủy!: " + getOrderCode(newOrder));
+                } else if (type == TYPE_AVAILABLE && isAvailableOrder(newOrder) && !isAvailableOrder(oldOrder)) {
+                    ToastBanner.showInfo("Đơn hàng mới!: " + getOrderCode(newOrder));
+                }
                 loadData();
             }
 
@@ -182,6 +193,10 @@ public class DeliveryListFragment extends Fragment implements OrderAdapter.Order
                 && !"delivered".equalsIgnoreCase(status)
                 && ("unassigned".equalsIgnoreCase(deliveryStatus)
                 || "searching".equalsIgnoreCase(deliveryStatus));
+    }
+
+    private boolean isCancelledOrder(JsonObject order) {
+        return "cancelled".equalsIgnoreCase(getString(order, "status"));
     }
 
     private String getOrderCode(JsonObject order) {
