@@ -40,6 +40,25 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_restaurant_filter"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:hint="Lọc theo nhà hàng"
+                app:startIconDrawable="@drawable/ic_restaurant"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <AutoCompleteTextView
+                    android:id="@+id/ac_restaurant_filter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>

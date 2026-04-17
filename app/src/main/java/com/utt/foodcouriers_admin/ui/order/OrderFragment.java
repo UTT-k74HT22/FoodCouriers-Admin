@@ -9,6 +9,8 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,17 +23,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.utt.foodcouriers_admin.R;
 import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.model.Shipper;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
 import com.utt.foodcouriers_admin.ui.order.adapter.OrderAdapter;
 import com.utt.foodcouriers_admin.utils.SessionManager;
 import com.utt.foodcouriers_admin.utils.ToastBanner;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,11 +52,14 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
     private boolean isShipper = false;
     // Các thành phần UI
     private TextInputEditText etSearch;
+    private TextInputLayout tilRestaurantFilter;
+    private AutoCompleteTextView acRestaurantFilter;
     private TabLayout tabLayout;
     private RecyclerView rvOrders;
     private View emptyState, progressBar;
     private TextView tvEmptyTitle, tvEmptyMessage;
     private String currentQuery = "";
+    private String currentRestaurantId = "";
     private OrderStatus currentStatus = OrderStatus.PENDING;
     private boolean isViewingAvailable = false;
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
@@ -78,18 +86,29 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
         setupRecycler();
         setupTabs();
         setupSearch();
+        setupRestaurantFilter();
         observeViewModel();
+        
+        if (!isShipper) {
+            viewModel.fetchRestaurants();
+        }
         reloadOrders();
     }
     // ánh xạ các thành phần UI từ layout
     private void initViews(View view) {
         etSearch = view.findViewById(R.id.et_search);
+        tilRestaurantFilter = view.findViewById(R.id.til_restaurant_filter);
+        acRestaurantFilter = view.findViewById(R.id.ac_restaurant_filter);
         tabLayout = view.findViewById(R.id.tab_order_status);
         rvOrders = view.findViewById(R.id.rv_orders);
         emptyState = view.findViewById(R.id.empty_state);
         progressBar = view.findViewById(R.id.progress_bar);
         tvEmptyTitle = emptyState.findViewById(R.id.tvEmptyTitle);
         tvEmptyMessage = emptyState.findViewById(R.id.tvEmptyMessage);
+
+        if (!isShipper) {
+            tilRestaurantFilter.setVisibility(View.VISIBLE);
+        }
     }
 
     /**
@@ -111,6 +130,21 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             }
         });
 
+        // Quan sát danh sách nhà hàng
+        viewModel.restaurants.observe(getViewLifecycleOwner(), restaurants -> {
+            if (restaurants != null) {
+                List<String> restaurantNames = new ArrayList<>();
+                restaurantNames.add("Tất cả nhà hàng");
+                for (Restaurant r : restaurants) {
+                    restaurantNames.add(r.getName());
+                }
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                        android.R.layout.simple_dropdown_item_1line, restaurantNames);
+                acRestaurantFilter.setAdapter(adapter);
+                acRestaurantFilter.setText(restaurantNames.get(0), false);
+            }
+        });
+
         // Quan sát trạng thái đang tải (Loading)
         viewModel.isLoading.observe(getViewLifecycleOwner(), isLoading -> {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
@@ -121,6 +155,20 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             } else {
                 reloadOrders();
             }
+        });
+    }
+
+    private void setupRestaurantFilter() {
+        acRestaurantFilter.setOnItemClickListener((parent, view, position, id) -> {
+            if (position == 0) {
+                currentRestaurantId = "";
+            } else {
+                List<Restaurant> restaurants = viewModel.restaurants.getValue();
+                if (restaurants != null && position <= restaurants.size()) {
+                    currentRestaurantId = restaurants.get(position - 1).getId();
+                }
+            }
+            reloadOrders();
         });
     }
 
@@ -197,7 +245,7 @@ public class OrderFragment extends Fragment implements OrderAdapter.OrderActionL
             viewModel.fetchAvailableOrders();
         } else {
             String shipperId = isShipper ? sessionManager.getCurrentUser().getId() : null;
-            viewModel.fetchOrders(currentStatus, currentQuery, shipperId);
+            viewModel.fetchOrders(currentStatus, currentQuery, shipperId, currentRestaurantId);
         }
     }
 

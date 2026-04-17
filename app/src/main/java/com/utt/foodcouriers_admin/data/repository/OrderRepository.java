@@ -32,7 +32,7 @@ public class OrderRepository {
     /**
      * Lấy danh sách đơn hàng thực tế từ Supabase
      */
-    public void getOrders(OrderStatus status, String query, String shipperId, RepositoryCallback<List<Order>> callback) {
+    public void getOrders(OrderStatus status, String query, String shipperId, String restaurantId, RepositoryCallback<List<Order>> callback) {
         // Cấu trúc select để lấy thông tin join
         String selectClause = "*,user:users!user_id(*),restaurant:restaurants!restaurant_id(id,name),shipper:users!shipper_id(*),items:order_items(*)";
         
@@ -46,6 +46,12 @@ public class OrderRepository {
             if (filterBuilder.length() > 0) filterBuilder.append("&");
             filterBuilder.append("shipper_id=eq.").append(shipperId);
         }
+
+        if (restaurantId != null && !restaurantId.isEmpty()) {
+            if (filterBuilder.length() > 0) filterBuilder.append("&");
+            filterBuilder.append("restaurant_id=eq.").append(restaurantId);
+        }
+
         // Sắp xếp đơn mới nhất lên đầu
         if (filterBuilder.length() > 0) filterBuilder.append("&");
         filterBuilder.append("order=created_at.desc");

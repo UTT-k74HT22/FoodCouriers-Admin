@@ -8,9 +8,11 @@ import com.utt.foodcouriers_admin.data.common.BaseResponse;
 import com.utt.foodcouriers_admin.data.common.RepositoryCallback;
 import com.utt.foodcouriers_admin.data.model.Order;
 import com.utt.foodcouriers_admin.data.model.OrderStatus;
+import com.utt.foodcouriers_admin.data.model.Restaurant;
 import com.utt.foodcouriers_admin.data.model.Shipper;
 import com.utt.foodcouriers_admin.data.repository.DeliveryRepository;
 import com.utt.foodcouriers_admin.data.repository.OrderRepository;
+import com.utt.foodcouriers_admin.data.repository.RestaurantRepository;
 
 import java.util.List;
 
@@ -19,10 +21,15 @@ import java.util.List;
  */
 public class OrderViewModel extends ViewModel {
     private final OrderRepository orderRepository;
+    private final RestaurantRepository restaurantRepository;
     
     // Danh sách đơn hàng
     private final MutableLiveData<List<Order>> _orders = new MutableLiveData<>();
     public final LiveData<List<Order>> orders = _orders;
+
+    // Danh sách nhà hàng cho bộ lọc
+    private final MutableLiveData<List<Restaurant>> _restaurants = new MutableLiveData<>();
+    public final LiveData<List<Restaurant>> restaurants = _restaurants;
     
     // Trạng thái tải dữ liệu
     private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
@@ -34,10 +41,11 @@ public class OrderViewModel extends ViewModel {
 
     public OrderViewModel() {
         orderRepository = OrderRepository.getInstance();
+        restaurantRepository = RestaurantRepository.getInstance();
     }
 
     // Lấy danh sách đơn hàng
-    public void fetchOrders(OrderStatus status, String query, String shipperId) {
+    public void fetchOrders(OrderStatus status, String query, String shipperId, String restaurantId) {
         _isLoading.setValue(true);
 
         RepositoryCallback<List<Order>> callback = response -> {
@@ -52,8 +60,20 @@ public class OrderViewModel extends ViewModel {
             orderRepository.searchOrders(query.trim(), callback);
         }
         else {
-            orderRepository.getOrders(status, "", shipperId, callback);
+            orderRepository.getOrders(status, "", shipperId, restaurantId, callback);
         }
+    }
+
+    /** Lấy danh sách nhà hàng để lọc */
+    public void fetchRestaurants() {
+        restaurantRepository.getAll(new RepositoryCallback<List<Restaurant>>() {
+            @Override
+            public void onComplete(BaseResponse<List<Restaurant>> response) {
+                if (response.isSuccess()) {
+                    _restaurants.setValue(response.getData());
+                }
+            }
+        });
     }
 
     /** Lấy danh sách đơn hàng đang chờ Shipper nhận (Dành cho Shipper) */
