@@ -104,12 +104,27 @@ public class OrderRealtimeManager {
         return new RealtimeListener() {
             @Override
             public void onInsert(JsonObject record) {
+                if (!isProcessableOrder(record)) {
+                    Log.d(TAG, "Ignoring unpaid order insert: " + getOrderCode(record));
+                    return;
+                }
                 Log.d(TAG, "New order inserted: " + getOrderCode(record));
                 callback.onNewOrder(record);
             }
 
             @Override
             public void onUpdate(JsonObject record, JsonObject oldRecord) {
+                boolean wasProcessable = isProcessableOrder(oldRecord);
+                boolean isProcessable = isProcessableOrder(record);
+                if (!wasProcessable && isProcessable) {
+                    Log.d(TAG, "Paid order became processable: " + getOrderCode(record));
+                    callback.onNewOrder(record);
+                    return;
+                }
+                if (!isProcessable) {
+                    Log.d(TAG, "Ignoring unpaid order update: " + getOrderCode(record));
+                    return;
+                }
                 Log.d(TAG, "Order updated: " + getOrderCode(record));
                 callback.onOrderUpdated(record, oldRecord);
             }
@@ -188,6 +203,30 @@ public class OrderRealtimeManager {
             return record.get("id").getAsString();
         }
         return "unknown";
+    }
+
+    private boolean isProcessableOrder(JsonObject record) {
+        if (record == null) {
+            return false;
+        }
+
+        String status = getString(record, "status");
+        String paymentMethod = getString(record, "payment_method");
+        String paymentStatus = getString(record, "payment_status");
+
+        if ("awaiting_payment".equalsIgnoreCase(status)) {
+            return false;
+        }
+
+        return !"vnpay".equalsIgnoreCase(paymentMethod)
+                || "paid".equalsIgnoreCase(paymentStatus);
+    }
+
+    private String getString(JsonObject record, String key) {
+        if (record == null || !record.has(key) || record.get(key).isJsonNull()) {
+            return "";
+        }
+        return record.get(key).getAsString();
     }
 
     private void handleRealtimeError(String error) {
