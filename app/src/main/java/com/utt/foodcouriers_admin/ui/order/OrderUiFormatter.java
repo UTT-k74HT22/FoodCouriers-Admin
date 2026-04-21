@@ -34,6 +34,7 @@ public final class OrderUiFormatter {
         switch (status) {
             case CONFIRMED:
             case PREPARING:
+            case READY_FOR_PICKUP:
             case DELIVERING:
                 return R.drawable.admin_badge_info;
             case DELIVERED:
@@ -49,20 +50,15 @@ public final class OrderUiFormatter {
     public static int badgeTextColorRes(OrderStatus status) {
         switch (status) {
             case CONFIRMED:
-                return R.color.black;
             case PREPARING:
-                return R.color.black;
+            case READY_FOR_PICKUP:
             case DELIVERING:
-                return R.color.black;
-            case DELIVERED:
-                return R.color.white;
-            case CANCELLED:
-                return R.color.white;
             case PENDING:
                 return R.color.black;
-            case READY_FOR_PICKUP:
-                return R.color.black;
-                default:
+            case DELIVERED:
+            case CANCELLED:
+                return R.color.white;
+            default:
                 return R.color.white;
         }
     }
